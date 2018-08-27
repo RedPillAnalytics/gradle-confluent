@@ -1,0 +1,93 @@
+plugins {
+   id 'groovy'
+   id 'java-gradle-plugin'
+   id "com.gradle.plugin-publish" version "0.9.9"
+   id "pl.allegro.tech.build.axion-release" version "1.9.2"
+   id "com.github.breadmoirai.github-release" version "2.0.1"
+   id 'org.unbroken-dome.test-sets' version '1.5.1'
+   id "com.github.johnrengelman.shadow" version "2.0.4"
+   id "com.github.ben-manes.versions" version "0.20.0"
+   id "com.redpillanalytics.gradle-analytics" version "1.1.7"
+}
+
+// send analytics
+analytics {
+   organization = 'Red Pill Analytics'
+   sinks {
+      pubsub
+   }
+}
+
+scmVersion {
+
+   tag {
+      prefix = 'v'
+      versionSeparator = ''
+   }
+   ignoreUncommittedChanges = false
+}
+
+//set Gradle version to SCM Version
+allprojects {
+   project.version = scmVersion.version
+}
+
+githubRelease {
+
+   token = githubToken
+   owner = 'RedPillAnalytics'
+   repo = 'gradle-confluent'
+   tagName = "v${version}"
+   releaseAssets = fileTree(dir: buildDir, includes: ["**/*${version}*", "**/*${version}*.jar"]).toList()
+}
+
+dependencies {
+
+   compile gradleApi()
+   compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.12'
+   compile group: 'org.slf4j', name: 'slf4j-simple', version: '+'
+
+   testCompile('org.spockframework:spock-core:1.1-groovy-2.4')
+}
+
+// Default artifact naming.
+group = 'com.redpillanalytics'
+
+repositories {
+   jcenter()
+   maven {
+      url "https://plugins.gradle.org/m2/"
+   }
+}
+
+gradlePlugin {
+   plugins {
+      gradleConfluent {
+         id = 'com.redpillanalytics.gradle-confluent'
+         implementationClass = 'com.redpillanalytics.confluent.ConfluentPlugin'
+      }
+   }
+}
+
+pluginBundle {
+
+   website = 'http://redpillanalytics.com/'
+   vcsUrl = 'https://github.com/RedPillAnalytics/gradle-confluent/'
+
+   plugins {
+
+      gradleConfluent {
+         id = 'com.redpillanalytics.gradle-confluent'
+         displayName = 'gradle-confluent'
+         description = "A plugin for deploying streaming applications to a Confluent Kafka cluster."
+         tags = ['kafka', 'confluent','ksql']
+         version = project.version
+      }
+   }
+}
+
+// Options for all tests
+tasks.withType(Test) {
+   ignoreFailures true
+   testLogging.showStandardStreams true
+}
