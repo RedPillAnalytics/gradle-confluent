@@ -1,0 +1,3 @@
+steps:
+- name: 'gcr.io/rpa-development/confluent:5.0.0'
+  args: [ './gradlew', 'build']
