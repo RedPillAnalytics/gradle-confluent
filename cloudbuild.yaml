@@ -11,6 +11,7 @@ steps:
 - name: 'openjdk'
   id: 'gradle-release'
   args:
+  - 'bash'
   - '-c'
   - |
     [[ "$BRANCH_NAME" == "master" ]] && ./gradlew --build-cache -Si -Panalytics.buildId=$BUILD_ID -PgithubToken=$_GITHUB_TOKEN -g $_GRADLE_CACHE clean release -Prelease.disableChecks -Prelease.localOnly
