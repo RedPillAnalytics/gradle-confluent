@@ -1,5 +1,9 @@
 steps:
 - name: 'gcr.io/cloud-builders/git'
   args: [ 'fetch','--tags','--unshallow']
+- name: gcr.io/cloud-builders/gsutil
+  args: ['rsync', 'gs://rpa-cloudbuild-cache/gradle/build-cache/', 'build-cache', '||', ':']
 - name: 'openjdk'
-  args: [ './gradlew', 'build','-Si','-Panalytics.buildId=$BUILD_ID','-PgithubToken=$_GITHUB_TOKEN']
+  args: [ './gradlew', '--build-cache', 'build', '-Si', '-Panalytics.buildId=$BUILD_ID', '-PgithubToken=$_GITHUB_TOKEN']
+- name: gcr.io/cloud-builders/gsutil
+  args: ['rsync', 'build-cache', 'gs://rpa-cloudbuild-cache/gradle/build-cache/', '||',':']
