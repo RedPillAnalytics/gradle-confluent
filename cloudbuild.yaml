@@ -4,4 +4,4 @@ steps:
 - name: 'gcr.io/cloud-builders/git'
   args: [ 'status']
 - name: 'gradle:4.9'
-  args: [ 'gradle', 'build','-Si','-Panalytics.buildId=$BUILD_ID','-PgithubToken=d495ad9fd75812f5835625300cd476e6988dc5e4']
+  args: [ './gradlew', 'build','-Si','-Panalytics.buildId=$BUILD_ID','-PgithubToken=d495ad9fd75812f5835625300cd476e6988dc5e4']
