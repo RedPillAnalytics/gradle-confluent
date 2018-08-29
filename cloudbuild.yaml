@@ -36,7 +36,7 @@ steps:
 artifacts:
   objects:
     location: ['gs://rpa-cloudbuild/artifacts/']
-    paths: ['**/*.jar']
+    paths: [['build/libs/*.jar']]
 #- name: gcr.io/cloud-builders/gsutil
 #  id: save-build-dir
 #  args: ['rsync', '-r', '-d', 'build', 'gs://rpa-cloudbuild-cache/gradle/build/']
