@@ -33,9 +33,9 @@ steps:
     '-g', '$_GRADLE_CACHE',
     'build'
   ]
-artifacts:
+- artifacts:
   objects:
-    location: ["$_ARTIFACT_PATH"]
+    location: ['$_ARTIFACT_PATH']
     paths: ["build/libs/*.jar"]
 #- name: gcr.io/cloud-builders/gsutil
 #  id: save-build-dir
