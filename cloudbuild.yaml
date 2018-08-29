@@ -10,8 +10,8 @@ steps:
   args: ['rsync', '-r', 'gs://rpa-cloudbuild-cache/gradle/build/', 'build']
 - name: 'openjdk'
   id: 'gradle-release'
+  entrypoint: 'bash'
   args:
-  - 'bash'
   - '-c'
   - |
     [[ "$BRANCH_NAME" == "master" ]] && ./gradlew --build-cache -Si -Panalytics.buildId=$BUILD_ID -PgithubToken=$_GITHUB_TOKEN -g $_GRADLE_CACHE clean release -Prelease.disableChecks -Prelease.localOnly
