@@ -7,7 +7,7 @@ steps:
   args: ['mkdir','-p','$_GRADLE_CACHE']
 - name: gcr.io/cloud-builders/gsutil
   id: warmup-workspace
-  args: ['rsync', '-r', '-d', 'gs://rpa-cloudbuild-cache/gradle/', '.']
+  args: ['-m', 'rsync', '-r', 'gs://rpa-cloudbuild-cache/gradle/', '.']
 - name: openjdk
   id: gradle-release
   args: [
@@ -35,7 +35,7 @@ steps:
   ]
 - name: gcr.io/cloud-builders/gsutil
   id: save-build-dir
-  args: ['rsync', '-r', '-d', 'build', 'gs://rpa-cloudbuild-cache/gradle/build/']
+  args: ['-m', 'rsync', '-r', '-d', 'build', 'gs://rpa-cloudbuild-cache/gradle/build/']
 
 - name: gcr.io/cloud-builders/gsutil
   id: save-build-cache
