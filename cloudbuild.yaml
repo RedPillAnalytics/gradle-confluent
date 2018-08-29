@@ -1,16 +1,22 @@
 steps:
 - name: 'gcr.io/cloud-builders/git'
-  id: 'complete git checkout'
+  id: 'git-checkout'
   args: [ 'fetch','--tags','--unshallow']
 - name: 'openjdk'
-  id: 'create gradle_cache directory'
-  args: ['mkdir','-p','$_GRADLE_CACHE']
+  id: 'create-gradle-cache'
+  args: ['mkdir','-p','build']
 - name: gcr.io/cloud-builders/gsutil
-  id: 'refresh gradle cache'
-  args: ['rsync', '-r', 'gs://rpa-cloudbuild-cache/gradle/$_GRADLE_CACHE/', '$_GRADLE_CACHE']
+  id: 'refresh-gradle-cache'
+  args: ['rsync', '-r', 'gs://rpa-cloudbuild-cache/gradle/build/', 'build']
 - name: 'openjdk'
-  id: 'gradle build'
-  args: [ './gradlew', '--build-cache', 'build', '-Si', '-Panalytics.buildId=$BUILD_ID', '-PgithubToken=$_GITHUB_TOKEN', '-g', '$_GRADLE_CACHE']
+  id: 'gradle-release'
+  args:
+  - '-c'
+  - |
+    [[ "$BRANCH_NAME" == "master" ]] && ./gradlew --build-cache -Si -Panalytics.buildId=$BUILD_ID -PgithubToken=$_GITHUB_TOKEN -g $_GRADLE_CACHE clean release -Prelease.disableChecks -Prelease.localOnly
+- name: 'openjdk'
+  id: 'gradle-build'
+  args: [ './gradlew', '--build-cache', '-Si', '-Panalytics.buildId=$BUILD_ID', '-PgithubToken=$_GITHUB_TOKEN', '-g', '$_GRADLE_CACHE', 'build']
 - name: gcr.io/cloud-builders/gsutil
-  id: 'save gradle cache'
-  args: ['rsync', '-r', '$_GRADLE_CACHE', 'gs://rpa-cloudbuild-cache/gradle/$_GRADLE_CACHE/']
+  id: 'save-gradle-cache'
+  args: ['rsync', '-r', 'build', 'gs://rpa-cloudbuild-cache/gradle/build/']
