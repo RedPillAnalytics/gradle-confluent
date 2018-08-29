@@ -1,3 +1,7 @@
 steps:
+- name: 'gcr.io/cloud-builders/git'
+  args: [ 'git', 'fetch','--tags']
+- name: 'gcr.io/cloud-builders/git'
+  args: [ 'git', 'status']
 - name: 'gcr.io/cloud-builders/gradle'
   args: [ './gradlew', 'build','-Si','-Panalytics.buildId=$BUILD_ID']
