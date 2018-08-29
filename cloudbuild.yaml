@@ -35,7 +35,7 @@ steps:
   ]
 artifacts:
   objects:
-    location: [$_ARTIFACT_PATH]
+    location: ['$_ARTIFACT_PATH']
     paths: ['*.jar']
 #- name: gcr.io/cloud-builders/gsutil
 #  id: save-build-dir
