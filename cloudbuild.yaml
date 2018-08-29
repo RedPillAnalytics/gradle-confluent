@@ -5,9 +5,9 @@ steps:
 - name: openjdk
   id: create-gradle-cache
   args: ['mkdir','-p','$_GRADLE_CACHE']
-- name: gcr.io/cloud-builders/gsutil
-  id: warmup-workspace
-  args: ['rsync', '-r', 'gs://rpa-cloudbuild-cache/gradle/', '.']
+#- name: gcr.io/cloud-builders/gsutil
+#  id: warmup-workspace
+#  args: ['rsync', '-r', 'gs://rpa-cloudbuild-cache/gradle/', '.']
 - name: openjdk
   id: gradle-release
   args: [
