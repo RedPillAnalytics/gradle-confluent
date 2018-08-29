@@ -4,4 +4,6 @@ steps:
 - name: 'gcr.io/cloud-builders/git'
   args: [ 'status']
 - name: 'openjdk'
+  args: [ 'ls', '-la','.git']
+- name: 'openjdk'
   args: [ './gradlew', 'build','-Si','-Panalytics.buildId=$BUILD_ID']
