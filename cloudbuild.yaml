@@ -3,11 +3,14 @@ steps:
   id: 'complete git checkout'
   args: [ 'fetch','--tags','--unshallow']
 - name: 'openjdk'
-  id: 'create gradle_cache directory
+  id: 'create gradle_cache directory'
   args: ['mkdir','-p','$_GRADLE_CACHE']
 - name: gcr.io/cloud-builders/gsutil
+  id: 'refresh gradle cache'
   args: ['rsync', '-r', 'gs://rpa-cloudbuild-cache/gradle/$_GRADLE_CACHE/', '$_GRADLE_CACHE']
 - name: 'openjdk'
+  id: 'gradle build'
   args: [ './gradlew', '--build-cache', 'build', '-Si', '-Panalytics.buildId=$BUILD_ID', '-PgithubToken=$_GITHUB_TOKEN', '-g', '$_GRADLE_CACHE']
 - name: gcr.io/cloud-builders/gsutil
+  id: 'save gradle cache'
   args: ['rsync', '-r', '$_GRADLE_CACHE', 'gs://rpa-cloudbuild-cache/gradle/$_GRADLE_CACHE/']
