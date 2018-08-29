@@ -3,5 +3,5 @@ steps:
   args: [ 'fetch','--tags']
 - name: 'gcr.io/cloud-builders/git'
   args: [ 'status']
-- name: 'gcr.io/cloud-builders/gradle'
+- name: 'openjdk'
   args: [ './gradlew', 'build','-Si','-Panalytics.buildId=$BUILD_ID']
