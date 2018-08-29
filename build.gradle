@@ -91,7 +91,4 @@ tasks.withType(Test) {
    testLogging.showStandardStreams true
 }
 
-release.configure {
-   
-   onlyIf { gradle.rootProject.project.extensions.analytics.gitBranch = 'master' }
-}
+release.onlyIf { gradle.rootProject.extensions.analytics.gitBranch == 'master' }
