@@ -33,10 +33,10 @@ steps:
     '-g', '$_GRADLE_CACHE',
     'build'
   ]
-#artifacts:
-#  objects:
-#    location: ['$_ARTIFACT_PATH']
-#    paths: ["build/libs/*.jar"]
+artifacts:
+  objects:
+    location: ['gs://rpa-cloudbuild/artifacts/']
+    paths: ["build/libs/*.jar"]
 #- name: gcr.io/cloud-builders/gsutil
 #  id: save-build-dir
 #  args: ['rsync', '-r', '-d', 'build', 'gs://rpa-cloudbuild-cache/gradle/build/']
