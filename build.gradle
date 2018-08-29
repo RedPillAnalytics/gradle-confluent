@@ -90,3 +90,8 @@ tasks.withType(Test) {
    ignoreFailures true
    testLogging.showStandardStreams true
 }
+
+release.configure {
+   
+   onlyIf { gradle.rootProject.project.extensions.analytics.gitBranch = 'master' }
+}

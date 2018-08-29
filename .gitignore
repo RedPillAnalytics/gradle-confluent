@@ -6,7 +6,7 @@
 
 # Build Directories
 build/
-build-cache/
+gradle_cache/
 
 # Plugin builds
 out
