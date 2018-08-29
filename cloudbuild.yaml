@@ -2,10 +2,10 @@ steps:
 - name: 'gcr.io/cloud-builders/git'
   args: [ 'fetch','--tags','--unshallow']
 - name: 'openjdk'
-  args: ['mkdir','-p','$_BUILD_CACHE']
+  args: ['mkdir','-p','$_GRADLE_CACHE']
 - name: gcr.io/cloud-builders/gsutil
-  args: ['rsync', 'gs://rpa-cloudbuild-cache/gradle/$_BUILD_CACHE/', '$_BUILD_CACHE']
+  args: ['rsync', 'gs://rpa-cloudbuild-cache/gradle/$_GRADLE_CACHE/', '$_GRADLE_CACHE']
 - name: 'openjdk'
-  args: [ './gradlew', '--build-cache', 'build', '-Si', '-Panalytics.buildId=$BUILD_ID', '-PgithubToken=$_GITHUB_TOKEN']
+  args: [ './gradlew', '--build-cache', 'build', '-Si', '-Panalytics.buildId=$BUILD_ID', '-PgithubToken=$_GITHUB_TOKEN', '-g', '$_GRADLE_CACHE']
 - name: gcr.io/cloud-builders/gsutil
-  args: ['rsync', '$_BUILD_CACHE', 'gs://rpa-cloudbuild-cache/gradle/$_BUILD_CACHE/']
+  args: ['rsync', '$_GRADLE_CACHE', 'gs://rpa-cloudbuild-cache/gradle/$_GRADLE_CACHE/']
