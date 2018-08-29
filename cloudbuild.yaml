@@ -4,10 +4,10 @@ steps:
   args: [ 'fetch','--tags','--unshallow']
 - name: openjdk
   id: create-gradle-cache
-  args: ['mkdir','-p','build/$_GRADLE_CACHE']
+  args: ['mkdir','-p','$_GRADLE_CACHE']
 - name: gcr.io/cloud-builders/gsutil
-  id: 'refresh-gradle-cache'
-  args: ['rsync', '-r', 'gs://rpa-cloudbuild-cache/gradle/build/', 'build']
+  id: warmup-workspace
+  args: ['rsync', '-r', '-d', 'gs://rpa-cloudbuild-cache/gradle/', '.']
 - name: openjdk
   id: gradle-release
   args: [
@@ -34,5 +34,9 @@ steps:
     'build'
   ]
 - name: gcr.io/cloud-builders/gsutil
-  id: save-gradle-cache
-  args: ['rsync', '-r', 'build', 'gs://rpa-cloudbuild-cache/gradle/build/']
+  id: save-build-dir
+  args: ['rsync', '-r', '-d', 'build', 'gs://rpa-cloudbuild-cache/gradle/build/']
+
+- name: gcr.io/cloud-builders/gsutil
+  id: save-build-cache
+  args: ['rsync', '-r', '-d', '$_GRADLE_CACHE', 'gs://rpa-cloudbuild-cache/gradle/$_GRADLE_CACHE/']
