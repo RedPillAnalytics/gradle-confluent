@@ -4,7 +4,7 @@ steps:
   args: [ 'fetch','--tags','--unshallow']
 - name: openjdk
   id: create-gradle-cache
-  args: ['mkdir','-p','build']
+  args: ['mkdir','-p','build/$_GRADLE_CACHE']
 - name: gcr.io/cloud-builders/gsutil
   id: 'refresh-gradle-cache'
   args: ['rsync', '-r', 'gs://rpa-cloudbuild-cache/gradle/build/', 'build']
@@ -16,8 +16,7 @@ steps:
     '-Si',
     '-Panalytics.buildId=$BUILD_ID',
     '-PgithubToken=$_GITHUB_TOKEN',
-    '-g',
-    '$_GRADLE_CACHE',
+    '-g', '$_GRADLE_CACHE',
     'clean',
     'release',
     '-Prelease.disableChecks',
@@ -25,7 +24,15 @@ steps:
   ]
 - name: openjdk
   id: gradle-build
-  args: [ './gradlew', '--build-cache', '-Si', '-Panalytics.buildId=$BUILD_ID', '-PgithubToken=$_GITHUB_TOKEN', '-g', '$_GRADLE_CACHE', 'build']
+  args: [
+    './gradlew',
+    '--build-cache',
+    '-Si',
+    '-Panalytics.buildId=$BUILD_ID',
+    '-PgithubToken=$_GITHUB_TOKEN',
+    '-g', '$_GRADLE_CACHE',
+    'build'
+  ]
 - name: gcr.io/cloud-builders/gsutil
   id: save-gradle-cache
   args: ['rsync', '-r', 'build', 'gs://rpa-cloudbuild-cache/gradle/build/']
