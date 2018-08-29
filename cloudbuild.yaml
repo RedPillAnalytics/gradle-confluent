@@ -2,26 +2,26 @@ steps:
 - name: gcr.io/cloud-builders/git
   id: git-checkout
   args: [ 'fetch','--tags','--unshallow']
-- name: openjdk
-  id: create-gradle-cache
-  args: ['mkdir','-p','$_GRADLE_CACHE']
+#- name: openjdk
+#  id: create-gradle-cache
+#  args: ['mkdir','-p','$_GRADLE_CACHE']
 #- name: gcr.io/cloud-builders/gsutil
 #  id: warmup-workspace
 #  args: ['rsync', '-r', 'gs://rpa-cloudbuild-cache/gradle/', '.']
-- name: openjdk
-  id: gradle-release
-  args: [
-    './gradlew',
-    '--build-cache',
-    '-Si',
-    '-Panalytics.buildId=$BUILD_ID',
-    '-PgithubToken=$_GITHUB_TOKEN',
-    '-g', '$_GRADLE_CACHE',
-    'clean',
-    'release',
-    '-Prelease.disableChecks',
-    '-Prelease.localOnly'
-  ]
+#- name: openjdk
+#  id: gradle-release
+#  args: [
+#    './gradlew',
+#    '--build-cache',
+#    '-Si',
+#    '-Panalytics.buildId=$BUILD_ID',
+#    '-PgithubToken=$_GITHUB_TOKEN',
+#    '-g', '$_GRADLE_CACHE',
+#    'clean',
+#    'release',
+#    '-Prelease.disableChecks',
+#    '-Prelease.localOnly'
+#  ]
 - name: openjdk
   id: gradle-build
   args: [
