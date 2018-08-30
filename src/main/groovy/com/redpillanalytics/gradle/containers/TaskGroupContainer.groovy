@@ -22,6 +22,16 @@ class TaskGroupContainer {
    // capture the debug status
    Boolean isDebugEnabled = log.isDebugEnabled()
 
+   def isBuildEnv() {
+
+      return !isDeployOnly()
+   }
+
+   def isDeployOnly() {
+
+      return deployOnly
+   }
+
    def getDomainName() {
 
       return ((getClass() =~ /\w+$/)[0] - "Container")

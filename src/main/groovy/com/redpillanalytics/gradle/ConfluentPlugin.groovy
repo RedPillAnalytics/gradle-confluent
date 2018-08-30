@@ -23,7 +23,7 @@ class ConfluentPlugin implements Plugin<Project> {
       // create the deploy configuration
       // used for promoting functions and pipelines to downstream environments
       project.configurations {
-         deploy
+         promote
       }
 
       project.afterEvaluate {
@@ -61,7 +61,8 @@ class ConfluentPlugin implements Plugin<Project> {
             try {
                return (project.configurations."$configuration".dependencies.find { it.name =~ regexp }) ?: false
             }
-            catch (NullPointerException e) { }
+            catch (NullPointerException e) {
+            }
          }
 
          def getDependency = { configuration, regexp ->
@@ -103,19 +104,18 @@ class ConfluentPlugin implements Plugin<Project> {
          File sqlDir = project.file(project.extensions.confluent.getSqlPath())
          log.warn "sqlDir: ${sqlDir.getCanonicalPath()}"
 
-
          // configure build groups
          project.confluent.taskGroups.all { tg ->
 
             //todo change warn to info
             log.warn "Configuring ${tg.getDeployOnly() ? 'deploy' : 'build'} taskGroup: ${tg.name}"
 
-            if (!tg.getDeployOnly()) {
+            if (tg.isBuildEnv()) {
 
                project.task(tg.getTaskName('buildSql'), type: Zip) {
 
                   group tg.getGroupName()
-                  description 'Task for building KSQL statement distribution files.'
+                  description 'Build KSQL statement distribution files.'
                   appendix = 'ksql'
                   includeEmptyDirs false
 
@@ -127,11 +127,15 @@ class ConfluentPlugin implements Plugin<Project> {
 
             }
 
-            if (isUsableConfiguration(tg.name,tg.functionJarPattern)) {
+            if (isUsableConfiguration(tg.name, tg.functionJarPattern) || tg.isBuildEnv()) {
 
-               project.task(tg.getTaskName('deployFunctions'), type: Copy) {
+               project.task(tg.getTaskName('deployJar'), type: Copy) {
 
-                  from getDependency(tg.name, tg.functionJarPattern)
+                  group tg.getGroupName()
+                  description "Deploy KSQL UDFs, UDAFs, or any other external KSQL libraries to the KSQL Server."
+
+                  from tg.isBuildEnv() ? project."${tg.getTaskName('buildSql')}".archiveName : getDependency(tg.name, tg.functionJarPattern)
+
                   into project.extensions.confluent.getKsqlExtPath()
 
                }
@@ -153,7 +157,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
       project.extensions.confluent.taskGroups.add(new TaskGroupContainer(name: 'default'))
 
-      project.extensions.confluent.taskGroups.add(new TaskGroupContainer(name: 'deploy', deployOnly: true))
+      project.extensions.confluent.taskGroups.add(new TaskGroupContainer(name: 'promote', deployOnly: true))
 
    }
 }
