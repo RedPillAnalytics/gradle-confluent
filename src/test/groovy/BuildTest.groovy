@@ -67,7 +67,7 @@ class BuildTest extends Specification {
       //result.output.contains(":$task")
 
       where:
-      task << ['build', 'sqlBuild']
+      task << ['build', 'buildSql']
    }
 
 }

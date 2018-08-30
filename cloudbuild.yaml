@@ -8,20 +8,20 @@ steps:
 #- name: gcr.io/cloud-builders/gsutil
 #  id: warmup-workspace
 #  args: ['rsync', '-r', 'gs://rpa-cloudbuild-cache/gradle/', '.']
-#- name: openjdk
-#  id: gradle-release
-#  args: [
-#    './gradlew',
-#    '--build-cache',
-#    '-Si',
-#    '-Panalytics.buildId=$BUILD_ID',
-#    '-PgithubToken=$_GITHUB_TOKEN',
-#    '-g', '$_GRADLE_CACHE',
-#    'clean',
-#    'release',
-#    '-Prelease.disableChecks',
-#    '-Prelease.localOnly'
-#  ]
+- name: openjdk
+  id: gradle-release
+  args: [
+    './gradlew',
+    '--build-cache',
+    '-Si',
+    '-Panalytics.buildId=$BUILD_ID',
+    '-PgithubToken=$_GITHUB_TOKEN',
+    '-g', '$_GRADLE_CACHE',
+    'clean',
+    'release',
+    '-Prelease.disableChecks',
+    '-Prelease.localOnly'
+  ]
 - name: openjdk
   id: gradle-build
   args: [
@@ -35,8 +35,8 @@ steps:
   ]
 artifacts:
   objects:
-    location: ['gs://rpa-cloudbuild/artifacts/']
-    paths: ["build/libs/*.jar"]
+    location: '$_ARTIFACT_PATH'
+    paths: 'build/libs/*.jar'
 #- name: gcr.io/cloud-builders/gsutil
 #  id: save-build-dir
 #  args: ['rsync', '-r', '-d', 'build', 'gs://rpa-cloudbuild-cache/gradle/build/']

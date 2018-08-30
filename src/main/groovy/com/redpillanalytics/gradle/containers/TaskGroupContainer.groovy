@@ -3,7 +3,7 @@ package com.redpillanalytics.gradle.containers
 import groovy.util.logging.Slf4j
 
 @Slf4j
-class BuildGroupContainer {
+class TaskGroupContainer {
 
    // Build Group defaults
    private static final String DEFAULT_GROUP = 'default'
@@ -15,8 +15,9 @@ class BuildGroupContainer {
 
    String groupName = 'confluent'
 
-   // Build Group defaults
-   private static final String CURRENT_BUILD_NAME = 'current'
+   Boolean deployOnly = false
+
+   String functionJarPattern = 'ksql-functions'
 
    // capture the debug status
    Boolean isDebugEnabled = log.isDebugEnabled()
