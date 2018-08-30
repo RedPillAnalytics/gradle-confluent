@@ -10,8 +10,8 @@ steps:
 #  args: ['rsync', '-r', 'gs://rpa-cloudbuild-cache/gradle/', '.']
 - name: openjdk
   id: gradle-release
+  entrypoint: gradlew
   args: [
-    './gradlew',
     '--build-cache',
     '-Si',
     '-Panalytics.buildId=$BUILD_ID',
@@ -24,8 +24,8 @@ steps:
   ]
 - name: openjdk
   id: gradle-build
+  entrypoint: gradlew
   args: [
-    './gradlew',
     '--build-cache',
     '-Si',
     '-Panalytics.buildId=$BUILD_ID',
@@ -35,8 +35,11 @@ steps:
   ]
 - name: gcr.io/rpa-development/confluent:5.0.0
   id: test-depoloy
+  entrypoint: confluent start \
+              && ./datagen-init.sh \
+              && gradlew
   args: [
-    './gradlew', '--build-cache', '-Si', '-Panalytics.buildId=$BUILD_ID', '-g', '$_GRADLE_CACHE',
+    '--build-cache', '-Si', '-Panalytics.buildId=$BUILD_ID', '-g', '$_GRADLE_CACHE',
     'test'
   ]
 #artifacts:
