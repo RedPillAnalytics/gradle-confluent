@@ -37,6 +37,7 @@ steps:
 - name: gcr.io/rpa-development/confluent:5.0.0
   id: test-ls
   entrypoint: ls -l
+  args: [ ]
 - name: gcr.io/rpa-development/confluent:5.0.0
   id: test-depoloy
   entrypoint: confluent start \
