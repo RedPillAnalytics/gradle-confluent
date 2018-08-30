@@ -94,3 +94,7 @@ tasks.withType(Test) {
 
 release.onlyIf { gradle.rootProject.extensions.analytics.gitBranch == 'master' }
 publishPlugins.onlyIf { gradle.rootProject.extensions.analytics.gitBranch == 'master' }
+
+release.doLast {
+   logger.info "branch: ${gradle.rootProject.extensions.analytics.gitBranch}"
+}
