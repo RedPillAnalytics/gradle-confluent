@@ -33,6 +33,12 @@ steps:
     '-g', '$_GRADLE_CACHE',
     'build'
   ]
+- name: docker pull gcr.io/rpa-development/confluent:5.0.0
+  id: test-depoloy
+  args: [
+    './gradlew', '--build-cache', '-Si', '-Panalytics.buildId=$BUILD_ID', '-g', '$_GRADLE_CACHE',
+    'test'
+  ]
 #artifacts:
 #  objects:
 #    location: ['$_ARTIFACT_PATH']
