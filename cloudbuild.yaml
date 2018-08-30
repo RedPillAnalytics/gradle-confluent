@@ -10,7 +10,7 @@ steps:
 #  args: ['rsync', '-r', 'gs://rpa-cloudbuild-cache/gradle/', '.']
 - name: openjdk
   id: gradle-release
-  entrypoint: gradlew
+  entrypoint: ./gradlew
   args: [
     '--build-cache',
     '-Si',
@@ -24,7 +24,7 @@ steps:
   ]
 - name: openjdk
   id: gradle-build
-  entrypoint: gradlew
+  entrypoint: ./gradlew
   args: [
     '--build-cache',
     '-Si',
@@ -37,7 +37,7 @@ steps:
   id: test-depoloy
   entrypoint: confluent start \
               && ./datagen-init.sh \
-              && gradlew
+              && ./gradlew
   args: [
     '--build-cache', '-Si', '-Panalytics.buildId=$BUILD_ID', '-g', '$_GRADLE_CACHE',
     'test'
