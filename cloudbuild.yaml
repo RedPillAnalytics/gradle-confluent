@@ -2,6 +2,9 @@ steps:
 - name: gcr.io/cloud-builders/git
   id: git-checkout
   args: [ 'fetch','--tags','--unshallow']
+- name: gcr.io/cloud-builders/git
+  id: git-status
+  args: [ 'status']
 #- name: openjdk
 #  id: create-gradle-cache
 #  args: ['mkdir','-p','$_GRADLE_CACHE']
@@ -35,7 +38,8 @@ steps:
   ]
 - name: gcr.io/rpa-development/confluent:5.0.0
   id: test-ls
-  entrypoint: ls -l
+  entrypoint: ls
+  args: ['-l']
 - name: gcr.io/rpa-development/confluent:5.0.0
   id: test-depoloy
   entrypoint: confluent start \
