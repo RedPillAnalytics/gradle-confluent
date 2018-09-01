@@ -42,7 +42,7 @@ steps:
   args: ['-l']
 - name: gcr.io/rpa-development/confluent:5.0.0
   id: test-depoloy
-  entrypoint: ['confluent']
+  entrypoint: confluent
   args: [
     'start', '&&',
     './datagen-init.sh', '&&',
