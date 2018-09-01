@@ -4,7 +4,7 @@ steps:
   args: [ 'fetch','--tags','--unshallow']
 - name: gcr.io/cloud-builders/git
   id: git-checkout
-  args: [ 'checkout', '$BRAND_NAME']
+  args: [ 'checkout', '$BRANCH_NAME']
 - name: gcr.io/cloud-builders/git
   id: git-status
   args: [ 'status']
