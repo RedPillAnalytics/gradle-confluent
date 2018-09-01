@@ -1,6 +1,6 @@
 steps:
 - name: gcr.io/cloud-builders/git
-  id: git-checkout
+  id: git-fetch
   args: [ 'fetch','--tags','--unshallow']
 - name: gcr.io/cloud-builders/git
   id: git-checkout
