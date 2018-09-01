@@ -46,8 +46,7 @@ steps:
   args: [
     'start', '&&',
     './datagen-init.sh', '&&',
-    './gradlew'
-    '--build-cache', '-Si', '-Panalytics.buildId=$BUILD_ID', '-g', '$_GRADLE_CACHE',
+    './gradlew', '--build-cache', '-Si', '-Panalytics.buildId=$BUILD_ID', '-g', '$_GRADLE_CACHE',
     'test'
   ]
 #artifacts:
