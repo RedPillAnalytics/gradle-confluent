@@ -42,10 +42,11 @@ steps:
   args: ['-l']
 - name: gcr.io/rpa-development/confluent:5.0.0
   id: test-depoloy
-  entrypoint: confluent start \
-              && ./datagen-init.sh \
-              && ./gradlew
+  entrypoint: ['confluent']
   args: [
+    'start', '&&',
+    './datagen-init.sh', '&&',
+    './gradlew'
     '--build-cache', '-Si', '-Panalytics.buildId=$BUILD_ID', '-g', '$_GRADLE_CACHE',
     'test'
   ]
