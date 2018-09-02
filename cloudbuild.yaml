@@ -43,7 +43,7 @@ steps:
   id: gradle-test
   entrypoint: ./gradlew
   args: [
-    '--build-cache', '-Si', '-Panalytics.buildId=$BUILD_ID', '-g', '$_GRADLE_CACHE', '-PgithubToken=$_GITHUB_TOKEN'
+    '--build-cache', '-Si', '-Panalytics.buildId=$BUILD_ID', '-g', '$_GRADLE_CACHE', '-PgithubToken=$_GITHUB_TOKEN',
     'udfTest'
   ]
 #artifacts:
