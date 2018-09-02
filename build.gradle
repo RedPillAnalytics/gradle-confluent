@@ -107,7 +107,8 @@ task('startConfluent', type: Exec) {
 
 task('datagen', type: Exec) {
 
-   executable './datagen-init.sh'
+   executable 'datagen-init.sh'
+   workingDir '/'
    mustRunAfter startConfluent
 }
 
