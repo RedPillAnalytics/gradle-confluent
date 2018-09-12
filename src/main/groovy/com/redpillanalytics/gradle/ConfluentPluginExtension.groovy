@@ -13,7 +13,7 @@ class ConfluentPluginExtension {
    /**
     * Name of the KSQL directory that resides in the {@link #sourceBase} directory.
     */
-   String pipelineSourceName = 'pipelines'
+   String pipelineSourceName = 'pipeline'
 
    /**
     * Full path of the SQL source directory. When set, this overrides the values of {@link #sourceBase} and {@link #sqlSourceName}.
