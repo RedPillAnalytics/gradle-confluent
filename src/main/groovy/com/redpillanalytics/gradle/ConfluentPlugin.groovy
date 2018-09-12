@@ -112,7 +112,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
             if (tg.isBuildEnv()) {
 
-               project.task(tg.getTaskName('buildSql'), type: Zip) {
+               project.task(tg.getTaskName('buildPipelines'), type: Zip) {
 
                   group tg.getGroupName()
                   description 'Build KSQL statement distribution files.'

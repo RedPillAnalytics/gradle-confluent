@@ -1,7 +1,7 @@
 plugins {
    id 'groovy'
    id 'java-gradle-plugin'
-   id "com.gradle.plugin-publish" version "0.9.9"
+   id "com.gradle.plugin-publish" version "0.10.0"
    id "pl.allegro.tech.build.axion-release" version "1.9.2"
    id "com.github.breadmoirai.github-release" version "2.0.1"
    id 'org.unbroken-dome.test-sets' version '1.5.1'
@@ -44,7 +44,7 @@ githubRelease {
 dependencies {
 
    compile gradleApi()
-   compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.12'
+   compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.15'
    compile group: 'org.slf4j', name: 'slf4j-simple', version: '+'
 
    testCompile('org.spockframework:spock-core:1.1-groovy-2.4')
@@ -99,26 +99,25 @@ release.doLast {
    logger.info "branch: ${gradle.rootProject.extensions.analytics.gitBranch}"
 }
 
-task('startConfluent', type: Exec) {
-
-   executable 'confluent'
-   args 'start'
-}
-
-task('datagen', type: Exec) {
-
-   executable './datagen-init.sh'
-   workingDir '/'
-   mustRunAfter startConfluent
-}
-
-task('startup') {
-
-   dependsOn startConfluent, datagen
-}
+//task('startConfluent', type: Exec) {
+//
+//   executable 'confluent'
+//   args 'start'
+//}
+//
+//task('datagen', type: Exec) {
+//
+//   executable './datagen-init.sh'
+//   workingDir '/'
+//   mustRunAfter startConfluent
+//}
+//
+//task('startup') {
+//
+//   dependsOn startConfluent, datagen
+//}
 
 testSets {
-   udfTest
+   functionTest
+   pipelineTest
 }
-
-udfTest.dependsOn startup
