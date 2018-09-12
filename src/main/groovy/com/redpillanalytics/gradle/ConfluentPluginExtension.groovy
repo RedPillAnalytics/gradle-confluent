@@ -13,31 +13,26 @@ class ConfluentPluginExtension {
    /**
     * Name of the KSQL directory that resides in the {@link #sourceBase} directory.
     */
-   String sqlSourceName = 'sql'
+   String pipelineSourceName = 'pipelines'
 
    /**
     * Full path of the SQL source directory. When set, this overrides the values of {@link #sourceBase} and {@link #sqlSourceName}.
     */
-   String sqlSourcePath
-
-   /**
-    * Full path of the KSQL Server properties file.
-    */
-   String ksqlExtPath= '/etc/ksql/ext'
+   String pipelineSourcePath
 
    /**
     * RESTful endpoint for the KSQL Server.
     */
-   String ksqlEndpoint= 'http://localhost:8088'
+   String pipelineEndpoint= 'http://localhost:8088'
 
    /**
     * Provides the path for KSQL source files.
     *
     * @return The full path name of the KSQL source files.
     */
-   String getSqlPath() {
+   String getPipelinePath() {
 
-      return (sqlSourcePath ?: "${sourceBase}/${sqlSourceName}")
+      return (pipelineSourcePath ?: "${sourceBase}/${pipelineSourceName}")
    }
 
 }

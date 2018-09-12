@@ -17,8 +17,6 @@ class TaskGroupContainer {
 
    Boolean deployOnly = false
 
-   String functionJarPattern = 'ksql-functions'
-
    // capture the debug status
    Boolean isDebugEnabled = log.isDebugEnabled()
 

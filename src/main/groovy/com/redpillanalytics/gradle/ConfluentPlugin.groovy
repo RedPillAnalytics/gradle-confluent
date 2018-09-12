@@ -20,12 +20,6 @@ class ConfluentPlugin implements Plugin<Project> {
       // apply the Gradle extension plugin and the context container
       applyExtension(project)
 
-      // create the deploy configuration
-      // used for promoting functions and pipelines to downstream environments
-      project.configurations {
-         promote
-      }
-
       project.afterEvaluate {
 
          // Go look for any -P properties that have "confluent." in them
@@ -101,8 +95,8 @@ class ConfluentPlugin implements Plugin<Project> {
          }
 
          // get the location of the SQL source files
-         File sqlDir = project.file(project.extensions.confluent.getSqlPath())
-         log.warn "sqlDir: ${sqlDir.getCanonicalPath()}"
+         File pipelineDir = project.file(project.extensions.confluent.getPipelinePath())
+         log.warn "pipelineDir: ${pipelineDir.getCanonicalPath()}"
 
          // configure build groups
          project.confluent.taskGroups.all { tg ->
@@ -116,29 +110,15 @@ class ConfluentPlugin implements Plugin<Project> {
 
                   group tg.getGroupName()
                   description 'Build KSQL statement distribution files.'
-                  appendix = 'ksql'
+                  appendix = 'pipeline'
                   includeEmptyDirs false
 
-                  from sqlDir
+                  from pipelineDir
 
                }
 
-               project.build.dependsOn tg.getTaskName('buildSql')
+               project.build.dependsOn tg.getTaskName('buildPipelines')
 
-            }
-
-            if (isUsableConfiguration(tg.name, tg.functionJarPattern) || tg.isBuildEnv()) {
-
-               project.task(tg.getTaskName('deployJar'), type: Copy) {
-
-                  group tg.getGroupName()
-                  description "Deploy KSQL UDFs, UDAFs, or any other external KSQL libraries to the KSQL Server."
-
-                  from tg.isBuildEnv() ? project."${tg.getTaskName('buildSql')}".archiveName : getDependency(tg.name, tg.functionJarPattern)
-
-                  into project.extensions.confluent.getKsqlExtPath()
-
-               }
             }
 
          }
