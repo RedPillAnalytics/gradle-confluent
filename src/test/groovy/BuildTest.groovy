@@ -12,10 +12,6 @@ import spock.lang.Unroll
 @Title("Check basic configuration")
 class BuildTest extends Specification {
 
-   @ClassRule
-   @Shared
-   TemporaryFolder testProjectDir = new TemporaryFolder()
-
    @Shared
            resourcesDir = new File('src/test/resources')
 
@@ -24,13 +20,12 @@ class BuildTest extends Specification {
    @Shared
            result
    @Shared
-           indexedResultOutput
+           tasks
 
    // run the Gradle build
    // return regular output
    def setupSpec() {
 
-      //buildFile = testProjectDir.newFile('build.gradle')
       buildFile.write("""
             plugins {
                 id 'com.redpillanalytics.gradle-confluent'
@@ -40,13 +35,18 @@ class BuildTest extends Specification {
 
       result = GradleRunner.create()
               .withProjectDir(resourcesDir)
-              .withArguments('-Si', 'clean', 'build','--rerun-tasks')
+              .withArguments('-Si', 'clean', 'build', '--rerun-tasks')
               .withPluginClasspath()
               .build()
 
-      indexedResultOutput = result.output.readLines()
+      // produces a nice clean list of tasks in the order they ran
+      tasks = result.output.readLines().grep(~/(> Task :)(.+)/).collect {
+         it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
+      }
 
       log.warn result.output
+      log.warn "custom tasks: ${tasks.toString()}"
+      log.warn "tasks: $result.tasks"
 
    }
 
@@ -58,7 +58,7 @@ class BuildTest extends Specification {
    def "Expect to generate the deployment files"() {
 
       given: "a gradle execution running the :build task"
-      def zipFile = new File(resourcesDir,'build/distributions/resources-pipeline.zip')
+      def zipFile = new File(resourcesDir, 'build/distributions/resources-pipeline.zip')
 
       expect:
       zipFile.exists()
@@ -72,26 +72,25 @@ class BuildTest extends Specification {
 
       expect:
       result.output.contains("BUILD SUCCESSFUL")
-      //result.output.contains(":$task")
+      tasks.contains(task)
 
       where:
       task << ['build', 'createScripts', 'pipelineZip']
    }
 
-//   @Unroll
-//   def "Executing :build ensures :#firstTask runs before :#secondTask"() {
-//
-//      given: "a gradle execution running the :build task"
-//
-//      expect: "the index of :firstTask is lower than the index of :secondTask"
-//      indexedResultOutput.findIndexOf { it =~ /(:$firstTask)( SKIPPED)/ } < indexedResultOutput.findIndexOf {
-//         it =~ /(:$secondTask)( SKIPPED)/
-//      }
-//
-//      where:
-//
-//      firstTask << ['clean', 'deployScript', 'buildPipeline']
-//      secondTask << ['build', 'buildPipeline', 'build']
-//   }
+   @Unroll
+   def "Executing :build ensures :#firstTask runs before :#secondTask"() {
+
+      given: "a gradle execution running the :build task"
+
+      expect: "the index of :firstTask is lower than the index of :secondTask"
+      tasks.indexOf(firstTask) < tasks.indexOf(secondTask)
+
+
+      where:
+
+      firstTask << ['clean', 'createScripts', 'pipelineZip']
+      secondTask << ['build', 'pipelineZip', 'build']
+   }
 
 }

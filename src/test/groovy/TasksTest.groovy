@@ -19,8 +19,6 @@ class TasksTest extends Specification {
            buildFile
    @Shared
            result
-   @Shared
-           indexedResultOutput
 
    // run the Gradle build
    // return regular output
@@ -39,8 +37,6 @@ class TasksTest extends Specification {
               .withPluginClasspath()
               .build()
 
-      indexedResultOutput = result.output.readLines()
-
       log.warn result.output
    }
 
@@ -50,7 +46,7 @@ class TasksTest extends Specification {
       given: "a gradle tasks execution"
 
       expect:
-      result.output.contains("$task")
+      result.output.contains(task)
 
       where:
       task << ['build', 'createScripts', 'pipelineZip']

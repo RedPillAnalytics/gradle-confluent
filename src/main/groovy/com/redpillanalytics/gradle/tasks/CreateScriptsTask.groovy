@@ -9,16 +9,16 @@ import org.gradle.api.tasks.options.Option
 @Slf4j
 class CreateScriptsTask extends DefaultTask {
 
-   @Input
    @Option(option = "dirpath",
-           description = "The top-level directory containing the subdirectories--ordered alphanumerically--of KSQL pipeline processes.")
+           description = "The top-level directory containing the subdirectories--ordered alphanumerically--of pipeline processes."
+   )
    String dirPath
 
-//   @Input
-//   @Optional
-//   @Option(option = "scriptpath",
-//           description = "The single script to generate from all the pipelines in 'dir'.")
-//   String scriptPath
+   @Option(option = 'reverse-drops-disabled',
+           description = 'When defined, the DROPS script is not constructed in reverse order.'
+   )
+   boolean notReverseDrops
+
 
    @Internal
    FileTree getPipelineTree() {
@@ -48,24 +48,47 @@ class CreateScriptsTask extends DefaultTask {
    @OutputFile
    File getCreateScript() {
 
-      return project.file("${buildDir}/create.sql")
+      return project.file("${buildDir}/ksql-create-script.sql")
    }
 
    @OutputFile
    File getDropScript() {
 
-      return project.file("${buildDir}/drop.sql")
+      return project.file("${buildDir}/ksql-drop-script.sql")
    }
 
-   def writeStatement(File file, String message) {
+   def writeStatement(File file, String statement) {
 
-      file.append("${message}\n\n")
+      file.append("${statement.toLowerCase()}\n\n")
    }
 
    def buildDropScript() {
 
+      List sql = []
+
       pipelines.each { file ->
 
+         file.eachLine { String line, Integer count ->
+
+            //println line
+            line.find(/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
+
+               sql.add("DROP $type $name IF EXISTS;")
+            }
+         }
+      }
+
+      // put the drop statements in reverse order or original order
+      List finalSql = notReverseDrops ? sql : sql.reverse()
+
+
+      if (notReverseDrops) {sql = sql.reverse()}
+
+      log.info "Creating DROP statements:"
+
+      // write the drop statements to the file
+      finalSql.each {
+         writeStatement(dropScript, it)
       }
    }
 
@@ -81,6 +104,7 @@ class CreateScriptsTask extends DefaultTask {
 
       }
    }
+
 
    @TaskAction
    def buildScripts() {

@@ -26,6 +26,16 @@ class ConfluentPluginExtension {
    String pipelineBuildName = 'deploy'
 
    /**
+    * The name of the Pipeline deployment 'create' script, which contains all the persistent statements that need to be executed.
+    */
+   String pipelineCreateName = 'ksql-create-script.sql'
+
+   /**
+    * The name of the Pipeline deployment 'drop' script, which contains all the DROP statements that need to be executed.
+    */
+   String pipelineDropName = 'ksql-drop-script.sql'
+
+   /**
     * RESTful endpoint for the KSQL Server.
     */
    String pipelineEndpoint= 'http://localhost:8088'

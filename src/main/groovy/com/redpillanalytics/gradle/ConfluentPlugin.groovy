@@ -95,7 +95,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
          // get the location of the SQL source files
          File pipelineDir = project.file(project.extensions.confluent.getPipelinePath())
-         log.warn "pipelineDir: ${pipelineDir.getCanonicalPath()}"
+         log.debug "pipelineDir: ${pipelineDir.getCanonicalPath()}"
 
          File buildDir = project.file("${project.buildDir}/${project.extensions.confluent.pipelineBuildName}")
 
@@ -104,8 +104,6 @@ class ConfluentPlugin implements Plugin<Project> {
          project.confluent.taskGroups.all { tg ->
 
             if (tg.isBuildEnv()) {
-
-               log.warn "Task for generating the poor-man's DAG"
 
                project.task(tg.getTaskName('createScripts'), type: CreateScriptsTask) {
 
