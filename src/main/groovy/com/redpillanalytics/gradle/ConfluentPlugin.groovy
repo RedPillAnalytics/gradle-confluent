@@ -1,12 +1,11 @@
 package com.redpillanalytics.gradle
 
 import com.redpillanalytics.gradle.containers.TaskGroupContainer
-
+import com.redpillanalytics.gradle.tasks.CreateScriptsTask
 import groovy.util.logging.Slf4j
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.UnknownConfigurationException
-import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.bundling.Zip
 
 @Slf4j
@@ -98,26 +97,43 @@ class ConfluentPlugin implements Plugin<Project> {
          File pipelineDir = project.file(project.extensions.confluent.getPipelinePath())
          log.warn "pipelineDir: ${pipelineDir.getCanonicalPath()}"
 
+         File buildDir = project.file("${project.buildDir}/${project.extensions.confluent.pipelineBuildName}")
+
+
          // configure build groups
          project.confluent.taskGroups.all { tg ->
 
-            //todo change warn to info
-            log.warn "Configuring ${tg.getDeployOnly() ? 'deploy' : 'build'} taskGroup: ${tg.name}"
-
             if (tg.isBuildEnv()) {
 
-               project.task(tg.getTaskName('buildPipelines'), type: Zip) {
+               log.warn "Task for generating the poor-man's DAG"
+
+               project.task(tg.getTaskName('createScripts'), type: CreateScriptsTask) {
 
                   group tg.getGroupName()
-                  description 'Build KSQL statement distribution files.'
-                  appendix = 'pipeline'
-                  includeEmptyDirs false
+                  description('Build a single KSQL deployment script with all the individual pipeline processes ordered.'
+                          + ' Primarily used for building a server start script.')
 
-                  from pipelineDir
+                  dirPath pipelineDir.canonicalPath
 
                }
 
-               project.build.dependsOn tg.getTaskName('buildPipelines')
+               //project.build.dependsOn tg.getTaskName('deployScript')
+
+               project.task(tg.getTaskName('pipelineZip'), type: Zip) {
+
+                  group tg.getGroupName()
+                  description ('Build a distribution ZIP file with a single KSQL deployment script,'
+                  + ' as well as all the individual pipeline SQL scripts that are included in it')
+                  appendix = 'pipeline'
+                  includeEmptyDirs false
+
+                  from buildDir
+
+                  dependsOn tg.getTaskName('createScripts')
+
+               }
+
+               project.build.dependsOn tg.getTaskName('pipelineZip')
 
             }
 
@@ -136,8 +152,6 @@ class ConfluentPlugin implements Plugin<Project> {
       project.confluent.extensions.taskGroups = project.container(TaskGroupContainer)
 
       project.extensions.confluent.taskGroups.add(new TaskGroupContainer(name: 'default'))
-
-      project.extensions.confluent.taskGroups.add(new TaskGroupContainer(name: 'promote', deployOnly: true))
 
    }
 }

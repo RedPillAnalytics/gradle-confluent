@@ -53,7 +53,7 @@ class TasksTest extends Specification {
       result.output.contains("$task")
 
       where:
-      task << ['build', 'buildPipelines']
+      task << ['build', 'createScripts', 'pipelineZip']
    }
 
 }
