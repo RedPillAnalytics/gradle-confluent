@@ -29,7 +29,6 @@ class CreateScriptsTask extends DefaultTask {
    List getPipelines() {
 
       def sorted = pipelineTree.sort()
-      log.warn "Pipelines: ${sorted.toString()}"
       return sorted
    }
 
@@ -84,8 +83,6 @@ class CreateScriptsTask extends DefaultTask {
 
       if (notReverseDrops) {sql = sql.reverse()}
 
-      log.info "Creating DROP statements:"
-
       // write the drop statements to the file
       finalSql.each {
          writeStatement(dropScript, it)
@@ -93,8 +90,6 @@ class CreateScriptsTask extends DefaultTask {
    }
 
    def buildDeployScript() {
-
-      log.warn "Create script: ${createScript.canonicalPath}"
 
       createScript.delete()
 

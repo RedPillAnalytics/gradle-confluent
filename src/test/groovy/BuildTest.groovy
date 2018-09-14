@@ -1,40 +1,66 @@
 import groovy.util.logging.Slf4j
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.ClassRule
-import org.junit.rules.TemporaryFolder
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Title
 import spock.lang.Unroll
-
 
 @Slf4j
 @Title("Check basic configuration")
 class BuildTest extends Specification {
 
    @Shared
-           resourcesDir = new File('src/test/resources')
+   File projectDir
+   File buildDir
 
    @Shared
-           buildFile = new File(resourcesDir, 'build.gradle')
-   @Shared
-           result
-   @Shared
-           tasks
+   File buildFile, artifact
 
-   // run the Gradle build
-   // return regular output
-   def setupSpec() {
+   @Shared
+   File resourcesDir = new File('src/test/resources')
+
+   @Shared
+   def result
+
+   @Shared
+   def tasks
+
+   def setup() {
+      projectDir = File.createTempDir()
+      buildDir = new File(projectDir, 'build')
+
+      new AntBuilder().copy(todir: projectDir) {
+         fileset(dir: resourcesDir)
+      }
+      buildFile = new File(projectDir, 'build.gradle')
+      artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
+   }
+
+   def cleanup() {
+      buildDir.delete()
+   }
+
+   @Unroll
+   def "Create script files with defaults"() {
+
+      given:
 
       buildFile.write("""
             plugins {
-                id 'com.redpillanalytics.gradle-confluent'
+               id 'com.redpillanalytics.gradle-confluent'
+               id 'maven-publish'
             }
+            publishing {
+              repositories {
+                mavenLocal()
+              }
+            }
+            archivesBaseName = 'build-test'
         """)
 
-
+      when:
       result = GradleRunner.create()
-              .withProjectDir(resourcesDir)
+              .withProjectDir(projectDir)
               .withArguments('-Si', 'clean', 'build', '--rerun-tasks')
               .withPluginClasspath()
               .build()
@@ -44,53 +70,15 @@ class BuildTest extends Specification {
          it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
       }
 
-      log.warn result.output
-      log.warn "custom tasks: ${tasks.toString()}"
-      log.warn "tasks: $result.tasks"
 
-   }
-
-   def cleanupSpec() {
-
-      buildFile.delete()
-   }
-
-   def "Expect to generate the deployment files"() {
-
-      given: "a gradle execution running the :build task"
-      def zipFile = new File(resourcesDir, 'build/distributions/resources-pipeline.zip')
-
-      expect:
-      zipFile.exists()
-
-   }
-
-   @Unroll
-   def "Executing :build contains :#task"() {
-
-      given: "a gradle execution running the :build task"
-
-      expect:
-      result.output.contains("BUILD SUCCESSFUL")
-      tasks.contains(task)
+      then:
+      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":$task").outcome.toString())
+      artifact.exists()
+      tasks.indexOf(firstTask) < tasks.indexOf(secondTask)
 
       where:
       task << ['build', 'createScripts', 'pipelineZip']
-   }
-
-   @Unroll
-   def "Executing :build ensures :#firstTask runs before :#secondTask"() {
-
-      given: "a gradle execution running the :build task"
-
-      expect: "the index of :firstTask is lower than the index of :secondTask"
-      tasks.indexOf(firstTask) < tasks.indexOf(secondTask)
-
-
-      where:
-
       firstTask << ['clean', 'createScripts', 'pipelineZip']
       secondTask << ['build', 'pipelineZip', 'build']
    }
-
 }

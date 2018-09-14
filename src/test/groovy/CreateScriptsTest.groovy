@@ -2,18 +2,20 @@ import groovy.util.logging.Slf4j
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
-import org.omg.PortableInterceptor.SUCCESSFUL
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Title
-import spock.lang.Unroll
 
 @Slf4j
 @Title("Test for CreateScriptsTask")
 class CreateScriptsTest extends Specification {
 
-   @Rule final TemporaryFolder testProjectDir = new TemporaryFolder()
-   File buildFile
+   @Shared
+   File projectDir
+   File buildDir
+
+   @Shared
+   File buildFile, artifact
 
    @Shared
    File resourcesDir = new File('src/test/resources')
@@ -21,11 +23,22 @@ class CreateScriptsTest extends Specification {
    @Shared
    def result
 
+   @Shared
+   def tasks
+
    def setup() {
-      new AntBuilder().copy(todir: testProjectDir.root) {
+      projectDir = File.createTempDir()
+      buildDir = new File(projectDir, 'build')
+
+      new AntBuilder().copy(todir: projectDir) {
          fileset(dir: resourcesDir)
       }
-      buildFile = testProjectDir.newFile('build.gradle')
+      buildFile = new File(projectDir, 'build.gradle')
+      artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
+   }
+
+   def cleanup() {
+      buildDir.delete()
    }
 
    def "Create script files with defaults"() {
@@ -34,24 +47,31 @@ class CreateScriptsTest extends Specification {
 
       buildFile.write("""
             plugins {
-                id 'com.redpillanalytics.gradle-confluent'
+               id 'com.redpillanalytics.gradle-confluent'
+               id 'maven-publish'
             }
+            publishing {
+              repositories {
+                mavenLocal()
+              }
+            }
+            //archivesBaseName 'scripts-sorted'
         """)
 
       when:
       result = GradleRunner.create()
-              .withProjectDir(testProjectDir.root)
-              .withArguments('-Si', 'createScripts', '--rerun-tasks')
+              .withProjectDir(projectDir)
+              .withArguments('-Si', 'createScripts', '--rerun-tasks', 'publish')
               .withPluginClasspath()
               .build()
 
-      log.warn "tasks: $result.tasks"
-      log.info result.task(":createScripts").outcome.dump()
-      log.warn "I'm executing with original"
+      tasks = result.output.readLines().grep(~/(> Task :)(.+)/).collect {
+         it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
+      }
 
 
       then:
-      result.task(":createScripts").outcome.toString() == 'SUCCESS'
+      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":publish").outcome.toString())
    }
 
    def "Create script files with --reverse-drops-disabled"() {
@@ -59,23 +79,31 @@ class CreateScriptsTest extends Specification {
       given:
       buildFile.write("""
             plugins {
-                id 'com.redpillanalytics.gradle-confluent'
+               id 'com.redpillanalytics.gradle-confluent'
+               id 'maven-publish'
             }
+            publishing {
+              repositories {
+                mavenLocal()
+              }
+            }
+            //archivesBaseName 'scripts-reversed'
         """)
 
       when:
       result = GradleRunner.create()
-              .withProjectDir(testProjectDir.root)
-              .withArguments('-Si', 'createScripts', '--reverse-drops-disabled', '--rerun-tasks')
+              .withProjectDir(projectDir)
+              .withArguments('-Si', 'createScripts', '--reverse-drops-disabled', '--rerun-tasks', 'publish')
               .withPluginClasspath()
               .build()
 
-      log.warn "tasks: $result.tasks"
-      log.info result.task(":createScripts").outcome.dump()
-      log.warn "I'm executing with reverse"
+      tasks = result.output.readLines().grep(~/(> Task :)(.+)/).collect {
+         it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
+      }
 
       then:
-      result.task(":createScripts").outcome.toString() == 'SUCCESS'
+      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":publish").outcome.toString())
+
    }
 
 }

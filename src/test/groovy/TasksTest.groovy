@@ -11,45 +11,73 @@ import spock.lang.Unroll
 @Title("Check basic configuration")
 class TasksTest extends Specification {
 
-   @ClassRule
    @Shared
-   TemporaryFolder testProjectDir = new TemporaryFolder()
+   File projectDir
+   File buildDir
 
    @Shared
-           buildFile
+   File buildFile
+
    @Shared
-           result
+   File resourcesDir = new File('src/test/resources')
 
-   // run the Gradle build
-   // return regular output
-   def setupSpec() {
+   @Shared
+   def result
 
-      buildFile = testProjectDir.newFile('build.gradle')
-      buildFile << """
-            plugins {
-                id 'com.redpillanalytics.gradle-confluent'
-            }
-        """
+   @Shared
+   def tasks
 
-      result = GradleRunner.create()
-              .withProjectDir(testProjectDir.root)
-              .withArguments('-Si', 'tasks', '--all', 'showConfiguration')
-              .withPluginClasspath()
-              .build()
+   def setup() {
+      projectDir = File.createTempDir()
+      buildDir = new File(projectDir, 'build')
 
-      log.warn result.output
+      new AntBuilder().copy(todir: projectDir) {
+         fileset(dir: resourcesDir)
+      }
+      buildFile = new File(projectDir, 'build.gradle')
+   }
+
+   def cleanup() {
+      buildDir.delete()
    }
 
    @Unroll
    def "Executing :tasks contains :#task"() {
 
-      given: "a gradle tasks execution"
+      given:
 
-      expect:
+      buildFile.write("""
+            plugins {
+               id 'com.redpillanalytics.gradle-confluent'
+               id 'maven-publish'
+            }
+            publishing {
+              repositories {
+                mavenLocal()
+              }
+            }
+            archivesBaseName = 'build-test'
+        """)
+
+      when:
+      result = GradleRunner.create()
+              .withProjectDir(projectDir)
+              .withArguments('-Si', 'tasks', '--all', 'showConfiguration')
+              .withPluginClasspath()
+              .build()
+
+      // produces a nice clean list of tasks in the order they ran
+      tasks = result.output.readLines().grep(~/(> Task :)(.+)/).collect {
+         it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
+      }
+      log.warn result.output
+
+
+      then:
       result.output.contains(task)
+      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":tasks").outcome.toString())
 
       where:
-      task << ['build', 'createScripts', 'pipelineZip']
+      task << ['build', 'createScripts', 'pipelineZip','publish']
    }
-
 }
