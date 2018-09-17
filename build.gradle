@@ -90,6 +90,7 @@ pluginBundle {
 tasks.withType(Test) {
    ignoreFailures true
    testLogging.showStandardStreams true
+   systemProperty 'projectDir', temporaryDir
 }
 
 release.onlyIf { gradle.rootProject.extensions.analytics.gitBranch == 'master' }

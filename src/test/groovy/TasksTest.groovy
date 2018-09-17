@@ -12,39 +12,24 @@ import spock.lang.Unroll
 class TasksTest extends Specification {
 
    @Shared
-   File projectDir
-   File buildDir
+   File projectDir, buildDir, resourcesDir, buildFile, artifact
 
    @Shared
-   File buildFile
+   def result, tasks, taskList
 
-   @Shared
-   File resourcesDir = new File('src/test/resources')
+   def setupSpec() {
 
-   @Shared
-   def result
-
-   @Shared
-   def tasks
-
-   def setup() {
-      projectDir = File.createTempDir()
+      projectDir = new File("${System.getProperty("projectDir")}/run-tasks")
       buildDir = new File(projectDir, 'build')
+      buildFile = new File(projectDir, 'build.gradle')
+      artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
+      taskList = ['clean', 'assemble', 'check', 'createScripts', 'pipelineZip', 'build']
+
+      resourcesDir = new File('src/test/resources')
 
       new AntBuilder().copy(todir: projectDir) {
          fileset(dir: resourcesDir)
       }
-      buildFile = new File(projectDir, 'build.gradle')
-   }
-
-   def cleanup() {
-      buildDir.delete()
-   }
-
-   @Unroll
-   def "Executing :tasks contains :#task"() {
-
-      given:
 
       buildFile.write("""
             plugins {
@@ -56,26 +41,37 @@ class TasksTest extends Specification {
                 mavenLocal()
               }
             }
-            archivesBaseName = 'build-test'
+            archivesBaseName = 'test'
         """)
 
-      when:
       result = GradleRunner.create()
               .withProjectDir(projectDir)
               .withArguments('-Si', 'tasks', '--all', 'showConfiguration')
               .withPluginClasspath()
               .build()
 
-      // produces a nice clean list of tasks in the order they ran
       tasks = result.output.readLines().grep(~/(> Task :)(.+)/).collect {
          it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
       }
-      log.warn result.output
+   }
 
+   def "All tasks run and in the correct order"() {
+
+      given:
+      ":tasks execution is successful"
+
+      expect:
+      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":tasks").outcome.toString())
+   }
+
+   @Unroll
+   def "Executing :tasks contains :#task"() {
+
+      when:
+      "Gradle build runs"
 
       then:
       result.output.contains(task)
-      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":tasks").outcome.toString())
 
       where:
       task << ['build', 'createScripts', 'pipelineZip','publish']

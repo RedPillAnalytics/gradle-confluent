@@ -6,44 +6,28 @@ import spock.lang.Title
 import spock.lang.Unroll
 
 @Slf4j
-@Title("Check basic configuration")
+@Title("Test that a :build functions successfully")
 class BuildTest extends Specification {
 
    @Shared
-   File projectDir
-   File buildDir
+   File projectDir, buildDir, resourcesDir, buildFile, artifact
 
    @Shared
-   File buildFile, artifact
+   def result, tasks, taskList
 
-   @Shared
-   File resourcesDir = new File('src/test/resources')
+   def setupSpec() {
 
-   @Shared
-   def result
-
-   @Shared
-   def tasks
-
-   def setup() {
-      projectDir = File.createTempDir()
+      projectDir = new File("${System.getProperty("projectDir")}/simple-build")
       buildDir = new File(projectDir, 'build')
+      buildFile = new File(projectDir, 'build.gradle')
+      artifact = new File(buildDir, 'distributions/test-pipeline.zip')
+      taskList = ['clean', 'assemble', 'check', 'createScripts', 'pipelineZip', 'build']
+
+      resourcesDir = new File('src/test/resources')
 
       new AntBuilder().copy(todir: projectDir) {
          fileset(dir: resourcesDir)
       }
-      buildFile = new File(projectDir, 'build.gradle')
-      artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
-   }
-
-   def cleanup() {
-      buildDir.delete()
-   }
-
-   @Unroll
-   def "Create script files with defaults"() {
-
-      given:
 
       buildFile.write("""
             plugins {
@@ -55,30 +39,39 @@ class BuildTest extends Specification {
                 mavenLocal()
               }
             }
-            archivesBaseName = 'build-test'
+            archivesBaseName = 'test'
         """)
 
-      when:
       result = GradleRunner.create()
               .withProjectDir(projectDir)
               .withArguments('-Si', 'clean', 'build', '--rerun-tasks')
               .withPluginClasspath()
               .build()
 
-      // produces a nice clean list of tasks in the order they ran
       tasks = result.output.readLines().grep(~/(> Task :)(.+)/).collect {
          it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
       }
+   }
 
+   def "All tasks run and in the correct order"() {
+
+      given:
+      "Gradle build runs"
+
+      expect:
+      tasks == taskList
+   }
+
+   @Unroll
+   def "The execution of :#task is successful"() {
+
+      when:
+      "Gradle build runs"
 
       then:
       ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":$task").outcome.toString())
-      artifact.exists()
-      tasks.indexOf(firstTask) < tasks.indexOf(secondTask)
 
       where:
-      task << ['build', 'createScripts', 'pipelineZip']
-      firstTask << ['clean', 'createScripts', 'pipelineZip']
-      secondTask << ['build', 'pipelineZip', 'build']
+      task << taskList
    }
 }
