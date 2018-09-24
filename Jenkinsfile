@@ -28,7 +28,6 @@ pipeline {
          when { branch "master" }
          steps {
             sh "$gradle ${options} githubRelease publishPlugins"
-            sh "$gradle uploadGroovydoc"
          }
       }
       // Place for new Stage
