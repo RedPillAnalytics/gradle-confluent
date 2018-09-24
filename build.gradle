@@ -1,13 +1,12 @@
 plugins {
    id 'groovy'
    id 'java-gradle-plugin'
-   id "com.gradle.plugin-publish" version "0.9.9"
+   id "com.gradle.plugin-publish" version "0.10.0"
    id "pl.allegro.tech.build.axion-release" version "1.9.2"
    id "com.github.breadmoirai.github-release" version "2.0.1"
    id 'org.unbroken-dome.test-sets' version '1.5.1'
-   id "com.github.johnrengelman.shadow" version "2.0.4"
    id "com.github.ben-manes.versions" version "0.20.0"
-   id "com.redpillanalytics.gradle-analytics" version "1.1.7"
+   id "com.redpillanalytics.gradle-analytics" version "1.1.9"
 }
 
 // send analytics
@@ -15,6 +14,7 @@ analytics {
    organization = 'Red Pill Analytics'
    sinks {
       pubsub
+      gs
    }
 }
 
@@ -44,7 +44,7 @@ githubRelease {
 dependencies {
 
    compile gradleApi()
-   compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.12'
+   compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.15'
    compile group: 'org.slf4j', name: 'slf4j-simple', version: '+'
 
    testCompile('org.spockframework:spock-core:1.1-groovy-2.4')
@@ -64,7 +64,7 @@ gradlePlugin {
    plugins {
       gradleConfluent {
          id = 'com.redpillanalytics.gradle-confluent'
-         implementationClass = 'com.redpillanalytics.confluent.ConfluentPlugin'
+         implementationClass = 'com.redpillanalytics.gradle.ConfluentPlugin'
       }
    }
 }
@@ -80,7 +80,7 @@ pluginBundle {
          id = 'com.redpillanalytics.gradle-confluent'
          displayName = 'gradle-confluent'
          description = "A plugin for deploying streaming applications to a Confluent Kafka cluster."
-         tags = ['kafka', 'confluent','ksql']
+         tags = ['kafka', 'confluent', 'ksql', 'streams']
          version = project.version
       }
    }
@@ -90,4 +90,35 @@ pluginBundle {
 tasks.withType(Test) {
    ignoreFailures true
    testLogging.showStandardStreams true
+   systemProperty 'projectDir', temporaryDir
+}
+
+//release.onlyIf { gradle.rootProject.extensions.analytics.gitBranch == 'master' }
+//publishPlugins.onlyIf { gradle.rootProject.extensions.analytics.gitBranch == 'master' }
+//
+//release.doLast {
+//   logger.info "branch: ${gradle.rootProject.extensions.analytics.gitBranch}"
+//}
+
+//task('startConfluent', type: Exec) {
+//
+//   executable 'confluent'
+//   args 'start'
+//}
+//
+//task('datagen', type: Exec) {
+//
+//   executable './datagen-init.sh'
+//   workingDir '/'
+//   mustRunAfter startConfluent
+//}
+//
+//task('startup') {
+//
+//   dependsOn startConfluent, datagen
+//}
+
+testSets {
+   functionTest
+   pipelineTest
 }

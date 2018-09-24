@@ -1,0 +1,62 @@
+steps:
+- name: gcr.io/cloud-builders/git
+  id: git-fetch
+  args: [ 'fetch','--tags','--unshallow']
+- name: gcr.io/cloud-builders/git
+  id: git-checkout
+  args: [ 'checkout', '$BRANCH_NAME']
+- name: gcr.io/cloud-builders/git
+  id: git-status
+  args: [ 'status']
+#- name: openjdk
+#  id: create-gradle-cache
+#  args: ['mkdir','-p','$_GRADLE_CACHE']
+#- name: gcr.io/cloud-builders/gsutil
+#  id: warmup-workspace
+#  args: ['rsync', '-r', 'gs://rpa-cloudbuild-cache/gradle/', '.']
+- name: openjdk
+  id: gradle-release
+  entrypoint: ./gradlew
+  args: [
+    '--build-cache',
+    '-Si',
+    '-Panalytics.buildId=$BUILD_ID',
+    '-PgithubToken=$_GITHUB_TOKEN',
+    '-g', '$_GRADLE_CACHE',
+    'clean',
+    'release',
+    '-Prelease.disableChecks',
+    '-Prelease.localOnly'
+  ]
+- name: openjdk
+  id: gradle-build
+  entrypoint: ./gradlew
+  args: [
+    '--build-cache',
+    '-Si',
+    '-Panalytics.buildId=$BUILD_ID',
+    '-PgithubToken=$_GITHUB_TOKEN',
+    '-g', '$_GRADLE_CACHE',
+    'build'
+  ]
+- name: gcr.io/rpa-development/confluent-build:5.0.0
+  id: gradle-test
+  entrypoint: ./gradlew
+  args: [
+    '--build-cache', '-Si', '-Panalytics.buildId=$BUILD_ID', '-g', '$_GRADLE_CACHE', '-PgithubToken=$_GITHUB_TOKEN',
+    'udfTest'
+  ]
+#artifacts:
+#  objects:
+#    location: ['$_ARTIFACT_PATH']
+#    paths: ['build/libs/*.jar']
+#- name: gcr.io/cloud-builders/gsutil
+#  id: save-build-dir
+#  args: ['rsync', '-r', '-d', 'build', 'gs://rpa-cloudbuild-cache/gradle/build/']
+#
+#- name: gcr.io/cloud-builders/gsutil
+#  id: save-build-cache
+#  args: ['rsync', '-r', '-d', '$_GRADLE_CACHE', 'gs://rpa-cloudbuild-cache/gradle/$_GRADLE_CACHE/']
+
+
+
