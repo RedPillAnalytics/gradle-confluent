@@ -72,7 +72,10 @@ class CreateScriptsTask extends DefaultTask {
             //println line
             line.find(/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
 
-               sql.add("DROP $type $name IF EXISTS;")
+               if (!x1.startsWith('--')) {
+
+                  sql.add("DROP $type $name IF EXISTS;")
+               }
             }
          }
       }
@@ -81,7 +84,9 @@ class CreateScriptsTask extends DefaultTask {
       List finalSql = notReverseDrops ? sql : sql.reverse()
 
 
-      if (notReverseDrops) {sql = sql.reverse()}
+      if (notReverseDrops) {
+         sql = sql.reverse()
+      }
 
       // write the drop statements to the file
       finalSql.each {
