@@ -24,6 +24,14 @@ pipeline {
          }
       }
 
+      stage('Integration') {
+          agent { dockerfile true }
+          steps {
+              sh echo "Confluent startup somehow"
+              sh "$gradle ksqlServertest"
+          }
+      }
+
       stage('Publish') {
          when { branch "master" }
          steps {
