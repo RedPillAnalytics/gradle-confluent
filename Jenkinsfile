@@ -7,6 +7,7 @@ pipeline {
 
    environment {
       GOOGLE_APPLICATION_CREDENTIALS = '/var/lib/jenkins/.gcp/gradle-analytics-build-user.json'
+      JENKINS_NODE_COOKIE = 'dontKillMe'
    }
 
    stages {
@@ -24,10 +25,17 @@ pipeline {
          }
       }
 
+      stage('Integration') {
+          steps {
+              sh "confluent start"
+              sh "$gradle ksqlServertest"
+          }
+      }
+
       stage('Publish') {
          when { branch "master" }
          steps {
-            sh "$gradle ${options} githubRelease publishPlugins"
+            sh "$gradle ${options} publishPlugins githubRelease"
          }
       }
       // Place for new Stage
@@ -36,7 +44,7 @@ pipeline {
 
    post {
       always {
-         junit "build/test-results/**/*.xml"
+         junit testResults: "build/test-results/**/*.xml", allowEmptyResults: true, keepLongStdio: true
          archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true
          //sh "$gradle producer"
       }

@@ -9,11 +9,13 @@ import org.gradle.api.tasks.options.Option
 @Slf4j
 class CreateScriptsTask extends DefaultTask {
 
+   @Input
    @Option(option = "dirpath",
            description = "The top-level directory containing the subdirectories--ordered alphanumerically--of pipeline processes."
    )
    String dirPath
 
+   @Input
    @Option(option = 'reverse-drops-disabled',
            description = 'When defined, the DROPS script is not constructed in reverse order.'
    )
