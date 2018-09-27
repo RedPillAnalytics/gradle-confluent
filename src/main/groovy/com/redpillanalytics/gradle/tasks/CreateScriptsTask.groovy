@@ -43,7 +43,7 @@ class CreateScriptsTask extends DefaultTask {
    @OutputDirectory
    File getBuildDir() {
 
-      return project.file("${project.buildDir}/deploy")
+      return project.file("${project.buildDir}/${project.extensions.confluent.pipelineBuildName}")
    }
 
    @OutputFile

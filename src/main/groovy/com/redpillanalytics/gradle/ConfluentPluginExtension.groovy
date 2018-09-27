@@ -6,6 +6,11 @@ import groovy.util.logging.Slf4j
 class ConfluentPluginExtension {
 
    /**
+    * The group name to use for all tasks.
+    */
+   String taskGroup = 'confluent'
+
+   /**
     * Base source directory for the Confluent plugin.
     */
    String sourceBase = 'src/main'
@@ -21,9 +26,14 @@ class ConfluentPluginExtension {
    String pipelineSourcePath
 
    /**
-    * The name of the Pipeline deployment directory in the project build directory.
+    * The name of the Pipeline build directory in the project build directory.
     */
-   String pipelineBuildName = 'deploy'
+   String pipelineBuildName = 'pipeline-build'
+
+   /**
+    * The name of the Pipeline deploy directory in the project build directory.
+    */
+   String pipelineDeployName = 'pipeline-deploy'
 
    /**
     * The name of the Pipeline deployment 'create' script, which contains all the persistent statements that need to be executed.
@@ -39,6 +49,16 @@ class ConfluentPluginExtension {
     * RESTful endpoint for the KSQL Server.
     */
    String pipelineEndpoint= 'http://localhost:8088'
+
+   /**
+    * The appendix name to be used when building a pipeline deployment artifact.
+    */
+   String pipelineAppendix = 'pipeline'
+
+   /**
+    * The appendix name to be used when building a pipeline deployment artifact.
+    */
+   String functionAppendix = 'function'
 
    /**
     * Provides the path for Pipeline source files.
