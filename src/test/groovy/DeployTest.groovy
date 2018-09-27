@@ -7,7 +7,7 @@ import spock.lang.Unroll
 
 @Slf4j
 @Title("Test that a :build functions successfully")
-class BuildTest extends Specification {
+class DeployTest extends Specification {
 
    @Shared
    File projectDir, buildDir, resourcesDir, buildFile, artifact
@@ -17,11 +17,18 @@ class BuildTest extends Specification {
 
    def setupSpec() {
 
-      projectDir = new File("${System.getProperty("projectDir")}/simple-build")
+      projectDir = new File("${System.getProperty("projectDir")}/simple-deploy")
       buildDir = new File(projectDir, 'build')
       buildFile = new File(projectDir, 'build.gradle')
       artifact = new File(buildDir, 'distributions/test-pipeline.zip')
-      taskList = ['clean', 'assemble', 'check', 'createScripts', 'pipelineZip', 'build']
+      taskList = ['clean',
+                  'createScripts',
+                  'pipelineZip',
+                  'generatePomFileForPipelinePublication',
+                  'publishPipelinePublicationToMavenLocalRepository',
+                  'publish',
+                  'pipelineExtract',
+                  'deploy']
 
       resourcesDir = new File('src/test/resources')
 
@@ -40,11 +47,21 @@ class BuildTest extends Specification {
               }
             }
             archivesBaseName = 'test'
+            group = 'com.redpillanalytics'
+            version = '1.0.0'
+            
+            dependencies {
+              archives group: 'com.redpillanalytics', name: 'test-pipeline', version: '+'
+            }
+            
+            repositories {
+              mavenLocal()
+            }
         """)
 
       result = GradleRunner.create()
               .withProjectDir(projectDir)
-              .withArguments('-Si', 'clean', 'build', '--rerun-tasks')
+              .withArguments('-Si', 'clean', 'pipelineZip', 'publish', 'deploy', '--rerun-tasks')
               .withPluginClasspath()
               .build()
 

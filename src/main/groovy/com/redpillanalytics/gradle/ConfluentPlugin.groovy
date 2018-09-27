@@ -6,6 +6,8 @@ import groovy.util.logging.Slf4j
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.UnknownConfigurationException
+import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.bundling.Zip
 
 @Slf4j
@@ -93,12 +95,29 @@ class ConfluentPlugin implements Plugin<Project> {
             }
          }
 
+         // get the taskGroup
+         String taskGroup = project.extensions.confluent.taskGroup
+
          // get the location of the SQL source files
          File pipelineDir = project.file(project.extensions.confluent.getPipelinePath())
          log.debug "pipelineDir: ${pipelineDir.getCanonicalPath()}"
 
          File buildDir = project.file("${project.buildDir}/${project.extensions.confluent.pipelineBuildName}")
+         log.debug "pipelineBuildDir: ${buildDir.canonicalPath}"
 
+         File deployDir = project.file("${project.buildDir}/${project.extensions.confluent.pipelineDeployName}")
+         log.debug "pipelineDeployDir: ${deployDir.canonicalPath}"
+
+         String pipelineAppendix = project.extensions.confluent.pipelineAppendix
+         log.debug "pipelineAppendix: ${pipelineAppendix}"
+
+         // create deploy task
+         project.task('deploy') {
+
+            group taskGroup
+            description "Calls all dependent deployment tasks."
+
+         }
 
          // configure build groups
          project.confluent.taskGroups.all { tg ->
@@ -107,7 +126,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
                project.task(tg.getTaskName('createScripts'), type: CreateScriptsTask) {
 
-                  group tg.getGroupName()
+                  group taskGroup
                   description('Build a single KSQL deployment script with all the individual pipeline processes ordered.'
                           + ' Primarily used for building a server start script.')
 
@@ -119,10 +138,10 @@ class ConfluentPlugin implements Plugin<Project> {
 
                project.task(tg.getTaskName('pipelineZip'), type: Zip) {
 
-                  group tg.getGroupName()
-                  description ('Build a distribution ZIP file with a single KSQL deployment script,'
-                  + ' as well as all the individual pipeline SQL scripts that are included in it')
-                  appendix = 'pipeline'
+                  group taskGroup
+                  description('Build a distribution ZIP file with a single KSQL deployment script,'
+                          + ' as well as all the individual pipeline SQL scripts that are included in it')
+                  appendix = project.extensions.confluent.pipelineAppendix
                   includeEmptyDirs false
 
                   from buildDir
@@ -135,7 +154,34 @@ class ConfluentPlugin implements Plugin<Project> {
 
             }
 
+            if (getDependency('archives', pipelineAppendix)) {
+
+               project.task(tg.getTaskName('pipelineExtract'), type: Copy) {
+
+                  group taskGroup
+                  description = "Extract the deployment artifact into the deployment directory."
+
+                  from project.zipTree(getDependency('archives', pipelineAppendix))
+                  into { deployDir }
+
+               }
+            }
+
+            project.deploy.dependsOn tg.getTaskName('pipelineExtract')
+
          }
+
+         project.publishing.publications {
+
+            pipeline(MavenPublication) {
+               artifact project.pipelineZip {
+
+                  artifactId project.archivesBaseName + '-' + pipelineAppendix
+
+               }
+            }
+         }
+
       }
 
       // end of afterEvaluate

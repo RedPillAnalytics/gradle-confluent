@@ -13,8 +13,6 @@ class TaskGroupContainer {
     */
    String name
 
-   String groupName = 'confluent'
-
    Boolean deployOnly = false
 
    // capture the debug status

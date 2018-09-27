@@ -42,6 +42,16 @@ class TasksTest extends Specification {
               }
             }
             archivesBaseName = 'test'
+            group = 'com.redpillanalytics'
+            version = '1.0.0'
+            
+            dependencies {
+              archives group: 'com.redpillanalytics', name: 'test-pipeline', version: '+'
+            }
+            
+            repositories {
+              mavenLocal()
+            }
         """)
 
       result = GradleRunner.create()
@@ -53,6 +63,8 @@ class TasksTest extends Specification {
       tasks = result.output.readLines().grep(~/(> Task :)(.+)/).collect {
          it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
       }
+
+      log.warn result.getOutput()
    }
 
    def "All tasks run and in the correct order"() {
