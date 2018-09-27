@@ -21,7 +21,6 @@ pipeline {
       stage('Build') {
          steps {
             sh "$gradle build"
-            junit testResults: "build/test-results/**/*.xml", allowEmptyResults: true, keepLongStdio: true
          }
       }
 
@@ -29,7 +28,6 @@ pipeline {
           steps {
               sh "/var/lib/jenkins/confluent/confluent-5.0.0/bin/confluent start"
               sh "$gradle ksqlServertest"
-              junit testResults: "build/test-results/**/*.xml", allowEmptyResults: true, keepLongStdio: true
           }
       }
 
@@ -45,6 +43,7 @@ pipeline {
 
    post {
       always {
+         junit testResults: "build/test-results/**/*.xml", allowEmptyResults: true, keepLongStdio: true
          archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true
          //sh "$gradle producer"
       }
