@@ -21,6 +21,7 @@ pipeline {
       stage('Build') {
          steps {
             sh "$gradle build"
+            junit testResults: "build/test-results/**/*.xml", allowEmptyResults: true
          }
       }
 
@@ -28,6 +29,7 @@ pipeline {
           agent { dockerfile true }
           steps {
               sh "$gradle ksqlServertest"
+              junit testResults: "build/test-results/**/*.xml", allowEmptyResults: true
           }
       }
 
@@ -43,7 +45,6 @@ pipeline {
 
    post {
       always {
-         junit "build/test-results/**/*.xml"
          archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true
          //sh "$gradle producer"
       }
