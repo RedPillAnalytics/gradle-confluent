@@ -26,8 +26,8 @@ pipeline {
       }
 
       stage('Integration') {
-          agent { dockerfile true }
           steps {
+              sh "./bin/confluent start"
               sh "$gradle ksqlServertest"
               junit testResults: "build/test-results/**/*.xml", allowEmptyResults: true
           }
