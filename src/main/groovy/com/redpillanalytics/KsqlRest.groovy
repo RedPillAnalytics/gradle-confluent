@@ -8,7 +8,7 @@ import wslite.rest.RESTClient
 @Slf4j
 class KsqlRest {
 
-   def baseUrl = 'http://localhost:8088'
+   String baseUrl = 'http://localhost:8088'
 
    def execKsql(String sql, Map properties) {
 
@@ -43,15 +43,24 @@ class KsqlRest {
 
    }
 
-   String getKsqlExtensionPath() {
+   String getProperty(String property) {
 
-      def path = getProperties()."ksql.extension.dir"
-      log.debug "path: ${path}"
-      return path
+      def prop = getProperties()."$property"
+      return prop
    }
 
-   File getKsqlExtensionDir() {
+   String getExtensionPath() {
 
-      return new File(getKsqlExtensionPath())
+      return getProperty('ksql.extension.dir')
+   }
+
+   File getExtensionDir() {
+
+      return new File(getExtensionPath())
+   }
+
+   String getRestUrl() {
+
+      return getProperty('ksql.schema.registry.url')
    }
 }

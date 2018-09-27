@@ -22,20 +22,30 @@ class KsqlRestTest extends Specification {
    def "KSQL extension directory path is returned"() {
 
       when:
-      def result = ksqlRest.getKsqlExtensionPath()
+      def path = ksqlRest.getExtensionPath()
 
       then:
-      result
+      path
 
    }
 
    def "KSQL extension directory file is returned"() {
 
       when:
-      def result = ksqlRest.getKsqlExtensionDir()
+      def dir = ksqlRest.getExtensionDir()
 
       then:
-      result
+      dir
+
+   }
+
+   def "KSQL REST URL is returned"() {
+
+      when:
+      def url = ksqlRest.getRestUrl()
+
+      then:
+      url
 
    }
 }
