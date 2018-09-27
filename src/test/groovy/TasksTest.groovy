@@ -45,9 +45,9 @@ class TasksTest extends Specification {
             group = 'com.redpillanalytics'
             version = '1.0.0'
             
-            dependencies {
-              archives group: 'com.redpillanalytics', name: 'test-pipeline', version: '+'
-            }
+//            dependencies {
+//              archives group: 'com.redpillanalytics', name: 'test-pipeline', version: '+'
+//            }
             
             repositories {
               mavenLocal()
