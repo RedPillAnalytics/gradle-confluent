@@ -1,15 +1,13 @@
 import groovy.util.logging.Slf4j
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.ClassRule
-import org.junit.rules.TemporaryFolder
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Title
 import spock.lang.Unroll
 
 @Slf4j
-@Title("Check basic configuration")
-class TasksTest extends Specification {
+@Title("Test that a :build functions successfully")
+class DeployTest extends Specification {
 
    @Shared
    File projectDir, buildDir, resourcesDir, buildFile, artifact
@@ -19,11 +17,18 @@ class TasksTest extends Specification {
 
    def setupSpec() {
 
-      projectDir = new File("${System.getProperty("projectDir")}/run-tasks")
+      projectDir = new File("${System.getProperty("projectDir")}/simple-deploy")
       buildDir = new File(projectDir, 'build')
       buildFile = new File(projectDir, 'build.gradle')
-      artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
-      taskList = ['clean', 'assemble', 'check', 'createScripts', 'pipelineZip', 'build']
+      artifact = new File(buildDir, 'distributions/test-pipeline.zip')
+      taskList = ['clean',
+                  'createScripts',
+                  'pipelineZip',
+                  'generatePomFileForPipelinePublication',
+                  'publishPipelinePublicationToMavenLocalRepository',
+                  'publish',
+                  'pipelineExtract',
+                  'deploy']
 
       resourcesDir = new File('src/test/resources')
 
@@ -45,9 +50,9 @@ class TasksTest extends Specification {
             group = 'com.redpillanalytics'
             version = '1.0.0'
             
-//            dependencies {
-//              archives group: 'com.redpillanalytics', name: 'test-pipeline', version: '+'
-//            }
+            dependencies {
+              archives group: 'com.redpillanalytics', name: 'test-pipeline', version: '+'
+            }
             
             repositories {
               mavenLocal()
@@ -56,7 +61,7 @@ class TasksTest extends Specification {
 
       result = GradleRunner.create()
               .withProjectDir(projectDir)
-              .withArguments('-Si', 'tasks', '--all', 'showConfiguration')
+              .withArguments('-Si', 'clean', 'pipelineZip', 'publish', 'deploy', '--rerun-tasks')
               .withPluginClasspath()
               .build()
 
@@ -70,22 +75,22 @@ class TasksTest extends Specification {
    def "All tasks run and in the correct order"() {
 
       given:
-      ":tasks execution is successful"
+      "Gradle build runs"
 
       expect:
-      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":tasks").outcome.toString())
+      tasks == taskList
    }
 
    @Unroll
-   def "Executing :tasks contains :#task"() {
+   def "The execution of :#task is successful"() {
 
       when:
       "Gradle build runs"
 
       then:
-      result.output.contains(task)
+      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":$task").outcome.toString())
 
       where:
-      task << ['build', 'createScripts', 'pipelineZip','publish']
+      task << taskList
    }
 }
