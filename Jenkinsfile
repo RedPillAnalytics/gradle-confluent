@@ -27,7 +27,7 @@ pipeline {
 
       stage('Integration') {
           steps {
-              sh "./bin/confluent start"
+              sh "/confluent/confluent-5.0.0/bin/confluent start"
               sh "$gradle ksqlServertest"
               junit testResults: "build/test-results/**/*.xml", allowEmptyResults: true
           }
