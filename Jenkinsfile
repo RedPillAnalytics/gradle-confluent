@@ -27,7 +27,7 @@ pipeline {
 
       stage('Integration') {
           steps {
-              sh "/confluent/confluent-5.0.0/bin/confluent start"
+              sh "confluent/confluent-5.0.0/bin/confluent start"
               sh "$gradle ksqlServertest"
               junit testResults: "build/test-results/**/*.xml", allowEmptyResults: true
           }
@@ -36,7 +36,7 @@ pipeline {
       stage('Publish') {
          when { branch "master" }
          steps {
-            sh "$gradle ${options} publishPlugins"
+            sh "$gradle ${options} publishPlugins githubRelease"
          }
       }
       // Place for new Stage
