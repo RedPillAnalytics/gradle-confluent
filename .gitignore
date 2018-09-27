@@ -4,12 +4,9 @@
 #IntelliJ stuff
 *.iml
 
-# Build Directories
+# Gradle Build Directories
 build/
 gradle_cache/
-
-# Plugin builds
-out
 
 # Ignore Gradle GUI config
 gradle-app.setting
@@ -20,3 +17,7 @@ gradle-app.setting
 # Ignore all hidden files, except this one
 .*
 !.gitignore
+
+# Visual Studio Code build directory
+bin
+out
