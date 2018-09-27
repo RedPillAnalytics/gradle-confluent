@@ -7,6 +7,7 @@ pipeline {
 
    environment {
       GOOGLE_APPLICATION_CREDENTIALS = '/var/lib/jenkins/.gcp/gradle-analytics-build-user.json'
+      JENKINS_NODE_COOKIE = 'dontKillMe'
    }
 
    stages {
