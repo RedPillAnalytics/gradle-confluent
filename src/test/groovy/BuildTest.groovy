@@ -21,7 +21,16 @@ class BuildTest extends Specification {
       buildDir = new File(projectDir, 'build')
       buildFile = new File(projectDir, 'build.gradle')
       artifact = new File(buildDir, 'distributions/test-pipeline.zip')
-      taskList = ['clean', 'assemble', 'check', 'createScripts', 'pipelineZip', 'build']
+      taskList = ['clean',
+                  'assemble',
+                  'check',
+                  'createScripts',
+                  'pipelineZip',
+                  'build',
+                  'generatePomFileForPipelinePublication',
+                  'publishPipelinePublicationToMavenLocalRepository',
+                  'publish']
+
 
       resourcesDir = new File('src/test/resources')
 
@@ -40,11 +49,17 @@ class BuildTest extends Specification {
               }
             }
             archivesBaseName = 'test'
+            group = 'com.redpillanalytics'
+            version = '1.0.0'
+            
+            repositories {
+              mavenLocal()
+            }
         """)
 
       result = GradleRunner.create()
               .withProjectDir(projectDir)
-              .withArguments('-Si', 'clean', 'build', '--rerun-tasks')
+              .withArguments('-Si', 'clean', 'build', 'publish', '--rerun-tasks')
               .withPluginClasspath()
               .build()
 
