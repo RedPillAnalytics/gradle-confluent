@@ -23,8 +23,8 @@ class LoadConfigTest extends Specification {
       artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
       taskList = ['clean', 'assemble', 'check', 'createScripts', 'pipelineZip', 'build']
       absoluteDir = new File(System.getProperty("projectDir"))
-      absoluteFile = new File(absoluteDir,'streams.config')
-      relativeFile = new File(projectDir,'streams.config')
+      absoluteFile = new File(absoluteDir, 'streams.config')
+      relativeFile = new File(projectDir, 'streams.config')
 
 
 
@@ -190,8 +190,56 @@ class LoadConfigTest extends Specification {
       log.warn result.getOutput()
 
       expect:
-      ['SUCCESS', 'UP_TO_DATE','SKIPPED'].contains(result.task(":loadConfig").outcome.toString())
+      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":loadConfig").outcome.toString())
       !result.output.contains('APPLICATION_ID: dev-application')
+   }
+
+   def "Application Plugin expand works"() {
+
+      given:
+
+      relativeFile.write("""
+      APPLICATION_ID = 'dev-application'
+      TOPIC_PREFIX = 'dev-'
+      """)
+
+      buildFile.write("""
+            plugins {
+               id 'com.redpillanalytics.gradle-confluent'
+               id 'maven-publish'
+               id 'application'
+            }
+
+            archivesBaseName = 'test'
+            group = 'com.redpillanalytics'
+            version = '1.0.0'
+            
+            dependencies {
+
+               //standard groovy
+               compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.15'
+               compile group: 'org.slf4j', name: 'slf4j-simple', version: '+'
+            
+            }
+            
+            repositories {
+               jcenter()
+            }
+            
+            mainClassName = "streams.TestClass"
+        """)
+
+
+      result = GradleRunner.create()
+              .withProjectDir(projectDir)
+              .withArguments('-Si', 'build', '--rerun-tasks')
+              .withPluginClasspath()
+              .build()
+
+      log.warn result.getOutput()
+
+      expect:
+      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":build").outcome.toString())
    }
 
 }

@@ -2,6 +2,7 @@ package com.redpillanalytics.gradle.tasks
 
 import groovy.util.logging.Slf4j
 import org.gradle.api.DefaultTask
+import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
 
@@ -44,6 +45,14 @@ class LoadConfigTask extends DefaultTask {
             project.setProperty(k, v)
          } else {
             project.ext."${k}" = v
+         }
+      }
+
+      if (project.plugins.hasPlugin(ApplicationPlugin)) {
+
+         project.processResources.configure {
+
+            expand(project.properties)
          }
       }
    }
