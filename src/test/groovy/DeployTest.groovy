@@ -1,15 +1,12 @@
 import groovy.util.logging.Slf4j
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.ClassRule
-import org.junit.rules.TemporaryFolder
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Title
-import spock.lang.Unroll
 
 @Slf4j
 @Title("Check basic configuration")
-class TasksTest extends Specification {
+class DeployTest extends Specification {
 
    @Shared
    File projectDir, buildDir, resourcesDir, buildFile, artifact
@@ -19,10 +16,10 @@ class TasksTest extends Specification {
 
    def setupSpec() {
 
-      projectDir = new File("${System.getProperty("projectDir")}/run-tasks")
+      projectDir = new File("${System.getProperty("projectDir")}/simple-deploy")
       buildDir = new File(projectDir, 'build')
       buildFile = new File(projectDir, 'build.gradle')
-      artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
+      //artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
       taskList = ['clean', 'assemble', 'check', 'createScripts', 'pipelineZip', 'build']
 
       resourcesDir = new File('src/test/resources')
@@ -45,48 +42,33 @@ class TasksTest extends Specification {
             group = 'com.redpillanalytics'
             version = '1.0.0'
             
+            repositories {
+              mavenLocal()
+            }
+            
             dependencies {
                archives group: 'com.redpillanalytics', name: 'ksql-functions', version: '+'
                archives group: 'com.redpillanalytics', name: 'test-pipeline', version: '+'
             }
             
-            repositories {
-              mavenLocal()
-            }
+            confluent.functionArtifactName = 'ksql-functions.jar'
         """)
+   }
+
+   def "Deploy test using mavenLocal()"() {
+
+      given:
 
       result = GradleRunner.create()
               .withProjectDir(projectDir)
-              .withArguments('-Si', 'tasks', '--all', 'showConfiguration')
+              .withArguments('-Si', 'deploy')
               .withPluginClasspath()
               .build()
 
-      tasks = result.output.readLines().grep(~/(> Task :)(.+)/).collect {
-         it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
-      }
 
       log.warn result.getOutput()
-   }
-
-   def "All tasks run and in the correct order"() {
-
-      given:
-      ":tasks execution is successful"
 
       expect:
-      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":tasks").outcome.toString())
-   }
-
-   @Unroll
-   def "Executing :tasks contains :#task"() {
-
-      when:
-      "Gradle build runs"
-
-      then:
-      result.output.contains(task)
-
-      where:
-      task << ['build', 'createScripts', 'pipelineZip','publish']
+      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":deploy").outcome.toString())
    }
 }
