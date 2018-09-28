@@ -10,20 +10,22 @@ import spock.lang.Unroll
 class LoadConfigTest extends Specification {
 
    @Shared
-   File projectDir, buildDir, resourcesDir, buildFile, artifact, absoluteDir, absoluteFile
+   File projectDir, buildDir, resourcesDir, buildFile, artifact, absoluteDir, absoluteFile, relativeFile
 
    @Shared
    def result, tasks, taskList
 
    def setupSpec() {
 
-      projectDir = new File("${System.getProperty("projectDir")}/run-tasks")
+      projectDir = new File("${System.getProperty("projectDir")}/load-config")
       buildDir = new File(projectDir, 'build')
       buildFile = new File(projectDir, 'build.gradle')
       artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
       taskList = ['clean', 'assemble', 'check', 'createScripts', 'pipelineZip', 'build']
       absoluteDir = new File(System.getProperty("projectDir"))
       absoluteFile = new File(absoluteDir,'streams.config')
+      relativeFile = new File(projectDir,'streams.config')
+
 
 
       resourcesDir = new File('src/test/resources')
@@ -133,9 +135,9 @@ class LoadConfigTest extends Specification {
 
       given:
       absoluteFile.write("""
-             APPLICATION_ID = 'dev-application'
-             TOPIC_PREFIX = 'dev-'
-        """)
+      APPLICATION_ID = 'dev-application'
+      TOPIC_PREFIX = 'dev-'
+      """)
 
       result = GradleRunner.create()
               .withProjectDir(projectDir)
@@ -149,6 +151,47 @@ class LoadConfigTest extends Specification {
       ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":loadConfig").outcome.toString())
       result.output.contains('APPLICATION_ID: dev-application')
       result.output.contains('TOPIC_PREFIX: dev-')
+   }
+
+   def "Project property works for configuring 'configpath'"() {
+
+      given:
+      absoluteFile.write("""
+      APPLICATION_ID = 'dev-application'
+      TOPIC_PREFIX = 'dev-'
+      """)
+
+      result = GradleRunner.create()
+              .withProjectDir(projectDir)
+              .withArguments('-Si', 'loadConfig', "-Pconfluent.configPath=${absoluteFile.canonicalPath}", 'properties')
+              .withPluginClasspath()
+              .build()
+
+      log.warn result.getOutput()
+
+      expect:
+      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":loadConfig").outcome.toString())
+      result.output.contains('APPLICATION_ID: dev-application')
+      result.output.contains('TOPIC_PREFIX: dev-')
+   }
+
+   def "No failures when :loadConfig is called with no file"() {
+
+      given:
+
+      relativeFile.delete()
+
+      result = GradleRunner.create()
+              .withProjectDir(projectDir)
+              .withArguments('-Si', 'loadConfig', 'properties')
+              .withPluginClasspath()
+              .build()
+
+      log.warn result.getOutput()
+
+      expect:
+      ['SUCCESS', 'UP_TO_DATE','SKIPPED'].contains(result.task(":loadConfig").outcome.toString())
+      !result.output.contains('APPLICATION_ID: dev-application')
    }
 
 }

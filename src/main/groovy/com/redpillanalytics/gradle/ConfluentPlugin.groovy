@@ -36,7 +36,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
                if (extension == 'confluent' && project.confluent.hasProperty(property)) {
 
-                  log.warn "Setting configuration property for extension: $extension, property: $property, value: $value"
+                  log.debug "Setting configuration property for extension: $extension, property: $property, value: $value"
 
                   if (project.extensions.getByName(extension)."$property" instanceof Boolean) {
 
@@ -140,36 +140,32 @@ class ConfluentPlugin implements Plugin<Project> {
                //project.build.dependsOn tg.getTaskName('deployScript')
 
                project.task(tg.getTaskName('pipelineZip'), type: Zip) {
-
                   group taskGroup
-                  description('Build a distribution ZIP file with a single KSQL deployment script,'
-                          + ' as well as all the individual pipeline SQL scripts that are included in it')
+                  description "Build a distribution ZIP file with a single KSQL 'create' script, as well as a KSQL 'drop' script."
                   appendix = project.extensions.confluent.pipelineAppendix
                   includeEmptyDirs false
-
                   from buildDir
-
                   dependsOn tg.getTaskName('createScripts')
-
-               }
-
-               project.task(tg.getTaskName('loadConfig'), type: LoadConfigTask) {
-
-                  filePath configPath
-
                }
 
                project.build.dependsOn tg.getTaskName('pipelineZip')
+
+               project.task(tg.getTaskName('loadConfig'), type: LoadConfigTask) {
+                  group taskGroup
+                  description "Load a config file using ConfigSlurper()."
+                  filePath configPath
+                  onlyIf { configFile.exists() }
+               }
+
+               project.build.dependsOn tg.getTaskName('loadConfig')
 
             }
 
             if (getDependency('archives', pipelineAppendix)) {
 
                project.task(tg.getTaskName('pipelineExtract'), type: Copy) {
-
                   group taskGroup
                   description = "Extract the deployment artifact into the deployment directory."
-
                   from project.zipTree(getDependency('archives', pipelineAppendix))
                   into { deployDir }
 

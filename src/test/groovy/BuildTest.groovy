@@ -24,6 +24,7 @@ class BuildTest extends Specification {
       taskList = ['clean',
                   'assemble',
                   'check',
+                  'loadConfig',
                   'createScripts',
                   'pipelineZip',
                   'build',
