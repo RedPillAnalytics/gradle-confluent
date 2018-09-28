@@ -77,7 +77,7 @@ class BuildTest extends Specification {
       "Gradle build runs"
 
       expect:
-      tasks == taskList
+      tasks.collect { it - ' SKIPPED' } == taskList
    }
 
    @Unroll
@@ -87,7 +87,7 @@ class BuildTest extends Specification {
       "Gradle build runs"
 
       then:
-      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":$task").outcome.toString())
+      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":$task").outcome.toString())
 
       where:
       task << taskList
