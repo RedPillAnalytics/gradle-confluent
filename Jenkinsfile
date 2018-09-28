@@ -28,7 +28,7 @@ pipeline {
       stage('Integration') {
           steps {
               sh "confluent start"
-              sh "$gradle ksqlServertest deployTest"
+              sh "$gradle ksqlServertest"
           }
       }
 

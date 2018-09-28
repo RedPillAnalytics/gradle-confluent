@@ -20,7 +20,7 @@ class DeployTest extends Specification {
       buildDir = new File(projectDir, 'build')
       buildFile = new File(projectDir, 'build.gradle')
       //artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
-      taskList = ['clean', 'assemble', 'check', 'createScripts', 'pipelineZip', 'build']
+      taskList = ['functionCopy', 'pipelineExtract', 'deploy']
 
       resourcesDir = new File('src/test/resources')
 
@@ -65,10 +65,14 @@ class DeployTest extends Specification {
               .withPluginClasspath()
               .build()
 
+      tasks = result.output.readLines().grep(~/(> Task :)(.+)/).collect {
+         it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
+      }
 
       log.warn result.getOutput()
 
       expect:
       ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":deploy").outcome.toString())
+      tasks.collect { it - ' SKIPPED' } == taskList
    }
 }

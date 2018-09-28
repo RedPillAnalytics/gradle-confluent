@@ -121,5 +121,4 @@ tasks.withType(Test) {
 
 testSets {
    ksqlServerTest
-   deployTest
 }
