@@ -2,10 +2,12 @@ package com.redpillanalytics.gradle
 
 import com.redpillanalytics.gradle.containers.TaskGroupContainer
 import com.redpillanalytics.gradle.tasks.CreateScriptsTask
+import com.redpillanalytics.gradle.tasks.LoadConfigTask
 import groovy.util.logging.Slf4j
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.UnknownConfigurationException
+import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.bundling.Zip
@@ -35,7 +37,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
                if (extension == 'confluent' && project.confluent.hasProperty(property)) {
 
-                  log.warn "Setting configuration property for extension: $extension, property: $property, value: $value"
+                  log.debug "Setting configuration property for extension: $extension, property: $property, value: $value"
 
                   if (project.extensions.getByName(extension)."$property" instanceof Boolean) {
 
@@ -111,6 +113,8 @@ class ConfluentPlugin implements Plugin<Project> {
          String pipelineAppendix = project.extensions.confluent.pipelineAppendix
          log.debug "pipelineAppendix: ${pipelineAppendix}"
 
+         String configPath = project.extensions.confluent.configPath
+
          // create deploy task
          project.task('deploy') {
 
@@ -131,36 +135,40 @@ class ConfluentPlugin implements Plugin<Project> {
                           + ' Primarily used for building a server start script.')
 
                   dirPath pipelineDir.canonicalPath
+                  onlyIf {dir.exists()}
 
                }
 
                //project.build.dependsOn tg.getTaskName('deployScript')
 
                project.task(tg.getTaskName('pipelineZip'), type: Zip) {
-
                   group taskGroup
-                  description('Build a distribution ZIP file with a single KSQL deployment script,'
-                          + ' as well as all the individual pipeline SQL scripts that are included in it')
+                  description "Build a distribution ZIP file with a single KSQL 'create' script, as well as a KSQL 'drop' script."
                   appendix = project.extensions.confluent.pipelineAppendix
                   includeEmptyDirs false
-
                   from buildDir
-
                   dependsOn tg.getTaskName('createScripts')
-
+                  onlyIf {buildDir.exists()}
                }
 
                project.build.dependsOn tg.getTaskName('pipelineZip')
+
+               project.task(tg.getTaskName('loadConfig'), type: LoadConfigTask) {
+                  group taskGroup
+                  description "Load a config file using ConfigSlurper()."
+                  filePath configPath
+                  onlyIf { configFile.exists() }
+               }
+
+               project.build.dependsOn tg.getTaskName('loadConfig')
 
             }
 
             if (getDependency('archives', pipelineAppendix)) {
 
                project.task(tg.getTaskName('pipelineExtract'), type: Copy) {
-
                   group taskGroup
                   description = "Extract the deployment artifact into the deployment directory."
-
                   from project.zipTree(getDependency('archives', pipelineAppendix))
                   into { deployDir }
 
@@ -169,6 +177,13 @@ class ConfluentPlugin implements Plugin<Project> {
 
             project.deploy.dependsOn tg.getTaskName('pipelineExtract')
 
+         }
+
+         // a bit of a hack at the moment
+         project.tasks.each {
+            task -> if ((task.group == 'confluent' || task.group == 'build') && task.name != 'loadConfig') {
+               task.mustRunAfter project.loadConfig
+            }
          }
 
          project.publishing.publications {
@@ -181,6 +196,8 @@ class ConfluentPlugin implements Plugin<Project> {
                }
             }
          }
+
+         
 
       }
 

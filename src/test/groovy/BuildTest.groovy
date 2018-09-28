@@ -21,7 +21,8 @@ class BuildTest extends Specification {
       buildDir = new File(projectDir, 'build')
       buildFile = new File(projectDir, 'build.gradle')
       artifact = new File(buildDir, 'distributions/test-pipeline.zip')
-      taskList = ['clean',
+      taskList = ['loadConfig',
+                  'clean',
                   'assemble',
                   'check',
                   'createScripts',
