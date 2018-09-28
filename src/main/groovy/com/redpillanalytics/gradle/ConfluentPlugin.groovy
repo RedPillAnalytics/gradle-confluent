@@ -7,7 +7,6 @@ import groovy.util.logging.Slf4j
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.UnknownConfigurationException
-import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.bundling.Zip
@@ -114,6 +113,10 @@ class ConfluentPlugin implements Plugin<Project> {
          log.debug "pipelineAppendix: ${pipelineAppendix}"
 
          String configPath = project.extensions.confluent.configPath
+         log.debug "configPath: ${configPath}"
+
+         String configEnv = project.extensions.confluent.configEnv
+         log.debug "configEnv: ${configEnv}"
 
          // create deploy task
          project.task('deploy') {
@@ -155,8 +158,9 @@ class ConfluentPlugin implements Plugin<Project> {
 
                project.task(tg.getTaskName('loadConfig'), type: LoadConfigTask) {
                   group taskGroup
-                  description "Load a config file using ConfigSlurper()."
+                  description "Load a config file using ConfigSlurper."
                   filePath configPath
+                  environment configEnv
                   onlyIf { configFile.exists() }
                }
 
