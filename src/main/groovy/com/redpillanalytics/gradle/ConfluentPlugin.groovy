@@ -134,6 +134,7 @@ class ConfluentPlugin implements Plugin<Project> {
                           + ' Primarily used for building a server start script.')
 
                   dirPath pipelineDir.canonicalPath
+                  onlyIf {dir.exists()}
 
                }
 
@@ -146,6 +147,7 @@ class ConfluentPlugin implements Plugin<Project> {
                   includeEmptyDirs false
                   from buildDir
                   dependsOn tg.getTaskName('createScripts')
+                  onlyIf {buildDir.exists()}
                }
 
                project.build.dependsOn tg.getTaskName('pipelineZip')
@@ -176,6 +178,13 @@ class ConfluentPlugin implements Plugin<Project> {
 
          }
 
+         // a bit of a hack at the moment
+         project.tasks.each {
+            task -> if ((task.group == 'confluent' || task.group == 'build') && task.name != 'loadConfig') {
+               task.mustRunAfter project.loadConfig
+            }
+         }
+
          project.publishing.publications {
 
             pipeline(MavenPublication) {
@@ -186,6 +195,8 @@ class ConfluentPlugin implements Plugin<Project> {
                }
             }
          }
+
+         
 
       }
 
