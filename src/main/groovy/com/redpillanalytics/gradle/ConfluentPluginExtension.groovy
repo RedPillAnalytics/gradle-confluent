@@ -61,6 +61,11 @@ class ConfluentPluginExtension {
    String functionAppendix = 'function'
 
    /**
+    * The path of the Streams configuration file. A relative path will be resolved in the project directory, while absolute paths are resolved absolutely.
+    */
+   String configPath = 'streams.config'
+
+   /**
     * Provides the path for Pipeline source files.
     *
     * @return The full path of the Pipeline source files, constructed using {@link #sourceBase}, {@link #pipelineSourceName} and {@link #pipelineSourcePath}.

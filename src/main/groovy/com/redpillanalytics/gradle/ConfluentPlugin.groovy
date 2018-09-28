@@ -2,6 +2,7 @@ package com.redpillanalytics.gradle
 
 import com.redpillanalytics.gradle.containers.TaskGroupContainer
 import com.redpillanalytics.gradle.tasks.CreateScriptsTask
+import com.redpillanalytics.gradle.tasks.LoadConfigTask
 import groovy.util.logging.Slf4j
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -111,6 +112,8 @@ class ConfluentPlugin implements Plugin<Project> {
          String pipelineAppendix = project.extensions.confluent.pipelineAppendix
          log.debug "pipelineAppendix: ${pipelineAppendix}"
 
+         String configPath = project.extensions.confluent.configPath
+
          // create deploy task
          project.task('deploy') {
 
@@ -147,6 +150,12 @@ class ConfluentPlugin implements Plugin<Project> {
                   from buildDir
 
                   dependsOn tg.getTaskName('createScripts')
+
+               }
+
+               project.task(tg.getTaskName('loadConfig'), type: LoadConfigTask) {
+
+                  filePath configPath
 
                }
 
