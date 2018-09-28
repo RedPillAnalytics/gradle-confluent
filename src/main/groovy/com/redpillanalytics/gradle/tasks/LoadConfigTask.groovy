@@ -11,15 +11,15 @@ class LoadConfigTask extends DefaultTask {
 
    @Optional
    @Input
-   @Option(option = "configpath",
+   @Option(option = "config-path",
            description = "The path of the Streams configuration file. A relative path will be resolved in the project directory, while absolute paths are resolved absolutely."
    )
    String filePath
 
    @Optional
    @Input
-   @Option(option = "environment",
-           description = "The name of the environment to use in 'configpath'."
+   @Option(option = "config-env",
+           description = "The environment to pass when configuring 'configPath'. This uses ConfigSlurper, which allows for an environment attribute."
    )
    String environment
 
@@ -39,7 +39,7 @@ class LoadConfigTask extends DefaultTask {
    @TaskAction
    def loadProperties() {
 
-      config.each { k, v ->
+      getConfig().each { k, v ->
 
          if (project.hasProperty(k)) {
             project.setProperty(k, v)

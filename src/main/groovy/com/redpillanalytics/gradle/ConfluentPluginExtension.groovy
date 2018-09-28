@@ -66,6 +66,11 @@ class ConfluentPluginExtension {
    String configPath = 'streams.config'
 
    /**
+    * The environment to pass when configuring 'configPath'. This uses ConfigSlurper, which allows for an environment attribute.
+    */
+   String configEnv = 'development'
+
+   /**
     * Provides the path for Pipeline source files.
     *
     * @return The full path of the Pipeline source files, constructed using {@link #sourceBase}, {@link #pipelineSourceName} and {@link #pipelineSourcePath}.
