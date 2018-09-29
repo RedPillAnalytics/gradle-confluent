@@ -14,7 +14,7 @@ class KsqlRest {
    String baseUrl = 'http://localhost:8088'
 
    /**
-    * Executes KSQL statements using the KSQL RESTful API.
+    * Executes a KSQL statement using the KSQL RESTful API.
     *
     * @param sql the SQL statement to execute.
     *
@@ -41,7 +41,23 @@ class KsqlRest {
    }
 
    /**
-    * Executes KSQL statements using the KSQL RESTful API.
+    * Executes a List of KSQL statements using the KSQL RESTful API.
+    *
+    * @param sql the List of SQL statements to execute.
+    *
+    * @param properties Any KSQL parameters to include with the KSQL execution.
+    *
+    * @return JSON representation of the KSQL response payload.
+    */
+   def execKsql(List sql, Map properties) {
+
+      sql.each {
+         execKsql(it, properties)
+      }
+   }
+
+   /**
+    * Executes a KSQL statement using the KSQL RESTful API.
     *
     * @param sql The SQL statement to execute.
     *
@@ -53,6 +69,22 @@ class KsqlRest {
 
       def data = execKsql(sql, (earliest ? ["ksql.streams.auto.offset.reset": "earliest"] : [:]))
       return data
+   }
+
+   /**
+    * Executes a List of KSQL statements using the KSQL RESTful API.
+    *
+    * @param sql the List of SQL statements to execute.
+    *
+    * @param earliest Boolean dictating that the statement should set 'auto.offset.reset' to 'earliest'.
+    *
+    * @return JSON representation of the KSQL response payload.
+    */
+   def execKsql(List sql, Boolean earliest = true) {
+
+      sql.each {
+         execKsql(it, earliest)
+      }
    }
 
    /**
