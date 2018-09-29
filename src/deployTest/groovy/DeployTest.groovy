@@ -3,10 +3,9 @@ import org.gradle.testkit.runner.GradleRunner
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Title
-import spock.lang.Unroll
 
 @Slf4j
-@Title("Test that a :build functions successfully")
+@Title("Check basic configuration")
 class DeployTest extends Specification {
 
    @Shared
@@ -20,15 +19,8 @@ class DeployTest extends Specification {
       projectDir = new File("${System.getProperty("projectDir")}/simple-deploy")
       buildDir = new File(projectDir, 'build')
       buildFile = new File(projectDir, 'build.gradle')
-      artifact = new File(buildDir, 'distributions/test-pipeline.zip')
-      taskList = ['clean',
-                  'createScripts',
-                  'pipelineZip',
-                  'generatePomFileForPipelinePublication',
-                  'publishPipelinePublicationToMavenLocalRepository',
-                  'publish',
-                  'pipelineExtract',
-                  'deploy']
+      //artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
+      taskList = ['functionCopy', 'pipelineExtract', 'deploy']
 
       resourcesDir = new File('src/test/resources')
 
@@ -50,18 +42,26 @@ class DeployTest extends Specification {
             group = 'com.redpillanalytics'
             version = '1.0.0'
             
-            dependencies {
-              archives group: 'com.redpillanalytics', name: 'test-pipeline', version: '+'
-            }
-            
             repositories {
               mavenLocal()
             }
+            
+            dependencies {
+               archives group: 'com.redpillanalytics', name: 'ksql-functions', version: '+'
+               archives group: 'com.redpillanalytics', name: 'test-pipeline', version: '+'
+            }
+            
+            confluent.functionArtifactName = 'ksql-functions.jar'
         """)
+   }
+
+   def "Deploy test using mavenLocal()"() {
+
+      given:
 
       result = GradleRunner.create()
               .withProjectDir(projectDir)
-              .withArguments('-Si', 'clean', 'pipelineZip', 'publish', 'deploy', '--rerun-tasks')
+              .withArguments('-Si', 'deploy')
               .withPluginClasspath()
               .build()
 
@@ -70,27 +70,9 @@ class DeployTest extends Specification {
       }
 
       log.warn result.getOutput()
-   }
-
-   def "All tasks run and in the correct order"() {
-
-      given:
-      "Gradle build runs"
 
       expect:
-      tasks == taskList
-   }
-
-   @Unroll
-   def "The execution of :#task is successful"() {
-
-      when:
-      "Gradle build runs"
-
-      then:
-      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":$task").outcome.toString())
-
-      where:
-      task << taskList
+      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":deploy").outcome.toString())
+      tasks.collect { it - ' SKIPPED' } == taskList
    }
 }

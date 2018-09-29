@@ -52,15 +52,6 @@ class ConfluentPlugin implements Plugin<Project> {
             }
          }
 
-         def dependencyMatching = { configuration, regexp ->
-
-            try {
-               return (project.configurations."$configuration".dependencies.find { it.name =~ regexp }) ?: false
-            }
-            catch (NullPointerException e) {
-            }
-         }
-
          def getDependency = { configuration, regexp ->
 
             return project.configurations."$configuration".find { File file -> file.absolutePath =~ regexp }
@@ -103,14 +94,20 @@ class ConfluentPlugin implements Plugin<Project> {
          File pipelineDir = project.file(project.extensions.confluent.getPipelinePath())
          log.debug "pipelineDir: ${pipelineDir.getCanonicalPath()}"
 
-         File buildDir = project.file("${project.buildDir}/${project.extensions.confluent.pipelineBuildName}")
-         log.debug "pipelineBuildDir: ${buildDir.canonicalPath}"
+         File pipelineBuildDir = project.file("${project.buildDir}/${project.extensions.confluent.pipelineBuildName}")
+         log.debug "pipelineBuildDir: ${pipelineBuildDir.canonicalPath}"
 
-         File deployDir = project.file("${project.buildDir}/${project.extensions.confluent.pipelineDeployName}")
-         log.debug "pipelineDeployDir: ${deployDir.canonicalPath}"
+         File pipelineDeployDir = project.file("${project.buildDir}/${project.extensions.confluent.pipelineDeployName}")
+         log.debug "pipelineDeployDir: ${pipelineDeployDir.canonicalPath}"
 
-         String pipelineAppendix = project.extensions.confluent.pipelineAppendix
-         log.debug "pipelineAppendix: ${pipelineAppendix}"
+         File functionDeployDir = project.file("${project.buildDir}/${project.extensions.confluent.functionDeployName}")
+         log.debug "pipelineDeployDir: ${pipelineDeployDir.canonicalPath}"
+
+         String pipelinePattern = project.extensions.confluent.pipelinePattern
+         log.debug "pipelinePattern: ${pipelinePattern}"
+
+         String functionPattern = project.extensions.confluent.functionPattern
+         log.debug "functionPattern: ${functionPattern}"
 
          String configPath = project.extensions.confluent.configPath
          log.debug "configPath: ${configPath}"
@@ -138,7 +135,7 @@ class ConfluentPlugin implements Plugin<Project> {
                           + ' Primarily used for building a server start script.')
 
                   dirPath pipelineDir.canonicalPath
-                  onlyIf {dir.exists()}
+                  onlyIf { dir.exists() }
 
                }
 
@@ -147,11 +144,11 @@ class ConfluentPlugin implements Plugin<Project> {
                project.task(tg.getTaskName('pipelineZip'), type: Zip) {
                   group taskGroup
                   description "Build a distribution ZIP file with a single KSQL 'create' script, as well as a KSQL 'drop' script."
-                  appendix = project.extensions.confluent.pipelineAppendix
+                  appendix = project.extensions.confluent.pipelinePattern
                   includeEmptyDirs false
-                  from buildDir
+                  from pipelineBuildDir
                   dependsOn tg.getTaskName('createScripts')
-                  onlyIf {buildDir.exists()}
+                  onlyIf { pipelineBuildDir.exists() }
                }
 
                project.build.dependsOn tg.getTaskName('pipelineZip')
@@ -168,26 +165,41 @@ class ConfluentPlugin implements Plugin<Project> {
 
             }
 
-            if (getDependency('archives', pipelineAppendix)) {
+            if (isUsableConfiguration('archives', pipelinePattern)) {
 
                project.task(tg.getTaskName('pipelineExtract'), type: Copy) {
                   group taskGroup
                   description = "Extract the deployment artifact into the deployment directory."
-                  from project.zipTree(getDependency('archives', pipelineAppendix))
-                  into { deployDir }
+                  from project.zipTree(getDependency('archives', pipelinePattern))
+                  into { pipelineDeployDir }
 
                }
+
+               project.deploy.dependsOn tg.getTaskName('pipelineExtract')
             }
 
-            project.deploy.dependsOn tg.getTaskName('pipelineExtract')
+            if (isUsableConfiguration('archives', functionPattern)) {
+
+               project.task(tg.getTaskName('functionCopy'), type: Copy) {
+                  group taskGroup
+                  description = "Copy the function deployment artifact into the deployment directory."
+                  from getDependency('archives', functionPattern)
+                  into { functionDeployDir }
+                  if (project.extensions.confluent.functionArtifactName) rename {project.extensions.confluent.functionArtifactName}
+
+               }
+
+               project.deploy.dependsOn tg.getTaskName('functionCopy')
+            }
 
          }
 
          // a bit of a hack at the moment
          project.tasks.each {
-            task -> if ((task.group == 'confluent' || task.group == 'build') && task.name != 'loadConfig') {
-               task.mustRunAfter project.loadConfig
-            }
+            task ->
+               if ((task.group == 'confluent' || task.group == 'build') && task.name != 'loadConfig') {
+                  task.mustRunAfter project.loadConfig
+               }
          }
 
          project.publishing.publications {
@@ -195,13 +207,12 @@ class ConfluentPlugin implements Plugin<Project> {
             pipeline(MavenPublication) {
                artifact project.pipelineZip {
 
-                  artifactId project.archivesBaseName + '-' + pipelineAppendix
+                  artifactId project.archivesBaseName + '-' + pipelinePattern
 
                }
             }
          }
 
-         
 
       }
 

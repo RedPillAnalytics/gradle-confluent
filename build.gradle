@@ -14,7 +14,6 @@ analytics {
    organization = 'Red Pill Analytics'
    sinks {
       pubsub
-      gs
    }
 }
 
@@ -122,4 +121,9 @@ tasks.withType(Test) {
 testSets {
    ksqlServerTest
    deployTest
+}
+
+task('cleanJunit', type:Delete) {
+
+   delete getTestResultsDir()
 }

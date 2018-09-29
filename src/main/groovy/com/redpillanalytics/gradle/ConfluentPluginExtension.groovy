@@ -36,6 +36,16 @@ class ConfluentPluginExtension {
    String pipelineDeployName = 'pipeline-deploy'
 
    /**
+    * The name of the Function deploy directory in the project build directory.
+    */
+   String functionDeployName = 'function-deploy'
+
+   /**
+    * If populated, the KSQL JAR file will be renamed to this value during the copy. This makes it easy to hand-off to downstream deployment mechanisms.
+    */
+   String functionArtifactName
+
+   /**
     * The name of the Pipeline deployment 'create' script, which contains all the persistent statements that need to be executed.
     */
    String pipelineCreateName = 'ksql-create-script.sql'
@@ -51,14 +61,14 @@ class ConfluentPluginExtension {
    String pipelineEndpoint= 'http://localhost:8088'
 
    /**
-    * The appendix name to be used when building a pipeline deployment artifact.
+    * The pattern used for matching the pipeline deployment artifact.
     */
-   String pipelineAppendix = 'pipeline'
+   String pipelinePattern = 'pipeline'
 
    /**
-    * The appendix name to be used when building a pipeline deployment artifact.
+    * The pattern used for matching the function deployment artifact.
     */
-   String functionAppendix = 'function'
+   String functionPattern = 'function'
 
    /**
     * The path of the Streams configuration file. A relative path will be resolved in the project directory, while absolute paths are resolved absolutely.
