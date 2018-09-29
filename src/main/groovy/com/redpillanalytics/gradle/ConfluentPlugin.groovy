@@ -115,6 +115,15 @@ class ConfluentPlugin implements Plugin<Project> {
          String configEnv = project.extensions.confluent.configEnv
          log.debug "configEnv: ${configEnv}"
 
+         Boolean enablePipelines = project.extensions.confluent.enablePipelines
+         log.debug "enablePipelines: ${enablePipelines}"
+
+         Boolean enableFunctions = project.extensions.confluent.enableFunctions
+         log.debug "enableFunctions: ${enableFunctions}"
+
+         Boolean enableStreams = project.extensions.confluent.enableStreams
+         log.debug "enableStreams: ${enableStreams}"
+
          // create deploy task
          project.task('deploy') {
 
@@ -126,7 +135,7 @@ class ConfluentPlugin implements Plugin<Project> {
          // configure build groups
          project.confluent.taskGroups.all { tg ->
 
-            if (tg.isBuildEnv()) {
+            if (tg.isBuildEnv() && enablePipelines) {
 
                project.task(tg.getTaskName('createScripts'), type: CreateScriptsTask) {
 
@@ -153,6 +162,21 @@ class ConfluentPlugin implements Plugin<Project> {
 
                project.build.dependsOn tg.getTaskName('pipelineZip')
 
+               if (isUsableConfiguration('archives', pipelinePattern)) {
+
+                  project.task(tg.getTaskName('pipelineExtract'), type: Copy) {
+                     group taskGroup
+                     description = "Extract the deployment artifact into the deployment directory."
+                     from project.zipTree(getDependency('archives', pipelinePattern))
+                     into { pipelineDeployDir }
+
+                  }
+
+                  project.deploy.dependsOn tg.getTaskName('pipelineExtract')
+               }
+            }
+
+            if (tg.isBuildEnv() && enableStreams) {
                project.task(tg.getTaskName('loadConfig'), type: LoadConfigTask) {
                   group taskGroup
                   description "Load a config file using ConfigSlurper."
@@ -160,25 +184,10 @@ class ConfluentPlugin implements Plugin<Project> {
                   environment configEnv
                   onlyIf { configFile.exists() }
                }
-
                project.build.dependsOn tg.getTaskName('loadConfig')
-
             }
 
-            if (isUsableConfiguration('archives', pipelinePattern)) {
-
-               project.task(tg.getTaskName('pipelineExtract'), type: Copy) {
-                  group taskGroup
-                  description = "Extract the deployment artifact into the deployment directory."
-                  from project.zipTree(getDependency('archives', pipelinePattern))
-                  into { pipelineDeployDir }
-
-               }
-
-               project.deploy.dependsOn tg.getTaskName('pipelineExtract')
-            }
-
-            if (isUsableConfiguration('archives', functionPattern)) {
+            if (isUsableConfiguration('archives', functionPattern) && enableFunctions) {
 
                project.task(tg.getTaskName('functionCopy'), type: Copy) {
                   group taskGroup
@@ -202,18 +211,19 @@ class ConfluentPlugin implements Plugin<Project> {
                }
          }
 
-         project.publishing.publications {
+         if (enablePipelines) {
 
-            pipeline(MavenPublication) {
-               artifact project.pipelineZip {
+            project.publishing.publications {
 
-                  artifactId project.archivesBaseName + '-' + pipelinePattern
+               pipeline(MavenPublication) {
+                  artifact project.pipelineZip {
 
+                     artifactId project.archivesBaseName + '-' + pipelinePattern
+
+                  }
                }
             }
          }
-
-
       }
 
       // end of afterEvaluate

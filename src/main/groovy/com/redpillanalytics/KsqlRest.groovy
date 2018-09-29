@@ -28,7 +28,8 @@ class KsqlRest {
       def response = client.post(path: '/ksql') {
 
          type ContentType.JSON
-         json ksql: "$sql;", streamsProperties: properties
+         // accept statements with either a ';' or not. Do that by replacing ';;' with ';'
+         json ksql: "$sql;".replace(';;',';'), streamsProperties: properties
 
       }
 
@@ -94,7 +95,7 @@ class KsqlRest {
     */
    def getProperties() {
 
-      def data = execKsql('LIST PROPERTIES')
+      def data = execKsql('LIST PROPERTIES;')
       def properties = data[0].properties
       log.debug "properties: ${properties.dump()}"
       return properties

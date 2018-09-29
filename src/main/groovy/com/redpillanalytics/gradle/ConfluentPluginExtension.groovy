@@ -11,6 +11,21 @@ class ConfluentPluginExtension {
    String taskGroup = 'confluent'
 
    /**
+    * Enable KSQL pipeline support.
+    */
+   Boolean enablePipelines = true
+
+   /**
+    * Enable KSQL UD(A)F support.
+    */
+   Boolean enableFunctions = true
+
+   /**
+    * Enable Kafka Streams support.
+    */
+   Boolean enableStreams = true
+
+   /**
     * Base source directory for the Confluent plugin.
     */
    String sourceBase = 'src/main'

@@ -56,4 +56,15 @@ class KsqlUtils {
       return sql
    }
 
+   /**
+    * Utility function for writing text to a File object. Specifically used for writing KSQL statements to deployment artifacts.
+    *
+    * @param file The output file to write to, usually a deployment artifact.
+    *
+    * @param statement The statement to write to the output file.
+    */
+   static writeStatement(File file, String statement) {
+
+      file.append("${statement.toLowerCase()}")
+   }
 }
