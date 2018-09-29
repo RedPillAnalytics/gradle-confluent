@@ -21,7 +21,7 @@ class ConfluentPluginExtension {
    String pipelineSourceName = 'pipeline'
 
    /**
-    * Full path of the Pipeline source directory. When set, this overrides the values of {@link #sourceBase} and {@link #sqlSourceName}.
+    * Full path of the Pipeline source directory. When set, this overrides the values of {@link #sourceBase} and {@link #pipelineSourceName}.
     */
    String pipelineSourcePath
 
@@ -83,7 +83,7 @@ class ConfluentPluginExtension {
    /**
     * Provides the path for Pipeline source files.
     *
-    * @return The full path of the Pipeline source files, constructed using {@link #sourceBase}, {@link #pipelineSourceName} and {@link #pipelineSourcePath}.
+    * @return The full path of the Pipeline source files. Uses {@link #pipelineSourcePath} first if it exists, and if it doesn't (the default), then it uses {@link #sourceBase} and {@link #pipelineSourceName}.
     */
    String getPipelinePath() {
 

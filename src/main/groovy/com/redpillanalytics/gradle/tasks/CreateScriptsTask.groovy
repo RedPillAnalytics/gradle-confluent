@@ -1,5 +1,6 @@
 package com.redpillanalytics.gradle.tasks
 
+import com.redpillanalytics.KsqlUtils
 import groovy.util.logging.Slf4j
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileTree
@@ -60,53 +61,23 @@ class CreateScriptsTask extends DefaultTask {
 
    def writeStatement(File file, String statement) {
 
-      file.append("${statement.toLowerCase()}\n\n")
+      file.append("${statement.toLowerCase()}")
    }
 
    def buildDropScript() {
 
-      List sql = []
-
-      pipelines.each { file ->
-
-         file.eachLine { String line, Integer count ->
-
-            //println line
-            line.find(/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
-
-               if (!x1.startsWith('--')) {
-
-                  sql.add("DROP $type $name IF EXISTS;")
-               }
-            }
-         }
-      }
-
-      // put the drop statements in reverse order or original order
-      List finalSql = notReverseDrops ? sql : sql.reverse()
-
-
-      if (notReverseDrops) {
-         sql = sql.reverse()
-      }
-
-      // write the drop statements to the file
-      finalSql.each {
-         writeStatement(dropScript, it)
-      }
+      KsqlUtils.getDropSql(pipelines, notReverseDrops).each { writeStatement(dropScript, it) }
    }
 
    def buildDeployScript() {
 
       createScript.delete()
 
-      pipelines.each { file ->
+      KsqlUtils.getCreateSql(pipelines).each { sql ->
 
-         createScript.append("${file.text}\n\n")
-
+         createScript.append(sql)
       }
    }
-
 
    @TaskAction
    def buildScripts() {
