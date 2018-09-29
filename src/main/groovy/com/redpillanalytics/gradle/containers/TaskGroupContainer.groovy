@@ -13,38 +13,47 @@ class TaskGroupContainer {
     */
    String name
 
-   Boolean deployOnly = false
+   /**
+    * Turn on/off certain features that are only enabled for task groups used to deploy code.
+    */
+   Boolean isDeployEnv = true
 
-   // capture the debug status
+   /**
+    * Turn on/off certain features that are only enabled for task groups used to build code.
+    */
+   Boolean isBuildEnv = true
+
+   /**
+    * Capture the debug status from the Gradle logging framework. Not currently used.
+    */
    Boolean isDebugEnabled = log.isDebugEnabled()
-
-   def isBuildEnv() {
-
-      return !isDeployOnly()
-   }
-
-   def isDeployOnly() {
-
-      return deployOnly
-   }
 
    def getDomainName() {
 
       return ((getClass() =~ /\w+$/)[0] - "Container")
    }
 
+   /**
+    * Easy method for instrumentation configuring Gradle tasks.
+    */
    def logTaskName(String task) {
 
       log.debug "${getDomainName()}: $name, TaskName: $task"
 
    }
 
+   /**
+    * This plugin has a default set of tasks that are configured with a single task group called 'default'. This method is used during configuration when special handling is needed for those tasks.
+    */
    def isDefaultTask(String buildName) {
 
       return (buildName == DEFAULT_GROUP) ? true : false
 
    }
 
+   /**
+    * A method that makes it easy for naming 'default' tasks versus non-'default' tasks.
+    */
    def getTaskName(String baseTaskName) {
 
       // return either the baseTaskName or prepend with a name

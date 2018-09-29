@@ -11,6 +11,21 @@ class ConfluentPluginExtension {
    String taskGroup = 'confluent'
 
    /**
+    * Enable KSQL pipeline support.
+    */
+   Boolean enablePipelines = true
+
+   /**
+    * Enable KSQL UD(A)F support.
+    */
+   Boolean enableFunctions = true
+
+   /**
+    * Enable Kafka Streams support.
+    */
+   Boolean enableStreams = true
+
+   /**
     * Base source directory for the Confluent plugin.
     */
    String sourceBase = 'src/main'
@@ -21,7 +36,7 @@ class ConfluentPluginExtension {
    String pipelineSourceName = 'pipeline'
 
    /**
-    * Full path of the Pipeline source directory. When set, this overrides the values of {@link #sourceBase} and {@link #sqlSourceName}.
+    * Full path of the Pipeline source directory. When set, this overrides the values of {@link #sourceBase} and {@link #pipelineSourceName}.
     */
    String pipelineSourcePath
 
@@ -76,14 +91,14 @@ class ConfluentPluginExtension {
    String configPath = 'streams.config'
 
    /**
-    * The environment to pass when configuring 'configPath'. This uses ConfigSlurper, which allows for an environment attribute.
+    * The environment to pass when configuring {@link #configPath}. This uses the ConfigSlurper concept of default values with environmental overloads.
     */
    String configEnv = 'development'
 
    /**
     * Provides the path for Pipeline source files.
     *
-    * @return The full path of the Pipeline source files, constructed using {@link #sourceBase}, {@link #pipelineSourceName} and {@link #pipelineSourcePath}.
+    * @return The full path of the Pipeline source files. Uses {@link #pipelineSourcePath} first if it exists, and if it doesn't (the default), then it uses {@link #sourceBase} and {@link #pipelineSourceName}.
     */
    String getPipelinePath() {
 

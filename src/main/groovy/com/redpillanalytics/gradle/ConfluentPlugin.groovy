@@ -14,12 +14,15 @@ import org.gradle.api.tasks.bundling.Zip
 @Slf4j
 class ConfluentPlugin implements Plugin<Project> {
 
+   /**
+    * Apply the Gradle Plugin.
+    */
    void apply(Project project) {
 
       // apply Gradle built-in plugins
       project.apply plugin: 'base'
 
-      // apply the Gradle extension plugin and the context container
+      // apply the Gradle plugin extension and the context container
       applyExtension(project)
 
       project.afterEvaluate {
@@ -115,6 +118,15 @@ class ConfluentPlugin implements Plugin<Project> {
          String configEnv = project.extensions.confluent.configEnv
          log.debug "configEnv: ${configEnv}"
 
+         Boolean enablePipelines = project.extensions.confluent.enablePipelines
+         log.debug "enablePipelines: ${enablePipelines}"
+
+         Boolean enableFunctions = project.extensions.confluent.enableFunctions
+         log.debug "enableFunctions: ${enableFunctions}"
+
+         Boolean enableStreams = project.extensions.confluent.enableStreams
+         log.debug "enableStreams: ${enableStreams}"
+
          // create deploy task
          project.task('deploy') {
 
@@ -126,7 +138,7 @@ class ConfluentPlugin implements Plugin<Project> {
          // configure build groups
          project.confluent.taskGroups.all { tg ->
 
-            if (tg.isBuildEnv()) {
+            if (tg.isBuildEnv && enablePipelines) {
 
                project.task(tg.getTaskName('createScripts'), type: CreateScriptsTask) {
 
@@ -153,32 +165,21 @@ class ConfluentPlugin implements Plugin<Project> {
 
                project.build.dependsOn tg.getTaskName('pipelineZip')
 
-               project.task(tg.getTaskName('loadConfig'), type: LoadConfigTask) {
-                  group taskGroup
-                  description "Load a config file using ConfigSlurper."
-                  filePath configPath
-                  environment configEnv
-                  onlyIf { configFile.exists() }
+               if (isUsableConfiguration('archives', pipelinePattern)) {
+
+                  project.task(tg.getTaskName('pipelineExtract'), type: Copy) {
+                     group taskGroup
+                     description = "Extract the deployment artifact into the deployment directory."
+                     from project.zipTree(getDependency('archives', pipelinePattern))
+                     into { pipelineDeployDir }
+
+                  }
+
+                  project.deploy.dependsOn tg.getTaskName('pipelineExtract')
                }
-
-               project.build.dependsOn tg.getTaskName('loadConfig')
-
             }
 
-            if (isUsableConfiguration('archives', pipelinePattern)) {
-
-               project.task(tg.getTaskName('pipelineExtract'), type: Copy) {
-                  group taskGroup
-                  description = "Extract the deployment artifact into the deployment directory."
-                  from project.zipTree(getDependency('archives', pipelinePattern))
-                  into { pipelineDeployDir }
-
-               }
-
-               project.deploy.dependsOn tg.getTaskName('pipelineExtract')
-            }
-
-            if (isUsableConfiguration('archives', functionPattern)) {
+            if (isUsableConfiguration('archives', functionPattern) && enableFunctions && tg.isDeployEnv) {
 
                project.task(tg.getTaskName('functionCopy'), type: Copy) {
                   group taskGroup
@@ -192,33 +193,51 @@ class ConfluentPlugin implements Plugin<Project> {
                project.deploy.dependsOn tg.getTaskName('functionCopy')
             }
 
+            if (tg.isBuildEnv && enableStreams) {
+               project.task(tg.getTaskName('loadConfig'), type: LoadConfigTask) {
+                  group taskGroup
+                  description "Load a config file using ConfigSlurper."
+                  filePath configPath
+                  environment configEnv
+                  onlyIf { configFile.exists() }
+               }
+               project.build.dependsOn tg.getTaskName('loadConfig')
+            }
+
          }
 
          // a bit of a hack at the moment
-         project.tasks.each {
-            task ->
-               if ((task.group == 'confluent' || task.group == 'build') && task.name != 'loadConfig') {
-                  task.mustRunAfter project.loadConfig
-               }
-         }
 
-         project.publishing.publications {
+         if (project.loadConfig) {
 
-            pipeline(MavenPublication) {
-               artifact project.pipelineZip {
-
-                  artifactId project.archivesBaseName + '-' + pipelinePattern
-
-               }
+            project.tasks.each {
+               task ->
+                  if ((task.group == 'confluent' || task.group == 'build') && task.name != 'loadConfig') {
+                     task.mustRunAfter project.loadConfig
+                  }
             }
          }
 
+         if (enablePipelines && project.pipelineZip) {
 
+            project.publishing.publications {
+
+               pipeline(MavenPublication) {
+                  artifact project.pipelineZip {
+
+                     artifactId project.archivesBaseName + '-' + pipelinePattern
+
+                  }
+               }
+            }
+         }
       }
 
       // end of afterEvaluate
    }
-
+   /**
+    * Apply the Gradle Plugin extension.
+    */
    void applyExtension(Project project) {
 
       project.configure(project) {
