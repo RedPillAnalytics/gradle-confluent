@@ -123,7 +123,34 @@ testSets {
    deployTest
 }
 
-task('cleanJunit', type:Delete) {
+task('cleanJunit', type: Delete) {
 
    delete getTestResultsDir()
 }
+
+ext.bucket = 's3://documentation.redpillanalytics.com'
+ext.bucketPath = 'gradle-confluent'
+
+
+task publishDocs {
+
+   description = 'Upload Groovydocs to s3.'
+   group = 'documentation'
+
+   doLast {
+
+      exec {
+         executable 'aws'
+         args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/${version}/"
+      }
+
+      exec {
+         executable 'aws'
+         args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/current/"
+      }
+   }
+
+   dependsOn groovydoc
+}
+
+tasks.publishPlugins.dependsOn publishDocs

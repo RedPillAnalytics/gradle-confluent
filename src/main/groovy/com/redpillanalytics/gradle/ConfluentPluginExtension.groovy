@@ -91,7 +91,7 @@ class ConfluentPluginExtension {
    String configPath = 'streams.config'
 
    /**
-    * The environment to pass when configuring 'configPath'. This uses ConfigSlurper, which allows for an environment attribute.
+    * The environment to pass when configuring {@link #configPath}. This uses the ConfigSlurper concept of default values with environmental overloads.
     */
    String configEnv = 'development'
 

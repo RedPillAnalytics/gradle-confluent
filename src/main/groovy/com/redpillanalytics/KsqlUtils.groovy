@@ -3,7 +3,7 @@ package com.redpillanalytics
 class KsqlUtils {
 
    /**
-    * Accepts a List of CREATE KSQL statements, and returns a List of DROP KSQL statements. The default behavior is to return those DROP statements in the reverse order of the CREATE statement.
+    * Accepts a List of CREATE KSQL statements, and returns an equivalent List of DROP KSQL statements. The default behavior is to return those DROP statements in the reverse order of the CREATE statement.
     *
     * @param pipelines The List of KSQL CREATE statements.
     *
@@ -38,7 +38,7 @@ class KsqlUtils {
     *
     * @param pipelines The List of KSQL CREATE statements.
     *
-    * @return The normalizewd List of KSQL create statements.
+    * @return The normalized List of KSQL create statements.
     */
    static List getCreateSql(List pipelines) {
 

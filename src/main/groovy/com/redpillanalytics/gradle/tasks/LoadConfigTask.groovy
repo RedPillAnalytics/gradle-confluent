@@ -41,9 +41,9 @@ class LoadConfigTask extends DefaultTask {
    }
 
    /**
-    * Get the ConfigSlurper represesation of the Configuration.
+    * Get the ConfigSlurper representation of the Configuration.
     *
-    * @return The ConfigSlurper represesation of the Configuration.
+    * @return The ConfigSlurper representation of the Configuration.
     */
    @Internal
    def getConfig() {
