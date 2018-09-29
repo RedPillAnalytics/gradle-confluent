@@ -46,7 +46,8 @@ pipeline {
       always {
          junit testResults: "build/test-results/**/*.xml", allowEmptyResults: true, keepLongStdio: true
          archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true
-         //sh "$gradle producer"
+         sh "$gradle cleanJunit
+         sh "$gradle producer"
       }
    }
 

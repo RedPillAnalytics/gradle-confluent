@@ -123,3 +123,8 @@ testSets {
    ksqlServerTest
    deployTest
 }
+
+task('cleanJunit', type:Delete) {
+
+   delete getTestResultsDir()
+}
