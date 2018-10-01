@@ -64,6 +64,7 @@ class LoadConfigTest extends Specification {
 
       relativeFile.delete()
       absoluteFile.delete()
+      processed.delete()
    }
 
    def "Application Plugin expand works with default file"() {
@@ -101,7 +102,7 @@ class LoadConfigTest extends Specification {
 
       result = GradleRunner.create()
               .withProjectDir(projectDir)
-              .withArguments('-Si', 'build', "-PconfigPath=streams.config", '--rerun-tasks')
+              .withArguments('-Si', 'build', "-P.confluent.configPath=streams.config", '--rerun-tasks')
               .withPluginClasspath()
               .build()
 
@@ -125,7 +126,7 @@ class LoadConfigTest extends Specification {
 
       result = GradleRunner.create()
               .withProjectDir(projectDir)
-              .withArguments('-Si', 'build', "-PconfigPath=${absoluteFile.canonicalPath}", '--rerun-tasks')
+              .withArguments('-Si', 'build', "-Pconfluent.configPath=${absoluteFile.canonicalPath}", '--rerun-tasks')
               .withPluginClasspath()
               .build()
 
@@ -138,4 +139,65 @@ class LoadConfigTest extends Specification {
       processed.text.contains('TOPIC_PREFIX = dev-')
    }
 
+   def "Application Plugin expand works with absolute file and environment"() {
+
+      given:
+
+      absoluteFile.write("""
+      APPLICATION_ID = 'dev-application'
+      TOPIC_PREFIX = 'dev-'
+      
+      environments {
+        test {
+           APPLICATION_ID = 'test-application'
+           TOPIC_PREFIX = 'test-'
+         }
+       }
+      """)
+
+      result = GradleRunner.create()
+              .withProjectDir(projectDir)
+              .withArguments('-Si', 'build', "-Pconfluent.configPath=${absoluteFile.canonicalPath}", "-Pconfluent.configEnv=test", '--rerun-tasks')
+              .withPluginClasspath()
+              .build()
+
+      log.warn result.getOutput()
+
+      expect:
+      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":build").outcome.toString())
+      processed.exists()
+      processed.text.contains('APPLICATION_ID = test-application')
+      processed.text.contains('TOPIC_PREFIX = test-')
+   }
+
+   def "Application Plugin expand works with absolute file and bogus environment"() {
+
+      given:
+
+      absoluteFile.write("""
+      APPLICATION_ID = 'dev-application'
+      TOPIC_PREFIX = 'dev-'
+      
+      environments {
+        test {
+           APPLICATION_ID = 'test-application'
+           TOPIC_PREFIX = 'test-'
+         }
+       }
+      """)
+
+      result = GradleRunner.create()
+              .withProjectDir(projectDir)
+              .withArguments('-Si', 'build', "-Pconfluent.configPath=${absoluteFile.canonicalPath}", "-Pconfluent.configEnv=nothing", '--rerun-tasks')
+              .withPluginClasspath()
+              .build()
+
+      log.warn result.getOutput()
+
+      expect:
+      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":build").outcome.toString())
+      processed.exists()
+      processed.text.contains('APPLICATION_ID = dev-application')
+      processed.text.contains('TOPIC_PREFIX = dev-')
+   }
 }

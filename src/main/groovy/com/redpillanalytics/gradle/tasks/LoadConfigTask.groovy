@@ -48,6 +48,8 @@ class LoadConfigTask extends DefaultTask {
    @Internal
    def getConfig() {
 
+      log.debug "configPath: $configFile.canonicalPath"
+      log.debug "configPath text:$configFile.text"
       log.debug "environment: ${environment}"
       return new ConfigSlurper(environment).parse(configFile.text)
    }
@@ -65,6 +67,7 @@ class LoadConfigTask extends DefaultTask {
 
          getConfig().each { k, v ->
 
+            log.debug "property: $k: $v"
             properties.put(k,v)
 
          }
