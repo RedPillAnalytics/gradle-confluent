@@ -48,6 +48,8 @@ class LoadConfigTask extends DefaultTask {
    @Internal
    def getConfig() {
 
+      log.debug "configPath: $configFile.canonicalPath"
+      log.debug "configPath text:$configFile.text"
       log.debug "environment: ${environment}"
       return new ConfigSlurper(environment).parse(configFile.text)
    }
@@ -59,20 +61,20 @@ class LoadConfigTask extends DefaultTask {
    @TaskAction
    def loadProperties() {
 
-      getConfig().each { k, v ->
-
-         if (project.hasProperty(k)) {
-            project.setProperty(k, v)
-         } else {
-            project.ext."${k}" = v
-         }
-      }
-
       if (project.plugins.hasPlugin(ApplicationPlugin)) {
+
+         def properties = new Properties()
+
+         getConfig().each { k, v ->
+
+            log.debug "property: $k: $v"
+            properties.put(k,v)
+
+         }
 
          project.processResources.configure {
 
-            expand(project.properties)
+            expand(properties)
          }
       }
    }

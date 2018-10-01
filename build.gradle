@@ -72,7 +72,7 @@ gradlePlugin {
 pluginBundle {
 
    website = 'http://redpillanalytics.com/'
-   vcsUrl = 'https://github.com/RedPillAnalytics/gradle-confluent/'
+   vcsUrl = 'https://github.com/RedPillAnalytics/gradle-confluent'
 
    plugins {
 
