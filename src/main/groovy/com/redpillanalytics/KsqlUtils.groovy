@@ -49,7 +49,7 @@ class KsqlUtils {
             // remove all comments from the deployment script
             // I was on the fence about this one... but I don't think code comments should be in an artifact
             if (!line.matches(/^(\s)*(--)(.*)/)) {
-               sql.add("${line}\n")
+               sql.add("${line - '\\'}\n")
             }
          }
       }
