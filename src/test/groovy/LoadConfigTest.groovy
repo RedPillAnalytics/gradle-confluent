@@ -10,10 +10,10 @@ import spock.lang.Unroll
 class LoadConfigTest extends Specification {
 
    @Shared
-   File projectDir, buildDir, resourcesDir, buildFile, artifact, absoluteDir, absoluteFile, relativeFile, propertiesFile, processed
+   File projectDir, buildDir, resourcesDir, buildFile, artifact, absoluteDir, absoluteFile, relativeFile, processed
 
    @Shared
-   def result, tasks, taskList
+   def result, taskList
 
    def setupSpec() {
 
@@ -25,251 +25,13 @@ class LoadConfigTest extends Specification {
       absoluteDir = new File(System.getProperty("projectDir"))
       absoluteFile = new File(absoluteDir, 'streams.config')
       relativeFile = new File(projectDir, 'streams.config')
-      propertiesFile = new File(projectDir, 'gradle.properties')
-      processed = new File(buildDir,'resources/main/streams.properties')
-
-
+      processed = new File(buildDir, 'resources/main/streams.properties')
 
       resourcesDir = new File('src/test/resources')
 
       new AntBuilder().copy(todir: projectDir) {
          fileset(dir: resourcesDir)
       }
-
-      buildFile.write("""
-            plugins {
-               id 'com.redpillanalytics.gradle-confluent'
-               id 'maven-publish'
-            }
-            publishing {
-              repositories {
-                mavenLocal()
-              }
-            }
-            archivesBaseName = 'test'
-            group = 'com.redpillanalytics'
-            version = '1.0.0'
-            
-            repositories {
-              mavenLocal()
-            }
-        """)
-   }
-
-   def "Task defaults work"() {
-
-      given:
-
-      propertiesFile.write('''
-      APPLICATION_ID = prod-application
-      ''')
-      relativeFile.delete()
-      absoluteFile.delete()
-
-      result = GradleRunner.create()
-              .withProjectDir(projectDir)
-              .withArguments('-Si', 'loadConfig', 'properties')
-              .withPluginClasspath()
-              .build()
-
-
-      log.warn result.getOutput()
-
-      expect:
-      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":loadConfig").outcome.toString())
-      result.output.contains('APPLICATION_ID: prod-application')
-   }
-
-   def "Task option 'configpath' works"() {
-
-      given:
-
-      relativeFile.write('''
-      APPLICATION_ID = 'dev-application'
-      ''')
-      propertiesFile.delete()
-      absoluteFile.delete()
-
-      result = GradleRunner.create()
-              .withProjectDir(projectDir)
-              .withArguments('-Si', 'loadConfig', '--config-path=streams.config', 'properties')
-              .withPluginClasspath()
-              .build()
-
-      log.warn result.getOutput()
-
-      expect:
-      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":loadConfig").outcome.toString())
-      result.output.contains('APPLICATION_ID: dev-application')
-   }
-
-   def "Task option 'environment' works regardless"() {
-
-      relativeFile.write('''
-      APPLICATION_ID = 'dev-application'
-      ''')
-      propertiesFile.delete()
-      absoluteFile.delete()
-
-      given:
-      result = GradleRunner.create()
-              .withProjectDir(projectDir)
-              .withArguments('-Si', 'loadConfig', '--config-env=production', 'properties')
-              .withPluginClasspath()
-              .build()
-
-      log.warn result.getOutput()
-
-      expect:
-      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":loadConfig").outcome.toString())
-      result.output.contains('APPLICATION_ID: dev-application')
-   }
-
-   def "Absolute path works correctly with existing and new properties"() {
-
-      given:
-      absoluteFile.write("""
-      APPLICATION_ID = 'dev-application'
-      TOPIC_PREFIX = 'dev-'
-      """)
-      propertiesFile.write("""
-      APPLICATION_ID = prod-application
-      """)
-      relativeFile.delete()
-
-      result = GradleRunner.create()
-              .withProjectDir(projectDir)
-              .withArguments('-Si', 'loadConfig', "--config-path=${absoluteFile.canonicalPath}", 'properties')
-              .withPluginClasspath()
-              .build()
-
-      log.warn result.getOutput()
-
-      expect:
-      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":loadConfig").outcome.toString())
-      result.output.contains('APPLICATION_ID: dev-application')
-      result.output.contains('TOPIC_PREFIX: dev-')
-   }
-
-   def "Configuring 'configPath' with project property"() {
-
-      given:
-      absoluteFile.write("""
-      APPLICATION_ID = 'dev-application'
-      TOPIC_PREFIX = 'dev-'
-      """)
-      propertiesFile.delete()
-      relativeFile.delete()
-
-      result = GradleRunner.create()
-              .withProjectDir(projectDir)
-              .withArguments('-Si', 'loadConfig', "-Pconfluent.configPath=${absoluteFile.canonicalPath}", 'properties')
-              .withPluginClasspath()
-              .build()
-
-      log.warn result.getOutput()
-
-      expect:
-      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":loadConfig").outcome.toString())
-      result.output.contains('APPLICATION_ID: dev-application')
-      result.output.contains('TOPIC_PREFIX: dev-')
-   }
-
-   def "Configuring 'configPath' with 'configEnv' with project properties"() {
-
-      given:
-      propertiesFile.delete()
-      relativeFile.delete()
-      absoluteFile.write("""
-      environments {
-         production {
-            APPLICATION_ID = 'dev-application'
-            TOPIC_PREFIX = 'dev-'
-          }
-       }
-      """)
-
-      result = GradleRunner.create()
-              .withProjectDir(projectDir)
-              .withArguments(
-              '-Si',
-              'loadConfig',
-              "-Pconfluent.configPath=${absoluteFile.canonicalPath}",
-              "-Pconfluent.configEnv=production",
-              'properties')
-              .withPluginClasspath()
-              .build()
-
-      log.warn result.getOutput()
-
-      expect:
-      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":loadConfig").outcome.toString())
-      result.output.contains('APPLICATION_ID: dev-application')
-      result.output.contains('TOPIC_PREFIX: dev-')
-   }
-
-   def "Configuring 'config-path' with 'config-env' with task options"() {
-
-      given:
-      propertiesFile.delete()
-      relativeFile.delete()
-      absoluteFile.write("""
-      environments {
-         production {
-            APPLICATION_ID = 'dev-application'
-            TOPIC_PREFIX = 'dev-'
-          }
-       }
-      """)
-
-      result = GradleRunner.create()
-              .withProjectDir(projectDir)
-              .withArguments(
-              '-Si',
-              'loadConfig',
-              "--config-path=${absoluteFile.canonicalPath}",
-              "--config-env=production",
-              'properties')
-              .withPluginClasspath()
-              .build()
-
-      log.warn result.getOutput()
-
-      expect:
-      ['SUCCESS', 'UP_TO_DATE'].contains(result.task(":loadConfig").outcome.toString())
-      result.output.contains('APPLICATION_ID: dev-application')
-      result.output.contains('TOPIC_PREFIX: dev-')
-   }
-
-   def "No failures when :loadConfig is called with no file"() {
-
-      given:
-
-      propertiesFile.delete()
-      relativeFile.delete()
-      absoluteFile.delete()
-
-      result = GradleRunner.create()
-              .withProjectDir(projectDir)
-              .withArguments('-Si', 'loadConfig', 'properties')
-              .withPluginClasspath()
-              .build()
-
-      log.warn result.getOutput()
-
-      expect:
-      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":loadConfig").outcome.toString())
-      !result.output.contains('APPLICATION_ID: dev-application')
-   }
-
-   def "Application Plugin expand works"() {
-
-      given:
-
-      relativeFile.write("""
-      APPLICATION_ID = 'dev-application'
-      TOPIC_PREFIX = 'dev-'
-      """)
 
       buildFile.write("""
             plugins {
@@ -296,7 +58,22 @@ class LoadConfigTest extends Specification {
             
             mainClassName = "streams.TestClass"
         """)
+   }
 
+   def setup() {
+
+      relativeFile.delete()
+      absoluteFile.delete()
+   }
+
+   def "Application Plugin expand works with default file"() {
+
+      given:
+
+      relativeFile.write("""
+      APPLICATION_ID = 'dev-application'
+      TOPIC_PREFIX = 'dev-'
+      """)
 
       result = GradleRunner.create()
               .withProjectDir(projectDir)
@@ -310,6 +87,55 @@ class LoadConfigTest extends Specification {
       ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":build").outcome.toString())
       processed.exists()
       processed.text.contains('APPLICATION_ID = dev-application')
+      processed.text.contains('TOPIC_PREFIX = dev-')
+   }
+
+   def "Application Plugin expand works with relative file"() {
+
+      given:
+
+      relativeFile.write("""
+      APPLICATION_ID = 'dev-application'
+      TOPIC_PREFIX = 'dev-'
+      """)
+
+      result = GradleRunner.create()
+              .withProjectDir(projectDir)
+              .withArguments('-Si', 'build', "-PconfigPath=streams.config", '--rerun-tasks')
+              .withPluginClasspath()
+              .build()
+
+      log.warn result.getOutput()
+
+      expect:
+      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":build").outcome.toString())
+      processed.exists()
+      processed.text.contains('APPLICATION_ID = dev-application')
+      processed.text.contains('TOPIC_PREFIX = dev-')
+   }
+
+   def "Application Plugin expand works with absolute file"() {
+
+      given:
+
+      absoluteFile.write("""
+      APPLICATION_ID = 'dev-application'
+      TOPIC_PREFIX = 'dev-'
+      """)
+
+      result = GradleRunner.create()
+              .withProjectDir(projectDir)
+              .withArguments('-Si', 'build', "-PconfigPath=${absoluteFile.canonicalPath}", '--rerun-tasks')
+              .withPluginClasspath()
+              .build()
+
+      log.warn result.getOutput()
+
+      expect:
+      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":build").outcome.toString())
+      processed.exists()
+      processed.text.contains('APPLICATION_ID = dev-application')
+      processed.text.contains('TOPIC_PREFIX = dev-')
    }
 
 }

@@ -59,20 +59,19 @@ class LoadConfigTask extends DefaultTask {
    @TaskAction
    def loadProperties() {
 
-      getConfig().each { k, v ->
-
-         if (project.hasProperty(k)) {
-            project.setProperty(k, v)
-         } else {
-            project.ext."${k}" = v
-         }
-      }
-
       if (project.plugins.hasPlugin(ApplicationPlugin)) {
+
+         def properties = new Properties()
+
+         getConfig().each { k, v ->
+
+            properties.put(k,v)
+
+         }
 
          project.processResources.configure {
 
-            expand(project.properties)
+            expand(properties)
          }
       }
    }
