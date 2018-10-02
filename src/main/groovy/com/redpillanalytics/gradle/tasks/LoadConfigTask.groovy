@@ -68,8 +68,22 @@ class LoadConfigTask extends DefaultTask {
          getConfig().each { k, v ->
 
             log.debug "property: $k: $v"
-            properties.put(k,v)
+            // create a properties object for use in expand()
+            properties.put(k, v)
 
+            // if we are specifically asking for the application defaults
+            if (k == 'applicationDefaultJvmArgs') {
+
+               // replace the text of the startup scripts
+               project.startScripts {
+                  doLast {
+                     unixScript.text = unixScript.text
+                             .replaceAll(/(DEFAULT_JVM_OPTS=)(")(")/, /$1$2$v$3/)
+                     windowsScript.text = windowsScript.text
+                             .replaceAll(/(DEFAULT_JVM_OPTS)(=)/, /$1$2"$v"/)
+                  }
+               }
+            }
          }
 
          project.processResources.configure {

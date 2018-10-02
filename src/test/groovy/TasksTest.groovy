@@ -35,6 +35,7 @@ class TasksTest extends Specification {
             plugins {
                id 'com.redpillanalytics.gradle-confluent'
                id 'maven-publish'
+               id 'application'
             }
             publishing {
               repositories {
@@ -53,6 +54,8 @@ class TasksTest extends Specification {
             repositories {
               mavenLocal()
             }
+            
+            mainClassName = "streams.TestClass"
         """)
 
       result = GradleRunner.create()
