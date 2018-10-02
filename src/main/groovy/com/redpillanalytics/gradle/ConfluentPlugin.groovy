@@ -1,7 +1,7 @@
 package com.redpillanalytics.gradle
 
 import com.redpillanalytics.gradle.containers.TaskGroupContainer
-import com.redpillanalytics.gradle.tasks.CreateScriptsTask
+import com.redpillanalytics.gradle.tasks.PipelineScriptTask
 import com.redpillanalytics.gradle.tasks.LoadConfigTask
 import groovy.util.logging.Slf4j
 import org.gradle.api.Plugin
@@ -140,7 +140,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
             if (tg.isBuildEnv && enablePipelines) {
 
-               project.task(tg.getTaskName('createScripts'), type: CreateScriptsTask) {
+               project.task(tg.getTaskName('pipelineScript'), type: PipelineScriptTask) {
 
                   group taskGroup
                   description('Build a single KSQL deployment script with all the individual pipeline processes ordered.'
@@ -159,7 +159,7 @@ class ConfluentPlugin implements Plugin<Project> {
                   appendix = project.extensions.confluent.pipelinePattern
                   includeEmptyDirs false
                   from pipelineBuildDir
-                  dependsOn tg.getTaskName('createScripts')
+                  dependsOn tg.getTaskName('pipelineScript')
                   onlyIf { pipelineBuildDir.exists() }
                }
 
@@ -169,7 +169,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
                   project.task(tg.getTaskName('pipelineExtract'), type: Copy) {
                      group taskGroup
-                     description = "Extract the deployment artifact into the deployment directory."
+                     description = "Extract the KSQL pipeline deployment dependency (or zip file) into the deployment directory."
                      from project.zipTree(getDependency('archives', pipelinePattern))
                      into { pipelineDeployDir }
 
@@ -183,7 +183,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
                project.task(tg.getTaskName('functionCopy'), type: Copy) {
                   group taskGroup
-                  description = "Copy the function deployment artifact into the deployment directory."
+                  description = "Copy the KSQL custom function deployment dependency (or JAR file) into the deployment directory."
                   from getDependency('archives', functionPattern)
                   into { functionDeployDir }
                   if (project.extensions.confluent.functionArtifactName) rename {project.extensions.confluent.functionArtifactName}

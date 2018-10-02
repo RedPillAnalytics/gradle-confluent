@@ -25,7 +25,7 @@ class BuildTest extends Specification {
                   'clean',
                   'assemble',
                   'check',
-                  'createScripts',
+                  'pipelineScript',
                   'pipelineZip',
                   'build',
                   'generatePomFileForPipelinePublication',
