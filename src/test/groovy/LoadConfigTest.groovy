@@ -10,7 +10,7 @@ import spock.lang.Unroll
 class LoadConfigTest extends Specification {
 
    @Shared
-   File projectDir, buildDir, resourcesDir, buildFile, artifact, absoluteDir, absoluteFile, relativeFile, processed
+   File projectDir, buildDir, resourcesDir, buildFile, artifact, absoluteDir, absoluteFile, relativeFile, processed, unixScript, windowsScript
 
    @Shared
    def result, taskList
@@ -26,6 +26,8 @@ class LoadConfigTest extends Specification {
       absoluteFile = new File(absoluteDir, 'streams.config')
       relativeFile = new File(projectDir, 'streams.config')
       processed = new File(buildDir, 'resources/main/streams.properties')
+      unixScript = new File(buildDir,'scripts/load-config')
+      windowsScript = new File(buildDir,'scripts/load-config.bat')
 
       resourcesDir = new File('src/test/resources')
 
@@ -199,5 +201,31 @@ class LoadConfigTest extends Specification {
       processed.exists()
       processed.text.contains('APPLICATION_ID = dev-application')
       processed.text.contains('TOPIC_PREFIX = dev-')
+   }
+
+   def "Application Plugin applicationDefaultJvmArgs are replaced"() {
+
+      given:
+
+      relativeFile.write("""
+      APPLICATION_ID = 'dev-application'
+      TOPIC_PREFIX = 'dev-'
+      applicationDefaultJvmArgs = '-Djava.io.tmpdir=/tmp'
+      """)
+
+      result = GradleRunner.create()
+              .withProjectDir(projectDir)
+              .withArguments('-Si', 'build', '--rerun-tasks')
+              .withPluginClasspath()
+              .build()
+
+      log.warn result.getOutput()
+
+      expect:
+      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":build").outcome.toString())
+      unixScript.exists()
+      unixScript.text.contains('''DEFAULT_JVM_OPTS="-Djava.io.tmpdir=/tmp"''')
+      windowsScript.exists()
+      windowsScript.text.contains('''set DEFAULT_JVM_OPTS="-Djava.io.tmpdir=/tmp"''')
    }
 }
