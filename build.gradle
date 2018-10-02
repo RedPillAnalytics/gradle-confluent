@@ -100,24 +100,6 @@ tasks.withType(Test) {
 //   logger.info "branch: ${gradle.rootProject.extensions.analytics.gitBranch}"
 //}
 
-//task('startConfluent', type: Exec) {
-//
-//   executable 'confluent'
-//   args 'start'
-//}
-//
-//task('datagen', type: Exec) {
-//
-//   executable './datagen-init.sh'
-//   workingDir '/'
-//   mustRunAfter startConfluent
-//}
-//
-//task('startup') {
-//
-//   dependsOn startConfluent, datagen
-//}
-
 testSets {
    ksqlServerTest
    deployTest
