@@ -8,7 +8,7 @@ import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
 
 @Slf4j
-class CreateScriptsTask extends DefaultTask {
+class PipelineScriptTask extends DefaultTask {
 
    /**
     * The top-level directory containing the subdirectories--ordered alphanumerically--of pipeline processes.
@@ -98,7 +98,7 @@ class CreateScriptsTask extends DefaultTask {
     * Builds the KSQL DROP script for the directory or directories.
     */
    @OutputFile
-   File buildDropScript() {
+   File dropScript() {
 
       KsqlUtils.getDropSql(pipelines, notReverseDrops).each { KsqlUtils.writeStatement(dropScript, it) }
 
@@ -109,7 +109,7 @@ class CreateScriptsTask extends DefaultTask {
     * Builds the KSQL CREEATE script for the directory or directories.
     */
    @OutputFile
-   File buildCreateScript() {
+   File createScript() {
 
       createScript.delete()
 
@@ -125,10 +125,10 @@ class CreateScriptsTask extends DefaultTask {
     * The main Gradle Task method.
     */
    @TaskAction
-   def createScripts() {
+   def pipelineScript() {
 
-      buildDropScript()
-      buildCreateScript()
+      dropScript()
+      createScript()
    }
 
 }

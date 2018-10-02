@@ -23,7 +23,7 @@ class TasksTest extends Specification {
       buildDir = new File(projectDir, 'build')
       buildFile = new File(projectDir, 'build.gradle')
       artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
-      taskList = ['clean', 'assemble', 'check', 'createScripts', 'pipelineZip', 'build']
+      taskList = ['clean', 'assemble', 'check', 'pipelineScript', 'pipelineZip', 'build']
 
       resourcesDir = new File('src/test/resources')
 
@@ -90,6 +90,6 @@ class TasksTest extends Specification {
       result.output.contains(task)
 
       where:
-      task << ['build', 'createScripts', 'pipelineZip','publish']
+      task << ['build', 'pipelineScript', 'pipelineZip','publish']
    }
 }

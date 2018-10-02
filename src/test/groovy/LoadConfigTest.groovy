@@ -21,7 +21,7 @@ class LoadConfigTest extends Specification {
       buildDir = new File(projectDir, 'build')
       buildFile = new File(projectDir, 'build.gradle')
       artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
-      taskList = ['clean', 'assemble', 'check', 'createScripts', 'pipelineZip', 'build']
+      taskList = ['clean', 'assemble', 'check', 'pipelineScript', 'pipelineZip', 'build']
       absoluteDir = new File(System.getProperty("projectDir"))
       absoluteFile = new File(absoluteDir, 'streams.config')
       relativeFile = new File(projectDir, 'streams.config')
