@@ -61,35 +61,32 @@ class LoadConfigTask extends DefaultTask {
    @TaskAction
    def loadProperties() {
 
-      if (project.plugins.hasPlugin(ApplicationPlugin)) {
+      def properties = new Properties()
 
-         def properties = new Properties()
+      getConfig().each { k, v ->
 
-         getConfig().each { k, v ->
+         log.debug "property: $k: $v"
+         // create a properties object for use in expand()
+         properties.put(k, v)
 
-            log.debug "property: $k: $v"
-            // create a properties object for use in expand()
-            properties.put(k, v)
+         // if we are specifically asking for the application defaults
+         if (k == 'applicationDefaultJvmArgs') {
 
-            // if we are specifically asking for the application defaults
-            if (k == 'applicationDefaultJvmArgs') {
-
-               // replace the text of the startup scripts
-               project.startScripts {
-                  doLast {
-                     unixScript.text = unixScript.text
-                             .replaceAll(/(DEFAULT_JVM_OPTS=)(")(")/, /$1$2$v$3/)
-                     windowsScript.text = windowsScript.text
-                             .replaceAll(/(DEFAULT_JVM_OPTS)(=)/, /$1$2"$v"/)
-                  }
+            // replace the text of the startup scripts
+            project.startScripts {
+               doLast {
+                  unixScript.text = unixScript.text
+                          .replaceAll(/(DEFAULT_JVM_OPTS=)(")(")/, /$1$2$v$3/)
+                  windowsScript.text = windowsScript.text
+                          .replaceAll(/(DEFAULT_JVM_OPTS)(=)/, /$1$2"$v"/)
                }
             }
          }
+      }
 
-         project.processResources.configure {
+      project.processResources.configure {
 
-            expand(properties)
-         }
+         expand(properties)
       }
    }
 }
