@@ -2,7 +2,7 @@ plugins {
    id 'groovy'
    id 'java-gradle-plugin'
    id "com.gradle.plugin-publish" version "0.10.0"
-   id "pl.allegro.tech.build.axion-release" version "1.9.2"
+   id "pl.allegro.tech.build.axion-release" version "1.9.3"
    id "com.github.breadmoirai.github-release" version "2.0.1"
    id 'org.unbroken-dome.test-sets' version '1.5.1'
    id "com.github.ben-manes.versions" version "0.20.0"
@@ -71,7 +71,7 @@ gradlePlugin {
 
 pluginBundle {
 
-   website = 'http://redpillanalytics.com/'
+   website = 'https://github.com/RedPillAnalytics/gradle-confluent'
    vcsUrl = 'https://github.com/RedPillAnalytics/gradle-confluent'
 
    plugins {

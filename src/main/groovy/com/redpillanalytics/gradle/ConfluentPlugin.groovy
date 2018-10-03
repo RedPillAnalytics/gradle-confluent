@@ -7,7 +7,9 @@ import groovy.util.logging.Slf4j
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.UnknownConfigurationException
+import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.bundling.Zip
 
@@ -193,7 +195,7 @@ class ConfluentPlugin implements Plugin<Project> {
                project.deploy.dependsOn tg.getTaskName('functionCopy')
             }
 
-            if (tg.isBuildEnv && enableStreams) {
+            if (tg.isBuildEnv && enableStreams && project.plugins.hasPlugin(ApplicationPlugin)) {
                project.task(tg.getTaskName('loadConfig'), type: LoadConfigTask) {
                   group taskGroup
                   description "Load a config file using ConfigSlurper."
@@ -208,7 +210,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
          // a bit of a hack at the moment
 
-         if (project.loadConfig) {
+         if (project.tasks.findByName('loadConfig')) {
 
             project.tasks.each {
                task ->
@@ -218,7 +220,7 @@ class ConfluentPlugin implements Plugin<Project> {
             }
          }
 
-         if (enablePipelines && project.pipelineZip) {
+         if (enablePipelines && project.pipelineZip && project.plugins.hasPlugin(MavenPublishPlugin)) {
 
             project.publishing.publications {
 

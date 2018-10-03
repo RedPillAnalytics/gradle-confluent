@@ -13,7 +13,7 @@ class BuildTest extends Specification {
    File projectDir, buildDir, resourcesDir, buildFile, artifact
 
    @Shared
-   def result, tasks, taskList
+   def result
 
    def setupSpec() {
 
@@ -21,16 +21,6 @@ class BuildTest extends Specification {
       buildDir = new File(projectDir, 'build')
       buildFile = new File(projectDir, 'build.gradle')
       artifact = new File(buildDir, 'distributions/test-pipeline.zip')
-      taskList = ['loadConfig',
-                  'clean',
-                  'assemble',
-                  'check',
-                  'pipelineScript',
-                  'pipelineZip',
-                  'build',
-                  'generatePomFileForPipelinePublication',
-                  'publishPipelinePublicationToMavenLocalRepository',
-                  'publish']
 
 
       resourcesDir = new File('src/test/resources')
@@ -43,6 +33,7 @@ class BuildTest extends Specification {
             plugins {
                id 'com.redpillanalytics.gradle-confluent'
                id 'maven-publish'
+               id 'application'
             }
             publishing {
               repositories {
@@ -56,6 +47,8 @@ class BuildTest extends Specification {
             repositories {
               mavenLocal()
             }
+            
+            mainClassName = "streams.TestClass"
         """)
 
       result = GradleRunner.create()
@@ -64,32 +57,25 @@ class BuildTest extends Specification {
               .withPluginClasspath()
               .build()
 
-      tasks = result.output.readLines().grep(~/(> Task :)(.+)/).collect {
-         it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
-      }
-
       log.warn result.getOutput()
    }
 
-   def "All tasks run and in the correct order"() {
-
-      given:
-      "Gradle build runs"
-
-      expect:
-      tasks.collect { it - ' SKIPPED' } == taskList
-   }
-
    @Unroll
-   def "The execution of :#task is successful"() {
+   def "Verify the following result: #task"() {
 
       when:
-      "Gradle build runs"
+      result = GradleRunner.create()
+              .withProjectDir(projectDir)
+              .withArguments('-Si', 'clean', 'build', 'publish', '--rerun-tasks')
+              .withPluginClasspath()
+              .build()
+
+      log.warn result.getOutput()
 
       then:
-      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":$task").outcome.toString())
+      !task.outcome != 'FAILURE'
 
       where:
-      task << taskList
+      task << result.getTasks()
    }
 }
