@@ -210,7 +210,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
          // a bit of a hack at the moment
 
-         if (project.loadConfig) {
+         if (project.tasks.findByName('loadConfig')) {
 
             project.tasks.each {
                task ->
