@@ -103,7 +103,7 @@ class KsqlRest {
    }
 
    /**
-    * Returns an individual KSQL server property using {@link #getProperties}. his is a helper method, used to return individual properties in other methods such as {@link #getExtensionPath} and {@link #getRestUrl}.
+    * Returns an individual KSQL server property using {@link #getProperties}. This is a helper method, used to return individual properties in other methods such as {@link #getExtensionPath} and {@link #getRestUrl}.
     *
     * @param property The individual property to return a value for.
     *
