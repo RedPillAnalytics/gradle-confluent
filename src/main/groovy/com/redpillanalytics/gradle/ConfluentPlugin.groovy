@@ -220,7 +220,7 @@ class ConfluentPlugin implements Plugin<Project> {
             }
          }
 
-         if (enablePipelines && project.pipelineZip && project.plugins.hasPlugin(MavenPublishPlugin)) {
+         if (enablePipelines && project.tasks.findByName('pipelineZip') && project.plugins.hasPlugin(MavenPublishPlugin)) {
 
             project.publishing.publications {
 

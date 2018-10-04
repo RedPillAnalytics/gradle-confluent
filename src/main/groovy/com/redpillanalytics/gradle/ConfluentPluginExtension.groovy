@@ -56,7 +56,7 @@ class ConfluentPluginExtension {
    String functionDeployName = 'function-deploy'
 
    /**
-    * If populated, the KSQL JAR file will be renamed to this value during the copy. This makes it easy to hand-off to downstream deployment mechanisms.
+    * If populated, the KSQL Function JAR file will be renamed to this value during the copy. This makes it easy to hand-off to downstream deployment mechanisms.
     */
    String functionArtifactName
 
