@@ -17,8 +17,7 @@ class KsqlUtils {
 
       pipelines.each { file ->
 
-         file.eachLine { String line, Integer count ->\
-            //println line
+         file.eachLine { String line, Integer count ->
             line.find(/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
                if (!x1.startsWith('--')) {
                   sql.add("DROP $type $name IF EXISTS;\n")
@@ -54,17 +53,5 @@ class KsqlUtils {
          }
       }
       return sql
-   }
-
-   /**
-    * Utility function for writing text to a File object. Specifically used for writing KSQL statements to deployment artifacts.
-    *
-    * @param file The output file to write to, usually a deployment artifact.
-    *
-    * @param statement The statement to write to the output file.
-    */
-   static writeStatement(File file, String statement) {
-
-      file.append("${statement.toLowerCase()}")
    }
 }
