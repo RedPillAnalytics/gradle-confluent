@@ -100,7 +100,10 @@ class PipelineScriptTask extends DefaultTask {
    @OutputFile
    File dropScript() {
 
-      KsqlUtils.getDropSql(pipelines, notReverseDrops).each { KsqlUtils.writeStatement(dropScript, it) }
+      createScript.delete()
+      KsqlUtils.getDropSql(pipelines, notReverseDrops).each {
+         dropScript.append(it)
+      }
 
       return dropScript
    }
