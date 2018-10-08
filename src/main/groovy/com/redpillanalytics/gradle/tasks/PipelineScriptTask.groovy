@@ -1,11 +1,7 @@
 package com.redpillanalytics.gradle.tasks
 
-import com.redpillanalytics.KsqlUtils
 import groovy.util.logging.Slf4j
-import org.gradle.api.DefaultTask
-import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.*
-import org.gradle.api.tasks.options.Option
 
 @Slf4j
 class PipelineScriptTask extends PipelineTask {
@@ -50,7 +46,7 @@ class PipelineScriptTask extends PipelineTask {
    File dropScript() {
 
       createScript.delete()
-      KsqlUtils.getDropSql(pipelines, notReverseDrops).each {
+      getDropSql(pipelines, notReverseDrops).each {
          dropScript.append(it)
       }
 
@@ -65,7 +61,7 @@ class PipelineScriptTask extends PipelineTask {
 
       createScript.delete()
 
-      KsqlUtils.getCreateSql(pipelines).each { sql ->
+      getCreateSql(pipelines).each { sql ->
 
          createScript.append(sql)
       }

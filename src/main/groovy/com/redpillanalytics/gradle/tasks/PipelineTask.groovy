@@ -5,6 +5,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
+import org.gradle.internal.file.FileType
 
 @Slf4j
 class PipelineTask extends DefaultTask {
@@ -16,7 +17,7 @@ class PipelineTask extends DefaultTask {
    @Option(option = "pipeline-dir",
            description = "The top-level directory containing the subdirectories--ordered alphanumerically--of pipeline processes."
    )
-   String dirPath
+   String pipelinePath
 
    /**
     * When defined, the DROPS script is not constructed in reverse order.
@@ -57,7 +58,62 @@ class PipelineTask extends DefaultTask {
    @InputDirectory
    File getDir() {
 
-      return project.file(dirPath)
+      return project.file(pipelinePath)
+   }
+
+   /**
+    * Accepts a List of CREATE KSQL statements, and returns an equivalent List of DROP KSQL statements. The default behavior is to return those DROP statements in the reverse order of the CREATE statement.
+    *
+    * @param pipelines The List of KSQL CREATE statements.
+    *
+    * @param reverse If 'true', then return the DROP statements in reverse order of the CREATE statements.
+    *
+    * @return The List of KSQL DROP statements.
+    */
+   List getDropSql(List pipelines, Boolean reverse = true) {
+
+      List sql = []
+
+      pipelines.each { file ->
+
+         file.eachLine { String line, Integer count ->
+            line.find(/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
+               if (!x1.startsWith('--')) {
+                  sql.add("DROP $type $name IF EXISTS;\n")
+               }
+            }
+         }
+      }
+
+      // put the drop statements in reverse order or original order
+      List finalSql = reverse ? sql : sql.reverse()
+
+      return finalSql
+   }
+
+   /**
+    * Accepts a List of CREATE KSQL statements, and normalizes them in preparation for being deployed to a KSQL server.
+    *
+    * @param pipelines The List of KSQL CREATE statements.
+    *
+    * @return The normalized List of KSQL create statements.
+    */
+   List getCreateSql(List pipelines) {
+
+      log.warn "pipelines: ${pipelines.toString()}"
+
+      List sql = []
+
+      pipelines.each { file ->
+         file.eachLine { String line, Integer count ->
+            // remove all comments from the deployment script
+            // I was on the fence about this one... but I don't think code comments should be in an artifact
+            if (!line.matches(/^(\s)*(--)(.*)/)) {
+               sql.add("${line - '\\'}\n")
+            }
+         }
+      }
+      return sql
    }
 
 }

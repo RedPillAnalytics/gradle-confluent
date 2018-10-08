@@ -1,6 +1,7 @@
 package com.redpillanalytics.gradle
 
 import com.redpillanalytics.gradle.containers.TaskGroupContainer
+import com.redpillanalytics.gradle.tasks.CreatePipelineTask
 import com.redpillanalytics.gradle.tasks.PipelineScriptTask
 import com.redpillanalytics.gradle.tasks.LoadConfigTask
 import groovy.util.logging.Slf4j
@@ -148,7 +149,7 @@ class ConfluentPlugin implements Plugin<Project> {
                   description('Build a single KSQL deployment script with all the individual pipeline processes ordered.'
                           + ' Primarily used for building a server start script.')
 
-                  dirPath pipelineDir.canonicalPath
+                  pipelinePath pipelineDir.canonicalPath
                   onlyIf { dir.exists() }
 
                }
@@ -166,7 +167,9 @@ class ConfluentPlugin implements Plugin<Project> {
                }
 
                project.build.dependsOn tg.getTaskName('pipelineZip')
+            }
 
+            if (enablePipelines && tg.isDeployEnv) {
                if (isUsableConfiguration('archives', pipelinePattern)) {
 
                   project.task(tg.getTaskName('pipelineExtract'), type: Copy) {
@@ -179,6 +182,13 @@ class ConfluentPlugin implements Plugin<Project> {
 
                   project.deploy.dependsOn tg.getTaskName('pipelineExtract')
                }
+
+               project.task(tg.getTaskName('pipelineExecute'), type: CreatePipelineTask) {
+                  group taskGroup
+                  description = "Execute all the KSQL pipelines--in hierarchical order--in the provided directory (recursively)."
+                  pipelinePath pipelineDir.canonicalPath
+                  onlyIf { dir.exists() }
+               }
             }
 
             if (isUsableConfiguration('archives', functionPattern) && enableFunctions && tg.isDeployEnv) {
@@ -188,7 +198,9 @@ class ConfluentPlugin implements Plugin<Project> {
                   description = "Copy the KSQL custom function deployment dependency (or JAR file) into the deployment directory."
                   from getDependency('archives', functionPattern)
                   into { functionDeployDir }
-                  if (project.extensions.confluent.functionArtifactName) rename {project.extensions.confluent.functionArtifactName}
+                  if (project.extensions.confluent.functionArtifactName) rename {
+                     project.extensions.confluent.functionArtifactName
+                  }
 
                }
 

@@ -24,6 +24,8 @@ class KsqlRest {
     */
    def execKsql(String sql, Map properties) {
 
+      log.warn "Executing statement: $sql..."
+
       def client = new RESTClient(baseUrl)
       def response = client.post(path: '/ksql') {
 
@@ -33,11 +35,11 @@ class KsqlRest {
 
       }
 
-      log.debug "response: ${response.toString()}"
+      log.warn "response: ${response.toString()}"
 
       def data = new JsonSlurper().parse(response.data)
 
-      log.debug "data: ${data.dump()}"
+      log.warn "data: ${data.dump()}"
       return data
    }
 
@@ -95,7 +97,7 @@ class KsqlRest {
     */
    def getProperties() {
 
-      def data = execKsql('LIST PROPERTIES;')
+      def data = execKsql('LIST PROPERTIES;', true)
       def properties = data[0].properties
       log.debug "properties: ${properties.dump()}"
       return properties
