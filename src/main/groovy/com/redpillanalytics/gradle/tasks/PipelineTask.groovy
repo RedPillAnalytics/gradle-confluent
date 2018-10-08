@@ -5,7 +5,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
-import org.gradle.internal.file.FileType
 
 @Slf4j
 class PipelineTask extends DefaultTask {
@@ -33,7 +32,7 @@ class PipelineTask extends DefaultTask {
     *
     * @return The FileTree of pipeline KSQL statements.
     */
-   @Internal
+   @OutputFiles
    FileTree getPipelineTree() {
       return project.fileTree(dir)
    }
@@ -43,7 +42,7 @@ class PipelineTask extends DefaultTask {
     *
     * @return The List of pipeline SQL files.
     */
-   @Internal
+   @OutputFiles
    List getPipelines() {
 
       def sorted = pipelineTree.sort()
