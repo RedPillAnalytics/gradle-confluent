@@ -24,21 +24,22 @@ class KsqlRest {
     */
    def execKsql(String sql, Map properties) {
 
+      def prepared = (sql + ';').replace('\n', '').replace(';;', ';')
+
+      log.info "Executing statement: $prepared"
+
       def client = new RESTClient(baseUrl)
-      def response = client.post(path: '/ksql') {
+      client.defaultContentTypeHeader = "application/json"
+      def response
 
-         type ContentType.JSON
+      response = client.post(path: '/ksql') {
+         //type ContentType.JSON
          // accept statements with either a ';' or not. Do that by replacing ';;' with ';'
-         json ksql: "$sql;".replace(';;',';'), streamsProperties: properties
-
+         json ksql: prepared, streamsProperties: properties
       }
 
-      log.debug "response: ${response.toString()}"
-
-      def data = new JsonSlurper().parse(response.data)
-
-      log.debug "data: ${data.dump()}"
-      return data
+      log.info "response: ${response.json}"
+      return response.json
    }
 
    /**
@@ -66,7 +67,7 @@ class KsqlRest {
     *
     * @return JSON representation of the KSQL response payload.
     */
-   def execKsql(String sql, Boolean earliest = true) {
+   def execKsql(String sql, Boolean earliest = false) {
 
       def data = execKsql(sql, (earliest ? ["ksql.streams.auto.offset.reset": "earliest"] : [:]))
       return data
@@ -81,7 +82,7 @@ class KsqlRest {
     *
     * @return JSON representation of the KSQL response payload.
     */
-   def execKsql(List sql, Boolean earliest = true) {
+   def execKsql(List sql, Boolean earliest = false) {
 
       sql.each {
          execKsql(it, earliest)
@@ -95,11 +96,10 @@ class KsqlRest {
     */
    def getProperties() {
 
-      def data = execKsql('LIST PROPERTIES;')
+      def data = execKsql('LIST PROPERTIES')
       def properties = data[0].properties
       log.debug "properties: ${properties.dump()}"
       return properties
-
    }
 
    /**
