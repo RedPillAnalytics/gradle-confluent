@@ -38,8 +38,6 @@ class ConfluentPlugin implements Plugin<Project> {
 
                def (extension, property) = key.toString().split(/\./)
 
-               //log.warn "Setting configuration property for extension: $extension, property: $property, value: $value"
-
                if (extension == 'confluent' && project.confluent.hasProperty(property)) {
 
                   log.debug "Setting configuration property for extension: $extension, property: $property, value: $value"

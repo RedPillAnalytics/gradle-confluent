@@ -33,8 +33,10 @@ class PipelineTask extends DefaultTask {
     * @return The FileTree of pipeline KSQL statements.
     */
    @OutputFiles
-   FileTree getPipelineTree() {
-      return project.fileTree(dir)
+   List getPipelineTree() {
+
+      def tree = project.fileTree(dir)
+      return tree.sort()
    }
 
    /**
@@ -42,11 +44,34 @@ class PipelineTask extends DefaultTask {
     *
     * @return The List of pipeline SQL files.
     */
-   @OutputFiles
+   @Internal
    List getPipelines() {
 
-      def sorted = pipelineTree.sort()
-      return sorted
+      // parse individual SQL statements out of each SQL script
+      def parsed = []
+
+      pipelineTree.each { file ->
+
+         log.warn "file path: ${file.path}"
+         log.warn "file text: ${file.text}"
+         file.text.trim().tokenize(';').each {
+            parsed << it
+         }
+      }
+
+      log.debug "parsed:"
+      parsed.each {log.debug "sql: $it \n"}
+
+      def normalized = parsed.collect { sql ->
+         sql.replaceAll(/(\s)*(--)(.*)/) { all, begin, symbol, comment ->
+            (begin ?: '').trim() - '\\'
+         }
+      }
+
+      log.debug "normalized:"
+      normalized.each {log.debug "sql: $it \n"}
+
+      return normalized
    }
 
    /**
@@ -56,7 +81,6 @@ class PipelineTask extends DefaultTask {
     */
    @InputDirectory
    File getDir() {
-
       return project.file(pipelinePath)
    }
 
@@ -71,48 +95,15 @@ class PipelineTask extends DefaultTask {
     */
    List getDropSql(List pipelines, Boolean reverse = true) {
 
-      List sql = []
+      List script = pipelines.collect { sql ->
 
-      pipelines.each { file ->
-
-         file.eachLine { String line, Integer count ->
-            line.find(/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
-               if (!x1.startsWith('--')) {
-                  sql.add("DROP $type $name IF EXISTS;\n")
-               }
-            }
+         sql.find(/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
+           type ? "DROP $type IF EXISTS $name;\n" : ''
          }
       }
 
       // put the drop statements in reverse order or original order
-      List finalSql = reverse ? sql : sql.reverse()
-
-      return finalSql
-   }
-
-   /**
-    * Accepts a List of CREATE KSQL statements, and normalizes them in preparation for being deployed to a KSQL server.
-    *
-    * @param pipelines The List of KSQL CREATE statements.
-    *
-    * @return The normalized List of KSQL create statements.
-    */
-   List getCreateSql(List pipelines) {
-
-      log.warn "pipelines: ${pipelines.toString()}"
-
-      List sql = []
-
-      pipelines.each { file ->
-         file.eachLine { String line, Integer count ->
-            // remove all comments from the deployment script
-            // I was on the fence about this one... but I don't think code comments should be in an artifact
-            if (!line.matches(/^(\s)*(--)(.*)/)) {
-               sql.add("${line - '\\'}\n")
-            }
-         }
-      }
-      return sql
+      return reverse ? script.reverse() : script
    }
 
 }

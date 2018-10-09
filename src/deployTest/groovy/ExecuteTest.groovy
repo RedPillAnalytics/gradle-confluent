@@ -76,7 +76,7 @@ class ExecuteTest extends Specification {
 
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['-Si'])
+      result = executeSingleTask(taskName, ['-Si','--rerun-tasks'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'

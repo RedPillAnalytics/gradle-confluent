@@ -60,12 +60,10 @@ class PipelineScriptTask extends PipelineTask {
    File createScript() {
 
       createScript.delete()
-
-      getCreateSql(pipelines).each { sql ->
-
+      pipelines.each { sql ->
+         log.warn "sql: ${sql.dump()}"
          createScript.append(sql)
       }
-
       return createScript
    }
 
