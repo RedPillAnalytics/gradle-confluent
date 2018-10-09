@@ -1,7 +1,6 @@
 package com.redpillanalytics.gradle
 
 import com.redpillanalytics.gradle.containers.TaskGroupContainer
-import com.redpillanalytics.gradle.tasks.CreatePipelineTask
 import com.redpillanalytics.gradle.tasks.PipelineScriptTask
 import com.redpillanalytics.gradle.tasks.LoadConfigTask
 import groovy.util.logging.Slf4j
@@ -181,12 +180,13 @@ class ConfluentPlugin implements Plugin<Project> {
                   project.deploy.dependsOn tg.getTaskName('pipelineExtract')
                }
 
-               project.task(tg.getTaskName('pipelineExecute'), type: CreatePipelineTask) {
-                  group taskGroup
-                  description = "Execute all the KSQL pipelines--in hierarchical order--in the provided directory (recursively)."
-                  pipelinePath pipelineDir.canonicalPath
-                  onlyIf { dir.exists() }
-               }
+               //todo Add this when the Rest problem has been figured out
+//               project.task(tg.getTaskName('pipelineExecute'), type: ExecutePipelineTask) {
+//                  group taskGroup
+//                  description = "Execute all the KSQL pipelines--in hierarchical order--in the provided directory (recursively)."
+//                  pipelinePath pipelineDir.canonicalPath
+//                  onlyIf { dir.exists() }
+//               }
             }
 
             if (isUsableConfiguration('archives', functionPattern) && enableFunctions && tg.isDeployEnv) {

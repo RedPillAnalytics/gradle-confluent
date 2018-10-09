@@ -100,12 +100,7 @@ class PipelineTask extends DefaultTask {
     */
    List getDropSql(Boolean reverse = true) {
 
-      pipelineSql.each {
-         log.warn "SQL: $it"
-      }
-
       List script = pipelineSql.collect { sql ->
-
          sql.find(/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
             type ? "DROP $type IF EXISTS $name;\n" : ''
          }

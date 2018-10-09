@@ -6,7 +6,7 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 
 @Slf4j
-class CreatePipelineTask extends PipelineTask {
+class ExecutePipelineTask extends PipelineTask {
 
    /**
     * The KsqlRest Object for interacting with the KSQL REST Server.
@@ -18,7 +18,7 @@ class CreatePipelineTask extends PipelineTask {
     * The main Gradle Task method.
     */
    @TaskAction
-   def creqtePipelines() {
+   def executePipelines() {
 
 
       //rest.execKsql(getDropSql(pipelines))

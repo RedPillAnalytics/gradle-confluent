@@ -1,5 +1,6 @@
 import groovy.util.logging.Slf4j
 import org.gradle.testkit.runner.GradleRunner
+import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Title
@@ -72,6 +73,7 @@ class ExecuteTest extends Specification {
 
    }
 
+   @Ignore
    def "Execute :pipelineExecute task with default values"() {
 
       given:
