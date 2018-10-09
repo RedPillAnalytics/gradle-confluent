@@ -45,8 +45,8 @@ class PipelineScriptTask extends PipelineTask {
    @OutputFile
    File dropScript() {
 
-      createScript.delete()
-      getDropSql(pipelines, notReverseDrops).each {
+      dropScript.delete()
+      getDropSql(notReverseDrops).each {
          dropScript.append(it)
       }
 
@@ -60,9 +60,8 @@ class PipelineScriptTask extends PipelineTask {
    File createScript() {
 
       createScript.delete()
-      pipelines.each { sql ->
-         log.warn "sql: ${sql.dump()}"
-         createScript.append(sql)
+      pipelineSql.each { sql ->
+         createScript.append(sql + ";\n")
       }
       return createScript
    }

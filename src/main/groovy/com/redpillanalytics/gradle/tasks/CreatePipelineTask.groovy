@@ -23,6 +23,6 @@ class CreatePipelineTask extends PipelineTask {
 
       //rest.execKsql(getDropSql(pipelines))
 
-      rest.execKsql(pipelines)
+      rest.execKsql(pipelineSql)
    }
 }
