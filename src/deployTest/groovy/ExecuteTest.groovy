@@ -84,15 +84,4 @@ class ExecuteTest extends Specification {
       result.task(":${taskName}").outcome.name() != 'FAILED'
 
    }
-
-//   def "Execute :importProject task with --import-path value"() {
-//
-//      given:
-//      taskName = 'importProject'
-//      result = executeSingleTask(taskName, ['--import-path=src/main/odi/project-test.xml', '-Si'])
-//
-//      expect:
-//      result.task(":${taskName}").outcome.name() != 'FAILED'
-//
-//   }
 }

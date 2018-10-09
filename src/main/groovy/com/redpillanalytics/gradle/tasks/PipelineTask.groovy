@@ -5,6 +5,9 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
 
+/**
+ * This class is meant to be inherited, which is why it doesn't have a @TaskAction-annotated method.
+ */
 @Slf4j
 class PipelineTask extends DefaultTask {
 
@@ -61,6 +64,11 @@ class PipelineTask extends DefaultTask {
       return tree.sort()
    }
 
+   /**
+    * Gets the hierarchical collection of pipeline SQL statements--tokenized and normalized--and sorted using {@link #getPipelineFiles}.
+    *
+    * @return The List of pipeline SQL statements.
+    */
    @Internal
    def getPipelineSql() {
 

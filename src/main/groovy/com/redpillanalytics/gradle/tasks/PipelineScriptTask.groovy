@@ -3,6 +3,10 @@ package com.redpillanalytics.gradle.tasks
 import groovy.util.logging.Slf4j
 import org.gradle.api.tasks.*
 
+
+/**
+ * Generate CREATE and DROP scripts used for deployment to KSQL Servers. Note: the DROP script is not currently being used... slated for future enhancements.
+ */
 @Slf4j
 class PipelineScriptTask extends PipelineTask {
 

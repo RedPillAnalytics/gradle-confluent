@@ -5,6 +5,9 @@ import groovy.util.logging.Slf4j
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 
+/**
+ * Use the KSQL RESTful API to execute all pipelines in a particular directory. Note: not functioning yet.
+ */
 @Slf4j
 class ExecutePipelineTask extends PipelineTask {
 
