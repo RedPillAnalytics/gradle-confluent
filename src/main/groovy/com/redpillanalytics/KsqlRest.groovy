@@ -1,8 +1,8 @@
 package com.redpillanalytics
 
+import com.google.gson.Gson
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
-import wslite.rest.ContentType
 import wslite.rest.RESTClient
 
 @Slf4j
@@ -12,6 +12,11 @@ class KsqlRest {
     * The base REST endpoint for the KSQL server. Defaults to 'http://localhost:8088', which is handy when developing against Confluent CLI.
     */
    String baseUrl = 'http://localhost:8088'
+
+   /**
+    * GSON object for parsing objects to JSON.
+    */
+   Gson gson = new Gson()
 
    /**
     * Executes a KSQL statement using the KSQL RESTful API.
@@ -26,20 +31,20 @@ class KsqlRest {
 
       def prepared = (sql + ';').replace('\n', '').replace(';;', ';')
 
+      String json = gson.toJson([ksql: "LIST PROPERTIES;", streamsProperties: properties])
+
       log.info "Executing statement: $prepared"
 
-      def client = new RESTClient(baseUrl)
-      client.defaultContentTypeHeader = "application/json"
-      def response
+      def post = new URL(baseUrl + '/ksql').openConnection()
+      post.setRequestMethod("POST")
+      post.setDoOutput(true)
+      post.setRequestProperty("Content-Type", "application/json")
+      post.getOutputStream().write(json.getBytes("UTF-8"))
 
-      response = client.post(path: '/ksql') {
-         //type ContentType.JSON
-         // accept statements with either a ';' or not. Do that by replacing ';;' with ';'
-         json ksql: prepared, streamsProperties: properties
-      }
+      def response = post.getInputStream().getText()
 
-      log.info "response: ${response.json}"
-      return response.json
+      log.warn "response: ${response}"
+      return response
    }
 
    /**
@@ -98,7 +103,7 @@ class KsqlRest {
 
       def data = execKsql('LIST PROPERTIES')
       def properties = data[0].properties
-      log.debug "properties: ${properties.dump()}"
+      log.warn "properties: ${properties.dump()}"
       return properties
    }
 
