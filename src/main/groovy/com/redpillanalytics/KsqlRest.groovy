@@ -1,6 +1,7 @@
 package com.redpillanalytics
 
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import groovy.util.logging.Slf4j
 //import groovyx.net.http.NativeHandlers
 import okhttp3.MediaType
@@ -28,7 +29,7 @@ class KsqlRest {
    /**
     * GSON object for parsing objects to JSON.
     */
-   Gson gson = new Gson()
+   Gson gson = new GsonBuilder().setPrettyPrinting().create()
 
    /**
     * Executes a KSQL statement using the KSQL RESTful API.
@@ -43,16 +44,20 @@ class KsqlRest {
 
       def prepared = (sql + ';').replace('\n', '').replace(';;', ';')
 
+      String json = gson.toJson([ksql: prepared, streamsProperties: properties])
+
+      log.warn "json: ${json}"
+
       log.warn "Executing statement: $prepared"
 
       OkHttpClient client = new OkHttpClient()
 
-      MediaType mediaType = MediaType.parse("application/vnd.ksql.v1+json");
-      RequestBody body = RequestBody.create(mediaType, /{"ksql": "${sql}",  "streamsProperties": {${properties}}/)
+      MediaType mediaType = MediaType.parse("application/json");
+      RequestBody body = RequestBody.create(mediaType, $/{"ksql": "LIST PROPERTIES;",  "streamsProperties": { }/$)
       Request request = new Request.Builder()
               .url("${baseUrl}/ksql")
               .post(body)
-              .addHeader("Content-Type", "application/vnd.ksql.v1+json")
+              .addHeader("Content-Type", "application/json")
               .build()
 
       Response response = client.newCall(request).execute()
