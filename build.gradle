@@ -46,7 +46,7 @@ dependencies {
    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.15'
    compile group: 'org.slf4j', name: 'slf4j-simple', version: '+'
    compile 'com.mashape.unirest:unirest-java:+'
-   compile 'com.google.code.gson:gson:+'
+   //compile 'com.google.code.gson:gson:+'
 
    testCompile('org.spockframework:spock-core:1.1-groovy-2.4')
 }

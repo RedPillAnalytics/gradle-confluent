@@ -45,13 +45,13 @@ class KsqlRestTest extends Specification {
       url
    }
 
-   def "Execute KSQL Statement"() {
-
-      when:
-      def result = ksqlRest.execKsql("""CREATE STREAM clickstream (_time bigint,time varchar, ip varchar, request varchar, status int, userid int, bytes bigint, agent varchar) 
-                                        |with (kafka_topic = 'clickstream', value_format = 'json');""".stripMargin())
-
-      then:
-      log.warn "result: ${result}"
-   }
+//   def "KSQL Describe Statement works"() {
+//
+//      when:
+//      def result = ksqlRest.execKsql("""DESCRIBE events_per_min""".stripMargin()
+//      )
+//
+//      then:
+//      log.warn "result: ${result.toString()}"
+//   }
 }
