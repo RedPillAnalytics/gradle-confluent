@@ -35,9 +35,7 @@ class KsqlRest {
 
       def prepared = (sql + ';').replace('\n', '').replace(';;', ';')
 
-      String body = gson.toJson([ksql: prepared, streamsProperties: properties])
-
-      log.info "Executing statement: $prepared"
+      //String body = gson.toJson([ksql: prepared, streamsProperties: properties])
 
       def client = new RESTClient(baseUrl)
 
@@ -52,8 +50,9 @@ class KsqlRest {
          //json body
       }
 
-      log.info "response: ${response.json}"
-      return response.json
+      def result = new String(response.data)
+      log.debug "result: ${result}"
+      return result
    }
 
    /**

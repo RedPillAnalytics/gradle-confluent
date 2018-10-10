@@ -52,6 +52,6 @@ class KsqlRestTest extends Specification {
                                         |with (kafka_topic = 'clickstream', value_format = 'json');""".stripMargin())
 
       then:
-      log.warn result
+      log.warn "result: ${result}"
    }
 }
