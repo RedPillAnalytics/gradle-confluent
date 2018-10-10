@@ -1,8 +1,9 @@
 package com.redpillanalytics
 
-import com.google.gson.Gson
 import com.mashape.unirest.http.HttpResponse
 import com.mashape.unirest.http.Unirest
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 
 @Slf4j
@@ -12,11 +13,6 @@ class KsqlRest {
     * The base REST endpoint for the KSQL server. Defaults to 'http://localhost:8088', which is handy when developing against Confluent CLI.
     */
    String baseUrl = 'http://localhost:8088'
-
-   /**
-    * GSON object for parsing objects to JSON.
-    */
-   Gson gson = new Gson()
 
    /**
     * Executes a KSQL statement using the KSQL RESTful API.
@@ -30,15 +26,27 @@ class KsqlRest {
    def execKsql(String sql, Map properties) {
 
       def prepared = (sql + ';').replace('\n', '').replace(';;', ';')
+      log.warn "Executing statement: $prepared"
 
       HttpResponse<String> response = Unirest.post("http://localhost:8088/ksql")
               .header("Content-Type", "application/vnd.ksql.v1+json")
               .header("Cache-Control", "no-cache")
               .header("Postman-Token", "473fbb05-9da1-4020-95c0-f2c60fed8289")
-              .body("{  \"ksql\":\"CREATE STREAM clickstream (_time bigint,time varchar, ip varchar, request varchar, status int, userid int, bytes bigint, agent varchar) with (kafka_topic = 'clickstream', value_format = 'json');\",\"streamsProperties\":{\"ksql.streams.auto.offset.reset\": \"earliest\"}}")
+              .body(JsonOutput.toJson([ksql: prepared, streamsProperties: properties]))
               .asString()
 
-      log.warn "response: ${response.dump()}"
+      log.debug "unirest response: ${response.dump()}"
+      def body = new JsonSlurper().parseText(response.body)
+
+
+
+      return [
+              status: response.status,
+              statusText: response.statusText,
+              message: body.message,
+              statementText: body.statementText,
+              commandId: body.commandId,
+              body: body]
    }
 
    /**
