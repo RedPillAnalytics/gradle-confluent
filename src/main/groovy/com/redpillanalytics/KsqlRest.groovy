@@ -2,12 +2,20 @@ package com.redpillanalytics
 
 import com.google.gson.Gson
 import groovy.util.logging.Slf4j
-import jdk.nashorn.internal.runtime.JSONFunctions
-import wslite.rest.ContentType
-import wslite.rest.RESTClient
+//import groovyx.net.http.NativeHandlers
+import okhttp3.MediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.Response
 
+//import wslite.rest.ContentType
+//import wslite.rest.RESTClient
 //import groovyx.net.http.RESTClient
 //import static groovyx.net.http.ContentType.*
+
+//import static groovyx.net.http.HttpBuilder.configure
+//import static groovyx.net.http.ContentTypes.*
 
 @Slf4j
 class KsqlRest {
@@ -35,24 +43,21 @@ class KsqlRest {
 
       def prepared = (sql + ';').replace('\n', '').replace(';;', ';')
 
-      //String body = gson.toJson([ksql: prepared, streamsProperties: properties])
+      log.warn "Executing statement: $prepared"
 
-      def client = new RESTClient(baseUrl)
+      OkHttpClient client = new OkHttpClient()
 
-      client.defaultContentTypeHeader = "application/vnd.ksql.v1+json"
+      MediaType mediaType = MediaType.parse("application/vnd.ksql.v1+json");
+      RequestBody body = RequestBody.create(mediaType, /{"ksql": "${sql}",  "streamsProperties": {${properties}}/)
+      Request request = new Request.Builder()
+              .url("${baseUrl}/ksql")
+              .post(body)
+              .addHeader("Content-Type", "application/vnd.ksql.v1+json")
+              .build()
 
-      log.info "Executing statement: $prepared"
+      Response response = client.newCall(request).execute()
 
-      def response = client.post(path: '/ksql') {
-         type "application/vnd.ksql.v1+json"
-         // accept statements with either a ';' or not. Do that by replacing ';;' with ';'
-         json ksql: prepared, streamsProperties: properties
-         //json body
-      }
-
-      def result = new String(response.data)
-      log.debug "result: ${result}"
-      return result
+      log.warn "response: ${response.toString()}"
    }
 
    /**
