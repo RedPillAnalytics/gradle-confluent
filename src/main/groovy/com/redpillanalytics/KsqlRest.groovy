@@ -1,9 +1,13 @@
 package com.redpillanalytics
 
 import com.google.gson.Gson
-import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
+import jdk.nashorn.internal.runtime.JSONFunctions
+import wslite.rest.ContentType
 import wslite.rest.RESTClient
+
+//import groovyx.net.http.RESTClient
+//import static groovyx.net.http.ContentType.*
 
 @Slf4j
 class KsqlRest {
@@ -31,20 +35,25 @@ class KsqlRest {
 
       def prepared = (sql + ';').replace('\n', '').replace(';;', ';')
 
-      String json = gson.toJson([ksql: "LIST PROPERTIES;", streamsProperties: properties])
+      String body = gson.toJson([ksql: prepared, streamsProperties: properties])
 
       log.info "Executing statement: $prepared"
 
-      def post = new URL(baseUrl + '/ksql').openConnection()
-      post.setRequestMethod("POST")
-      post.setDoOutput(true)
-      post.setRequestProperty("Content-Type", "application/json")
-      post.getOutputStream().write(json.getBytes("UTF-8"))
+      def client = new RESTClient(baseUrl)
 
-      def response = post.getInputStream().getText()
+      client.defaultContentTypeHeader = "application/vnd.ksql.v1+json"
 
-      log.warn "response: ${response}"
-      return response
+      log.info "Executing statement: $prepared"
+
+      def response = client.post(path: '/ksql') {
+         type "application/vnd.ksql.v1+json"
+         // accept statements with either a ';' or not. Do that by replacing ';;' with ';'
+         json ksql: prepared, streamsProperties: properties
+         //json body
+      }
+
+      log.info "response: ${response.json}"
+      return response.json
    }
 
    /**
@@ -103,7 +112,7 @@ class KsqlRest {
 
       def data = execKsql('LIST PROPERTIES')
       def properties = data[0].properties
-      log.warn "properties: ${properties.dump()}"
+      log.warn "properties: ${properties.toString()}"
       return properties
    }
 

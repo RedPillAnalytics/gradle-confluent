@@ -16,7 +16,6 @@ class KsqlRestTest extends Specification {
 
       then:
       result
-
    }
 
    def "KSQL extension directory path is returned"() {
@@ -26,7 +25,6 @@ class KsqlRestTest extends Specification {
 
       then:
       path
-
    }
 
    def "KSQL extension directory file is returned"() {
@@ -36,7 +34,6 @@ class KsqlRestTest extends Specification {
 
       then:
       dir
-
    }
 
    def "KSQL REST URL is returned"() {
@@ -46,6 +43,15 @@ class KsqlRestTest extends Specification {
 
       then:
       url
+   }
 
+   def "Execute KSQL Statement"() {
+
+      when:
+      def result = ksqlRest.execKsql("""CREATE STREAM clickstream (_time bigint,time varchar, ip varchar, request varchar, status int, userid int, bytes bigint, agent varchar) 
+                                        |with (kafka_topic = 'clickstream', value_format = 'json');""".stripMargin())
+
+      then:
+      log.warn result
    }
 }
