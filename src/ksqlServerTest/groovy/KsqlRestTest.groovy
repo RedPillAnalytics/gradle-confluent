@@ -44,14 +44,4 @@ class KsqlRestTest extends Specification {
       then:
       url
    }
-
-//   def "KSQL Describe Statement works"() {
-//
-//      when:
-//      def result = ksqlRest.execKsql("""DESCRIBE events_per_min""".stripMargin()
-//      )
-//
-//      then:
-//      log.warn "result: ${result.toString()}"
-//   }
 }

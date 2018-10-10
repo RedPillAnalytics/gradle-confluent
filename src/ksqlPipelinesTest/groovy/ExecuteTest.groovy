@@ -33,10 +33,6 @@ class ExecuteTest extends Specification {
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
                |}
-               |
-               |archivesBaseName = 'test'
-               |group = 'com.redpillanalytics'
-               |version = '1.0.0'
         """.stripMargin())
    }
 
@@ -73,7 +69,6 @@ class ExecuteTest extends Specification {
 
    }
 
-   @Ignore
    def "Execute :pipelineExecute task with default values"() {
 
       given:

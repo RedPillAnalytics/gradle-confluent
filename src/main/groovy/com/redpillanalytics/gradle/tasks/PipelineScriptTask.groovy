@@ -29,7 +29,7 @@ class PipelineScriptTask extends PipelineTask {
    @OutputFile
    File getCreateScript() {
 
-      return project.file("${buildDir}/ksql-create-script.sql")
+      return project.file("${buildDir}/${project.extensions.confluent.pipelineCreateName}")
    }
 
    /**
@@ -40,7 +40,7 @@ class PipelineScriptTask extends PipelineTask {
    @OutputFile
    File getDropScript() {
 
-      return project.file("${buildDir}/ksql-drop-script.sql")
+      return project.file("${buildDir}/${project.extensions.confluent.pipelineDropName}")
    }
 
    /**
@@ -50,7 +50,7 @@ class PipelineScriptTask extends PipelineTask {
    File dropScript() {
 
       dropScript.delete()
-      getDropSql(notReverseDrops).each {
+      getDropSql(noReverseDrops).each {
          dropScript.append(it)
       }
 
