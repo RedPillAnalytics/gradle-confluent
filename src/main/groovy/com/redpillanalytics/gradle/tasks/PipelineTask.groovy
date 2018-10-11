@@ -30,12 +30,6 @@ class PipelineTask extends DefaultTask {
    )
    Boolean fromBeginning = false
 
-   @Internal
-   def getKsqlRest() {
-
-      return new KsqlRest(baseUrl: restUrl)
-   }
-
    /**
     * The top-level directory containing the subdirectories--ordered alphanumerically--of pipeline processes.
     */
@@ -44,6 +38,15 @@ class PipelineTask extends DefaultTask {
            description = "The top-level directory containing the subdirectories--ordered alphanumerically--of pipeline processes."
    )
    String pipelinePath
+
+   /**
+    * When defined, the DROPS script is not constructed in reverse order.
+    */
+   @Input
+   @Option(option = 'no-reverse-drops',
+           description = 'When defined, the DROPS script is not constructed in reverse order.'
+   )
+   boolean noReverseDrops
 
    /**
     * Returns a File object representation of the {@filePath} parameter.
@@ -56,13 +59,15 @@ class PipelineTask extends DefaultTask {
    }
 
    /**
-    * When defined, the DROPS script is not constructed in reverse order.
+    * Instantiates a KsqlRest Class, which is used for interacting with the KSQL RESTful API.
+    *
+    * @return {@link KsqlRest}
     */
-   @Input
-   @Option(option = 'no-reverse-drops',
-           description = 'When defined, the DROPS script is not constructed in reverse order.'
-   )
-   boolean noReverseDrops
+   @Internal
+   def getKsqlRest() {
+
+      return new KsqlRest(baseUrl: restUrl)
+   }
 
    /**
     * Gets the hierarchical collection of pipeline files, sorted using folder structure and alphanumeric logic.
