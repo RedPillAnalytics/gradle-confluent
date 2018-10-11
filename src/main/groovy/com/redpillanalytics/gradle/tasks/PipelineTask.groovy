@@ -1,5 +1,6 @@
 package com.redpillanalytics.gradle.tasks
 
+import com.redpillanalytics.KsqlRest
 import groovy.util.logging.Slf4j
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.*
@@ -12,6 +13,24 @@ import org.gradle.api.tasks.options.Option
 class PipelineTask extends DefaultTask {
 
    /**
+    * The RESTful API URL for the KSQL Server.
+    */
+   @Input
+   @Option(option = "rest-url",
+           description = "The top-level directory containing the subdirectories--ordered alphanumerically--of pipeline processes."
+   )
+   String restUrl = project.extensions.confluent.pipelineEndpoint
+
+   /**
+    * If enabled, then set "ksql.streams.auto.offset.reset" to "earliest".
+    */
+   @Input
+   @Option(option = "from-beginning",
+           description = 'If enabled, then set "ksql.streams.auto.offset.reset" to "earliest".'
+   )
+   Boolean fromBeginning = false
+
+   /**
     * The top-level directory containing the subdirectories--ordered alphanumerically--of pipeline processes.
     */
    @Input
@@ -19,6 +38,15 @@ class PipelineTask extends DefaultTask {
            description = "The top-level directory containing the subdirectories--ordered alphanumerically--of pipeline processes."
    )
    String pipelinePath
+
+   /**
+    * When defined, the DROPS script is not constructed in reverse order.
+    */
+   @Input
+   @Option(option = 'no-reverse-drops',
+           description = 'When defined, the DROPS script is not constructed in reverse order.'
+   )
+   boolean noReverseDrops
 
    /**
     * Returns a File object representation of the {@filePath} parameter.
@@ -31,13 +59,15 @@ class PipelineTask extends DefaultTask {
    }
 
    /**
-    * When defined, the DROPS script is not constructed in reverse order.
+    * Instantiates a KsqlRest Class, which is used for interacting with the KSQL RESTful API.
+    *
+    * @return {@link KsqlRest}
     */
-   @Input
-   @Option(option = 'reverse-drops-disabled',
-           description = 'When defined, the DROPS script is not constructed in reverse order.'
-   )
-   boolean notReverseDrops
+   @Internal
+   def getKsqlRest() {
+
+      return new KsqlRest(baseUrl: restUrl)
+   }
 
    /**
     * Gets the hierarchical collection of pipeline files, sorted using folder structure and alphanumeric logic.
@@ -74,27 +104,31 @@ class PipelineTask extends DefaultTask {
 
       //parse individual SQL statements out of each SQL script
       def parsed = []
-
       getPipelineFiles().each { file ->
          file.text.trim().tokenize(';').each {
             parsed << it
          }
       }
-
       log.debug "parsed:"
       parsed.each { log.debug "sql: $it \n" }
 
+      // remove comments, even those that begin in the middle of a line
       def normalized = parsed.collect { sql ->
          sql.replaceAll(/(\s)*(--)(.*)/) { all, begin, symbol, comment ->
-            (begin ?: '').trim() - '\\'
+            (begin ?: '').trim()
          }
       }
+      // remove any null entries
+      normalized.removeAll([null])
 
-      log.debug "normalized:"
-      normalized.each { log.debug "sql: $it \n" }
+      // clean up, removing an backslashes
+      def cleaned = normalized.collect { sql ->
+         sql.replace("\\",'').replace("\n",' ').replace('  ',' ')
+      }
+      log.debug "cleaned:"
+      cleaned.each { log.debug "sql: $it \n" }
 
-      return normalized
-      //return pipelineFiles.collect { it.text }
+      return cleaned
    }
 
    /**
@@ -106,16 +140,19 @@ class PipelineTask extends DefaultTask {
     *
     * @return The List of KSQL DROP statements.
     */
-   List getDropSql(Boolean reverse = true) {
+   List getDropSql() {
 
       List script = pipelineSql.collect { sql ->
-         sql.find(/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
-            type ? "DROP $type IF EXISTS $name;\n" : ''
+
+         sql.find(~/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
+            "DROP $type IF EXISTS $name;\n"
          }
       }
 
+      script.removeAll([null])
+
       // put the drop statements in reverse order or original order
-      return reverse ? script.reverse() : script
+      return noReverseDrops ? script : script.reverse()
    }
 
 }

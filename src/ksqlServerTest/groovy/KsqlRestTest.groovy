@@ -15,8 +15,8 @@ class KsqlRestTest extends Specification {
       def result = ksqlRest.getProperties()
 
       then:
+      log.warn "result: ${result.toString()}"
       result
-
    }
 
    def "KSQL extension directory path is returned"() {
@@ -26,7 +26,6 @@ class KsqlRestTest extends Specification {
 
       then:
       path
-
    }
 
    def "KSQL extension directory file is returned"() {
@@ -36,7 +35,6 @@ class KsqlRestTest extends Specification {
 
       then:
       dir
-
    }
 
    def "KSQL REST URL is returned"() {
@@ -46,6 +44,5 @@ class KsqlRestTest extends Specification {
 
       then:
       url
-
    }
 }

@@ -1,21 +1,13 @@
 package com.redpillanalytics.gradle.tasks
 
-import com.redpillanalytics.KsqlRest
 import groovy.util.logging.Slf4j
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 
 /**
  * Use the KSQL RESTful API to execute all pipelines in a particular directory. Note: not functioning yet.
  */
 @Slf4j
-class ExecutePipelineTask extends PipelineTask {
-
-   /**
-    * The KsqlRest Object for interacting with the KSQL REST Server.
-    */
-   @Internal
-   KsqlRest rest = new KsqlRest()
+class PipelineExecuteTask extends PipelineTask {
 
    /**
     * The main Gradle Task method.
@@ -23,9 +15,12 @@ class ExecutePipelineTask extends PipelineTask {
    @TaskAction
    def executePipelines() {
 
+      // first execute the DROP SQL statements
+      // this also catches running statements and terminates them
+      ksqlRest.dropKsql(dropSql, [:])
 
-      //rest.execKsql(getDropSql(pipelines))
+      // now create the pipelines
+      ksqlRest.execKsql(pipelineSql)
 
-      rest.execKsql(pipelineSql)
    }
 }
