@@ -129,6 +129,17 @@ class ExecuteTest extends Specification {
 
    }
 
+   def "Execute :pipelineExecute task with --from-beginning"() {
+
+      given:
+      taskName = 'pipelineExecute'
+      result = executeSingleTask(taskName, ['--from-beginning','-Si','--rerun-tasks'])
+
+      expect:
+      result.task(":${taskName}").outcome.name() != 'FAILED'
+
+   }
+
    def "Execute :pipelineExecute task with custom REST endpoint"() {
 
       given:

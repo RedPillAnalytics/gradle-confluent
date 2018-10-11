@@ -28,7 +28,7 @@ class PipelineTask extends DefaultTask {
    @Option(option = "from-beginning",
            description = 'If enabled, then set "ksql.streams.auto.offset.reset" to "earliest".'
    )
-   Boolean fromBeginning = false
+   boolean fromBeginning = false
 
    /**
     * The top-level directory containing the subdirectories--ordered alphanumerically--of pipeline processes.

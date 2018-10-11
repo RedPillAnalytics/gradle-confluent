@@ -12,7 +12,7 @@ import org.gradle.api.tasks.options.Option
 class PipelineExecuteTask extends PipelineTask {
 
    /**
-    * When defined, the DROPS script is not constructed in reverse order.
+    * When defined, DROP statements are not processed using a TERMINATE for all currently-running queries.
     */
    @Input
    @Option(option = 'no-terminate',
@@ -21,7 +21,7 @@ class PipelineExecuteTask extends PipelineTask {
    boolean noTerminate
 
    /**
-    * When defined, the DROPS script is not constructed in reverse order.
+    * When defined, DROP statements are not processed.
     */
    @Input
    @Option(option = 'no-drop',
@@ -30,7 +30,7 @@ class PipelineExecuteTask extends PipelineTask {
    boolean noDrop
 
    /**
-    * When defined, the DROPS script is not constructed in reverse order.
+    * When defined, CREATE statements are not processed.
     */
    @Input
    @Option(option = 'no-create',
@@ -49,7 +49,7 @@ class PipelineExecuteTask extends PipelineTask {
       if (!noDrop) ksqlRest.dropKsql(dropSql, [:], !noTerminate)
 
       // now create the pipelines
-      if (!noCreate) ksqlRest.execKsql(pipelineSql)
+      if (!noCreate) ksqlRest.execKsql(pipelineSql, fromBeginning)
 
    }
 }
