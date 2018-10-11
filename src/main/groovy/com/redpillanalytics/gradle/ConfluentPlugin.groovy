@@ -168,7 +168,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
                project.task(tg.getTaskName('pipelineExecute'), type: PipelineExecuteTask) {
                   group taskGroup
-                  description = "Execute all the KSQL pipelines--in hierarchical order--in the provided directory (recursively)."
+                  description = "Execute all KSQL pipelines from the provided source directory, in hierarchical order, proceeded by applicable DROP and TERMINATE commands."
                   pipelinePath pipelineDir.canonicalPath
                   onlyIf { dir.exists() }
                }

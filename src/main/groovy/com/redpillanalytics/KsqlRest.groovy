@@ -7,6 +7,9 @@ import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 
 @Slf4j
+/**
+ * Class for interacting and normalizing behavior using the Confluent KSQL RESTful API.
+ */
 class KsqlRest {
 
    /**
@@ -80,11 +83,13 @@ class KsqlRest {
    }
 
    /**
-    * Executes a List of KSQL DROP statements using the KSQL RESTful API.
+    * Executes a List of KSQL DROP statements using the KSQL RESTful API. Manages issuing TERMINATE statements as part of the DROP, if desired.
     *
     * @param sql the List of SQL DROP statements to execute.
     *
     * @param properties Any KSQL parameters to include with the KSQL execution.
+    *
+    * @param terminate Determines whether TERMINATE statements are issued, along with a retry of the DROP.
     *
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
