@@ -15,6 +15,7 @@ class KsqlRestTest extends Specification {
       def result = ksqlRest.getProperties()
 
       then:
+      log.warn "result: ${result.toString()}"
       result
    }
 

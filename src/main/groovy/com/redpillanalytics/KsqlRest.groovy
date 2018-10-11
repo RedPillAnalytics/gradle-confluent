@@ -199,7 +199,8 @@ class KsqlRest {
    def getProperties() {
 
       def response = execKsql('LIST PROPERTIES', false)
-      def properties = response.body.properties
+      log.debug "response: ${response.toString()}"
+      def properties = response.body[0].properties
       log.debug "properties: ${properties.toString()}"
       return properties
    }
