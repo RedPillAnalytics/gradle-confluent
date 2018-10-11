@@ -21,7 +21,7 @@ class KsqlRest {
     *
     * @param properties Any KSQL parameters to include with the KSQL execution.
     *
-    * @return JSON representation of the KSQL response payload.
+    * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
    def execKsql(String sql, Map properties) {
 
@@ -38,13 +38,18 @@ class KsqlRest {
       log.debug "unirest response: ${response.dump()}"
       def body = new JsonSlurper().parseText(response.body)
 
-      return [
-              status       : response.status,
-              statusText   : response.statusText,
-              message      : body.message,
-              statementText: body.statementText,
-              commandId    : body.commandId,
-              body         : body[0]]
+      def result = [
+              status        : response.status,
+              statusText    : response.statusText,
+              message       : body.message,
+              statementText : body.statementText,
+              commandStatus : body.commandStatus ? body.commandStatus.status[0] : '',
+              commandMessage: body.commandStatus ? body.commandStatus.message[0] : '',
+              body          : body
+      ]
+
+      log.warn "result: ${result}"
+      return result
    }
 
    /**
@@ -54,12 +59,61 @@ class KsqlRest {
     *
     * @param properties Any KSQL parameters to include with the KSQL execution.
     *
-    * @return JSON representation of the KSQL response payload.
+    * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
    def execKsql(List sql, Map properties) {
 
       sql.each {
          execKsql(it, properties)
+      }
+   }
+
+   /**
+    * Executes a List of KSQL DROP statements using the KSQL RESTful API.
+    *
+    * @param sql the List of SQL DROP statements to execute.
+    *
+    * @param properties Any KSQL parameters to include with the KSQL execution.
+    *
+    * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
+    */
+   def dropKsql(List sql, Map properties, Boolean terminate = true) {
+
+      sql.each {
+
+         def result = execKsql(it, properties)
+
+         log.debug "result: ${result}"
+
+         if (result.commandMessage?.toLowerCase()?.contains('does not exist')) {
+            log.info result.commandMessage
+
+         } else if (result.status == 400 && result.message.toLowerCase().contains('cannot drop') && terminate) {
+            //log a message first
+
+            // could also use the DESCRIBE command REST API results to get read and write queries to terminate
+            // but it's pretty easy to grab it from the DROP command REST API payload
+            def matches = result.message.findAll(~/(\[)([^\]]*)(\])/) { match, b1, list, b2 ->
+               list
+            }
+            // Two "string lists" are returned first
+            String read = matches[0]
+            String write = matches[1]
+
+            // Get a list of all queries currently executing
+            List queries = read.tokenize(',') + write.tokenize(',')
+            log.debug "queries: ${queries.toString()}"
+
+            // now terminate with extreme prejudice
+            queries.each { queryId ->
+               execKsql("TERMINATE ${queryId}")
+            }
+
+            // now drop the table again
+            // this time using the non-explicit DROP method
+            // no Infinite Loops here
+            execKsql(it)
+         }
       }
    }
 
@@ -70,7 +124,7 @@ class KsqlRest {
     *
     * @param earliest Boolean dictating that the statement should set 'auto.offset.reset' to 'earliest'.
     *
-    * @return JSON representation of the KSQL response payload.
+    * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
    def execKsql(String sql, Boolean earliest = false) {
 
@@ -85,7 +139,7 @@ class KsqlRest {
     *
     * @param earliest Boolean dictating that the statement should set 'auto.offset.reset' to 'earliest'.
     *
-    * @return JSON representation of the KSQL response payload.
+    * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
    def execKsql(List sql, Boolean earliest = false) {
 
@@ -122,6 +176,16 @@ class KsqlRest {
    def getWriteQueries(String object) {
 
       getSourceDescription(object).writeQueries[0]
+   }
+
+   /**
+    * Gets all queries currently executing for a particular stream or table.
+    *
+    * @return All query IDs currently reading from or writing to this stream or table.
+    */
+   def getPipelineQueries(String object) {
+
+      log.warn "reads: ${getReadQueries(object)}"
    }
 
    /**

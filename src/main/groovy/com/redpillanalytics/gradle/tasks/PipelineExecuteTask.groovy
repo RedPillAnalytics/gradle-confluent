@@ -16,7 +16,11 @@ class PipelineExecuteTask extends PipelineTask {
    def executePipelines() {
 
       // first execute the DROP SQL statements
-      ksqlRest.execKsql(dropSql, fromBeginning)
+      // this also catches running statements and terminates them
+      ksqlRest.dropKsql(dropSql, [:])
+
+      // now create the pipelines
+      ksqlRest.execKsql(pipelineSql)
 
    }
 }

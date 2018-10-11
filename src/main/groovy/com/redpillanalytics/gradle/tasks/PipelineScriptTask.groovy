@@ -50,7 +50,7 @@ class PipelineScriptTask extends PipelineTask {
    File dropScript() {
 
       dropScript.delete()
-      getDropSql(noReverseDrops).each {
+      dropSql.each {
          dropScript.append(it)
       }
 

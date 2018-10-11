@@ -99,27 +99,31 @@ class PipelineTask extends DefaultTask {
 
       //parse individual SQL statements out of each SQL script
       def parsed = []
-
       getPipelineFiles().each { file ->
          file.text.trim().tokenize(';').each {
             parsed << it
          }
       }
-
       log.debug "parsed:"
       parsed.each { log.debug "sql: $it \n" }
 
+      // remove comments, even those that begin in the middle of a line
       def normalized = parsed.collect { sql ->
          sql.replaceAll(/(\s)*(--)(.*)/) { all, begin, symbol, comment ->
-            (begin ?: '').trim() - '\\'
+            (begin ?: '').trim()
          }
       }
+      // remove any null entries
+      normalized.removeAll([null])
 
-      log.debug "normalized:"
-      normalized.each { log.debug "sql: $it \n" }
+      // clean up, removing an backslashes
+      def cleaned = normalized.collect { sql ->
+         sql.replaceAll("\\\\",'')
+      }
+      log.debug "cleaned:"
+      cleaned.each { log.debug "sql: $it \n" }
 
-      return normalized
-      //return pipelineFiles.collect { it.text }
+      return cleaned
    }
 
    /**
@@ -134,10 +138,13 @@ class PipelineTask extends DefaultTask {
    List getDropSql() {
 
       List script = pipelineSql.collect { sql ->
-         sql.find(/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
-            type ? "DROP $type IF EXISTS $name;\n" : ''
+
+         sql.find(~/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
+            "DROP $type IF EXISTS $name;\n"
          }
       }
+
+      script.removeAll([null])
 
       // put the drop statements in reverse order or original order
       return noReverseDrops ? script : script.reverse()
