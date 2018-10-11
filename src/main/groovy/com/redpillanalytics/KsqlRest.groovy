@@ -48,7 +48,18 @@ class KsqlRest {
               body          : body
       ]
 
-      log.warn "result: ${result}"
+      if (result.statusText != 'OK' && (!result.message.toLowerCase()?.contains('cannot drop') || result.commandMessage?.toLowerCase()?.contains('does not exist') )) {
+         def newResult = [
+                 status: result.status,
+                 statusText: result.statusText,
+                 message: result.message,
+                 commandStatus: result.commandStatus,
+                 commandMessage: result.commandMessage
+         ]
+
+         log.info "result: $newResult"
+      }
+
       return result
    }
 
@@ -85,10 +96,7 @@ class KsqlRest {
 
          log.debug "result: ${result}"
 
-         if (result.commandMessage?.toLowerCase()?.contains('does not exist')) {
-            log.info result.commandMessage
-
-         } else if (result.status == 400 && result.message.toLowerCase().contains('cannot drop') && terminate) {
+         if (result.status == 400 && result.message.toLowerCase().contains('cannot drop') && terminate) {
             //log a message first
 
             // could also use the DESCRIBE command REST API results to get read and write queries to terminate
@@ -176,16 +184,6 @@ class KsqlRest {
    def getWriteQueries(String object) {
 
       getSourceDescription(object).writeQueries[0]
-   }
-
-   /**
-    * Gets all queries currently executing for a particular stream or table.
-    *
-    * @return All query IDs currently reading from or writing to this stream or table.
-    */
-   def getPipelineQueries(String object) {
-
-      log.warn "reads: ${getReadQueries(object)}"
    }
 
    /**

@@ -118,7 +118,7 @@ class PipelineTask extends DefaultTask {
 
       // clean up, removing an backslashes
       def cleaned = normalized.collect { sql ->
-         sql.replaceAll("\\\\",'')
+         sql.replace("\\",'').replace("\n",' ').replace('  ',' ')
       }
       log.debug "cleaned:"
       cleaned.each { log.debug "sql: $it \n" }
