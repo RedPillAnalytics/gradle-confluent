@@ -73,7 +73,7 @@ class ConfluentPluginExtension {
    /**
     * RESTful endpoint for the KSQL Server.
     */
-   String pipelineEndpoint= 'http://localhost:8088'
+   String pipelineEndpoint = 'http://localhost:8088'
 
    /**
     * The pattern used for matching the pipeline deployment artifact.

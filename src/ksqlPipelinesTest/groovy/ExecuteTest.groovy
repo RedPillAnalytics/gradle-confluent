@@ -33,6 +33,7 @@ class ExecuteTest extends Specification {
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
                |}
+               confluent.pipelineEndpoint = 'http://localhost:8088'
         """.stripMargin())
    }
 
@@ -74,6 +75,72 @@ class ExecuteTest extends Specification {
       given:
       taskName = 'pipelineExecute'
       result = executeSingleTask(taskName, ['-Si','--rerun-tasks'])
+
+      expect:
+      result.task(":${taskName}").outcome.name() != 'FAILED'
+
+   }
+
+   def "Execute :pipelineExecute task with custom directory"() {
+
+      given:
+      taskName = 'pipelineExecute'
+      result = executeSingleTask(taskName, ['--pipeline-dir=src/main/pipeline/01-clickstream','-Si','--rerun-tasks'])
+
+      expect:
+      result.task(":${taskName}").outcome.name() != 'FAILED'
+
+   }
+
+   def "Execute :pipelineExecute task with --no-drop"() {
+
+      given:
+      taskName = 'pipelineExecute'
+      result = executeSingleTask(taskName, ['--no-drop','-Si','--rerun-tasks'])
+
+      expect:
+      result.task(":${taskName}").outcome.name() != 'FAILED'
+      !result.output.toLowerCase().contains('drop table')
+
+   }
+
+   def "Execute :pipelineExecute task with --no-terminate"() {
+
+      given:
+      taskName = 'pipelineExecute'
+      result = executeSingleTask(taskName, ['--no-terminate','-Si','--rerun-tasks'])
+
+      expect:
+      result.task(":${taskName}").outcome.name() != 'FAILED'
+      !result.output.toLowerCase().contains('terminate')
+
+   }
+
+   def "Execute :pipelineExecute task with --no-create"() {
+
+      given:
+      taskName = 'pipelineExecute'
+      result = executeSingleTask(taskName, ['--no-create','-Si','--rerun-tasks'])
+
+      expect:
+      result.task(":${taskName}").outcome.name() != 'FAILED'
+      !result.output.toLowerCase().contains('create table')
+      !result.output.toLowerCase().contains('insert into')
+
+   }
+
+   def "Execute :pipelineExecute task with custom REST endpoint"() {
+
+      given:
+      buildFile.write("""
+               |plugins {
+               |  id 'com.redpillanalytics.gradle-confluent'
+               |}
+               confluent.pipelineEndpoint = 'http://nothing:8088'
+        """.stripMargin())
+
+      taskName = 'pipelineExecute'
+      result = executeSingleTask(taskName, ["-Pconfluent.pipelineEndpoint=http://localhost:8088",'-Si','--rerun-tasks'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'

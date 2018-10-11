@@ -119,7 +119,7 @@ class KsqlRest {
 
             // now terminate with extreme prejudice
             queries.each { queryId ->
-               execKsql("TERMINATE ${queryId}")
+               execKsql("TERMINATE ${queryId}", properties)
             }
 
             // now drop the table again
