@@ -40,11 +40,11 @@ class PipelineTask extends DefaultTask {
    String pipelinePath
 
    /**
-    * When defined, the DROPS script is not constructed in reverse order.
+    * When defined, DROP statements are not processed in reverse order of the CREATE statements, which is the default.
     */
    @Input
    @Option(option = 'no-reverse-drops',
-           description = 'When defined, the DROPS script is not constructed in reverse order.'
+           description = 'When defined, DROP statements are not processed in reverse order of the CREATE statements, which is the default.'
    )
    boolean noReverseDrops
 
@@ -95,6 +95,25 @@ class PipelineTask extends DefaultTask {
    }
 
    /**
+    * Gets tokenized (based on ';') pipeline SQL statements using {@link #getPipelineFiles}.
+    *
+    * @return The List of tokenized pipeline SQL statements.
+    */
+   @Internal
+   def getTokenizedSql() {
+
+      //tokenize individual SQL statements out of each SQL script
+      def tokenized = []
+      getPipelineFiles().each { file ->
+         file.text.trim().tokenize(';').each {
+            tokenized << it
+         }
+      }
+      log.debug "parsed:"
+      tokenized.each { log.debug "sql: $it \n" }
+   }
+
+   /**
     * Gets the hierarchical collection of pipeline SQL statements--tokenized and normalized--and sorted using {@link #getPipelineFiles}.
     *
     * @return The List of pipeline SQL statements.
@@ -102,50 +121,71 @@ class PipelineTask extends DefaultTask {
    @Internal
    def getPipelineSql() {
 
-      //parse individual SQL statements out of each SQL script
-      def parsed = []
-      getPipelineFiles().each { file ->
-         file.text.trim().tokenize(';').each {
-            parsed << it
-         }
-      }
-      log.debug "parsed:"
-      parsed.each { log.debug "sql: $it \n" }
+      // clean up, removing an backslashes
+      def transformed = tokenizedSql.collect { sql ->
 
-      // remove comments, even those that begin in the middle of a line
-      def normalized = parsed.collect { sql ->
-         sql.replaceAll(/(\s)*(--)(.*)/) { all, begin, symbol, comment ->
-            (begin ?: '').trim()
-         }
+         // all the transformations of the statements after tokenization
+         sql
+                 .replaceAll(~/(\s)*(--)(.*)/) { all, begin, symbol, comment -> (begin ?: '') } // remove comments
+                 .trim() // basically trim things up
+                 .replace("\n", ' ') // replace newlines with spaces
+                 .replace('  ', ' ') // replace 2 spaces with 1
+                 .replace("\\", '') // remove backslashes if they exist (and they shouldn't)
       }
       // remove any null entries
-      normalized.removeAll([null])
+      transformed.removeAll([null])
 
-      // clean up, removing an backslashes
-      def cleaned = normalized.collect { sql ->
-         sql.replace("\\",'').replace("\n",' ').replace('  ',' ')
-      }
       log.debug "cleaned:"
-      cleaned.each { log.debug "sql: $it \n" }
+      transformed.each { log.debug "sql: $it \n" }
 
-      return cleaned
+      return transformed
    }
 
    /**
-    * Accepts a List of CREATE KSQL statements, and returns an equivalent List of DROP KSQL statements. The default behavior is to return those DROP statements in the reverse order of the CREATE statement.
+    * Returns a List of Map objects of "Comment Annotations" from the KSQL source directory. These annotations are of the form: "--@", and are used to control certain behaviors.
     *
-    * @param pipelines The List of KSQL CREATE statements.
+    * @return List of Map objects of structure: [type: annotation type, object: stream or table name]. For instance: [type:DeleteTopic, object:events_per_min].
+    */
+   @Internal
+   def getAnnotations() {
+
+      List annotations = []
+
+      tokenizedSql.each { String sql ->
+         sql.find(/(?i)(--@{1,1})(\w+)(\n)(CREATE{1,1})( {1,})(\w+)( {1,})(\w+)/) { match, annotation, annotationType, s1, create, s2, table, s3, object ->
+            if (match != null) annotations << [type: annotationType, object: object]
+         }
+      }
+
+      return annotations
+   }
+
+   /**
+    * Returns a List tables or streams that should have the underlying topic deleted during {@pipelineExecute}. The annotation that controls this is: "--@DeleteTopic"
     *
-    * @param reverse If 'true', then return the DROP statements in reverse order of the CREATE statements.
+    * @return List of stream/table names that have the "--@DeleteTopic" annotation.
+    */
+   @Internal
+   def getDeleteTopics() {
+
+      annotations.collect { map ->
+         if (map.type == 'DeleteTopic') map.object
+      }
+   }
+
+   /**
+    * Returns a List of DROP KSQL statements: one for each CREATE statement in the specified pipeline directory.
+    * The default behavior is to return those DROP statements in the reverse order of the CREATE statement.
+    * This can be disabled using {@noReverseDrops} in the API, or the task option '--no-reverse-drops'.
     *
     * @return The List of KSQL DROP statements.
     */
    List getDropSql() {
 
-      List script = pipelineSql.collect { sql ->
+      List script = pipelineSql.collect { String sql ->
 
-         sql.find(~/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
-            "DROP $type IF EXISTS $name;\n"
+         sql.find(/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
+            "DROP $type IF EXISTS ${name}${deleteTopics.contains(name) ? ' DELETE TOPIC' : ''};\n"
          }
       }
 
