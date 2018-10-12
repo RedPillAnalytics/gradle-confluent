@@ -140,7 +140,7 @@ class ExecuteTest extends Specification {
 
    }
 
-   def "Execute :pipelineExecute and test for --@DeleteTopic annotation"() {
+   def "Execute :pipelineExecute and test for --@DeleteTopic directive"() {
 
       given:
       taskName = 'pipelineExecute'

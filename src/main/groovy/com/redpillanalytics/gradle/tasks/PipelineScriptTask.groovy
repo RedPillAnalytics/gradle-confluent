@@ -22,43 +22,7 @@ class PipelineScriptTask extends PipelineTask {
    }
 
    /**
-    * Returns a File object representation of the KSQL 'create' deployment artifact.
-    *
-    * @return The File object representation of the KSQL 'create' deployment artifact.
-    */
-   @OutputFile
-   File getCreateScript() {
-
-      return project.file("${buildDir}/${project.extensions.confluent.pipelineCreateName}")
-   }
-
-   /**
-    * Returns a File object representation of the KSQL 'drop' deployment artifact.
-    *
-    * @return The File object representation of the KSQL 'drop' deployment artifact.
-    */
-   @OutputFile
-   File getDropScript() {
-
-      return project.file("${buildDir}/${project.extensions.confluent.pipelineDropName}")
-   }
-
-   /**
-    * Builds the KSQL DROP script for the directory or directories.
-    */
-   @OutputFile
-   File dropScript() {
-
-      dropScript.delete()
-      dropSql.each {
-         dropScript.append(it)
-      }
-
-      return dropScript
-   }
-
-   /**
-    * Builds the KSQL CREEATE script for the directory or directories.
+    * Builds the KSQL script for the directory or directories.
     */
    @OutputFile
    File createScript() {
@@ -75,8 +39,6 @@ class PipelineScriptTask extends PipelineTask {
     */
    @TaskAction
    def pipelineScript() {
-
-      dropScript()
       createScript()
    }
 

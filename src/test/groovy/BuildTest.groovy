@@ -10,7 +10,7 @@ import spock.lang.Unroll
 class BuildTest extends Specification {
 
    @Shared
-   File projectDir, buildDir, resourcesDir, buildFile, artifact
+   File projectDir, buildDir, resourcesDir, buildFile, pipelineArtifact, script
 
    @Shared
    def result
@@ -20,8 +20,8 @@ class BuildTest extends Specification {
       projectDir = new File("${System.getProperty("projectDir")}/simple-build")
       buildDir = new File(projectDir, 'build')
       buildFile = new File(projectDir, 'build.gradle')
-      artifact = new File(buildDir, 'distributions/test-pipeline.zip')
-
+      pipelineArtifact = new File(buildDir, 'distributions/simple-build-pipeline-1.0.0.zip')
+      script = new File(buildDir, 'pipeline/ksql-script.sql')
 
       resourcesDir = new File('src/test/resources')
 
@@ -40,7 +40,6 @@ class BuildTest extends Specification {
                 mavenLocal()
               }
             }
-            archivesBaseName = 'test'
             group = 'com.redpillanalytics'
             version = '1.0.0'
             
@@ -60,13 +59,30 @@ class BuildTest extends Specification {
       log.warn result.getOutput()
    }
 
+   def "Verify the correctness of artifacts"() {
+
+      when:
+      result = GradleRunner.create()
+              .withProjectDir(projectDir)
+              .withArguments('-Si', 'build', 'publish')
+              .withPluginClasspath()
+              .build()
+
+      log.warn result.getOutput()
+
+      then:
+      pipelineArtifact.exists()
+      script.exists()
+      script.readLines().size() == 14
+   }
+
    @Unroll
    def "Verify the following result: #task"() {
 
       when:
       result = GradleRunner.create()
               .withProjectDir(projectDir)
-              .withArguments('-Si', 'clean', 'build', 'publish', '--rerun-tasks')
+              .withArguments('-Si', 'clean', 'build', '--rerun-tasks')
               .withPluginClasspath()
               .build()
 

@@ -43,17 +43,17 @@ class ConfluentPluginExtension {
    /**
     * The name of the Pipeline build directory in the project build directory.
     */
-   String pipelineBuildName = 'pipeline-build'
+   String pipelineBuildName = 'pipeline'
 
    /**
     * The name of the Pipeline deploy directory in the project build directory.
     */
-   String pipelineDeployName = 'pipeline-deploy'
+   String pipelineDeployName = 'pipeline'
 
    /**
     * The name of the Function deploy directory in the project build directory.
     */
-   String functionDeployName = 'function-deploy'
+   String functionDeployName = 'function'
 
    /**
     * If populated, the KSQL Function JAR file will be renamed to this value during the copy. This makes it easy to hand-off to downstream deployment mechanisms.
@@ -63,12 +63,7 @@ class ConfluentPluginExtension {
    /**
     * The name of the Pipeline deployment 'create' script, which contains all the persistent statements that need to be executed.
     */
-   String pipelineCreateName = 'ksql-create-script.sql'
-
-   /**
-    * The name of the Pipeline deployment 'drop' script, which contains all the DROP statements that need to be executed.
-    */
-   String pipelineDropName = 'ksql-drop-script.sql'
+   String pipelineCreateName = 'ksql-script.sql'
 
    /**
     * RESTful endpoint for the KSQL Server.
