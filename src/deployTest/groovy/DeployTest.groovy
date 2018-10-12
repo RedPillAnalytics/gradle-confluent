@@ -19,8 +19,8 @@ class DeployTest extends Specification {
       projectDir = new File("${System.getProperty("projectDir")}/simple-deploy")
       buildDir = new File(projectDir, 'build')
       buildFile = new File(projectDir, 'build.gradle')
-      //artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
-      taskList = ['functionCopy', 'pipelineExtract', 'deploy']
+      artifact = new File(buildDir, 'distributions/simple-deploy-pipeline.zip')
+      taskList = ['functionCopy', 'pipelineExtract', 'pipelineDeploy', 'deploy']
 
       resourcesDir = new File('src/test/resources')
 
@@ -38,7 +38,6 @@ class DeployTest extends Specification {
                 mavenLocal()
               }
             }
-            archivesBaseName = 'test'
             group = 'com.redpillanalytics'
             version = '1.0.0'
             
@@ -48,10 +47,8 @@ class DeployTest extends Specification {
             
             dependencies {
                archives group: 'com.redpillanalytics', name: 'ksql-functions', version: '+'
-               archives group: 'com.redpillanalytics', name: 'test-pipeline', version: '+'
+               archives group: 'com.redpillanalytics', name: 'simple-build-pipeline', version: '+'
             }
-            
-            confluent.functionArtifactName = 'ksql-functions.jar'
         """)
    }
 

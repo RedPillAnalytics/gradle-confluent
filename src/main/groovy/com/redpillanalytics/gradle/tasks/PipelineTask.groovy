@@ -31,9 +31,9 @@ class PipelineTask extends DefaultTask {
    boolean noReverseDrops
 
    /**
-    * Returns a File object representation of the {@filePath} parameter.
+    * Returns a File object representation of the {@pipelinePath} parameter.
     *
-    * @return The File object representation of the {@filePath} parameter.
+    * @return The File object representation of the {@pipelinePath} parameter.
     */
    @InputDirectory
    File getDir() {
@@ -41,14 +41,14 @@ class PipelineTask extends DefaultTask {
    }
 
    /**
-    * Instantiates a KsqlRest Class, which is used for interacting with the KSQL RESTful API.
+    * Returns a File object representation of the KSQL 'create' deployment artifact.
     *
-    * @return {@link KsqlRest}
+    * @return The File object representation of the KSQL 'create' deployment artifact.
     */
-   @Internal
-   def getKsqlRest() {
+   @OutputFile
+   File getCreateScript() {
 
-      return new KsqlRest(baseUrl: restUrl)
+      return project.file("${dir}/${project.extensions.confluent.pipelineCreateName}")
    }
 
    /**
@@ -59,7 +59,7 @@ class PipelineTask extends DefaultTask {
    @Internal
    List getPipelineFiles() {
 
-      def tree = project.fileTree(dir: dir, includes: ['**/*.sql', '**/*.SQL'])
+      def tree = project.fileTree(dir: dir, includes: ['**/*.sql', '**/*.SQL'], exclude: createScript.path )
 
       //todo Add content filtering here
       // this would only be applicable with a copy of all the source files first to the build directory

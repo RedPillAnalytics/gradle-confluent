@@ -10,7 +10,7 @@ import spock.lang.Unroll
 class BuildTest extends Specification {
 
    @Shared
-   File projectDir, buildDir, resourcesDir, buildFile, pipelineArtifact, pipelineCreate, pipelineDrop
+   File projectDir, buildDir, resourcesDir, buildFile, pipelineArtifact, script
 
    @Shared
    def result
@@ -21,9 +21,7 @@ class BuildTest extends Specification {
       buildDir = new File(projectDir, 'build')
       buildFile = new File(projectDir, 'build.gradle')
       pipelineArtifact = new File(buildDir, 'distributions/simple-build-pipeline-1.0.0.zip')
-      pipelineCreate = new File(buildDir, 'pipeline-build/ksql-create-script.sql')
-      pipelineDrop = new File(buildDir, 'pipeline-build/ksql-drop-script.sql')
-
+      script = new File(buildDir, 'pipeline/ksql-script.sql')
 
       resourcesDir = new File('src/test/resources')
 
@@ -74,10 +72,8 @@ class BuildTest extends Specification {
 
       then:
       pipelineArtifact.exists()
-      pipelineCreate.exists()
-      pipelineDrop.exists()
-      pipelineCreate.readLines().size() == 14
-      pipelineDrop.readLines().size() == 14
+      script.exists()
+      script.readLines().size() == 14
    }
 
    @Unroll

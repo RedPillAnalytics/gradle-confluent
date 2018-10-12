@@ -12,6 +12,7 @@ import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.bundling.Zip
 
 @Slf4j
@@ -111,22 +112,22 @@ class ConfluentPlugin implements Plugin<Project> {
          log.debug "pipelinePattern: ${pipelinePattern}"
 
          String functionPattern = project.extensions.confluent.functionPattern
-         log.debug "functionPattern: ${functionPattern}"
+         //log.debug "functionPattern: ${functionPattern}"
 
          String configPath = project.extensions.confluent.configPath
-         log.debug "configPath: ${configPath}"
+         //log.debug "configPath: ${configPath}"
 
          String configEnv = project.extensions.confluent.configEnv
-         log.debug "configEnv: ${configEnv}"
+         //log.debug "configEnv: ${configEnv}"
 
          Boolean enablePipelines = project.extensions.confluent.enablePipelines
-         log.debug "enablePipelines: ${enablePipelines}"
+         //log.debug "enablePipelines: ${enablePipelines}"
 
          Boolean enableFunctions = project.extensions.confluent.enableFunctions
-         log.debug "enableFunctions: ${enableFunctions}"
+         //log.debug "enableFunctions: ${enableFunctions}"
 
          Boolean enableStreams = project.extensions.confluent.enableStreams
-         log.debug "enableStreams: ${enableStreams}"
+         //log.debug "enableStreams: ${enableStreams}"
 
          // create deploy task
          project.task('deploy') {
@@ -141,22 +142,32 @@ class ConfluentPlugin implements Plugin<Project> {
 
             if (tg.isBuildEnv && enablePipelines) {
 
+               project.task(tg.getTaskName('pipelineSync'), type: Sync) {
+                  group taskGroup
+                  description = "Synchronize the pipeline build directory from the pipeline source directory."
+                  from pipelineDir
+                  into pipelineBuildDir
+               }
+
+               project.build.dependsOn tg.getTaskName('pipelineSync')
+
                project.task(tg.getTaskName('pipelineScript'), type: PipelineScriptTask) {
 
                   group taskGroup
                   description('Build a single KSQL deployment script with all the individual pipeline processes ordered.'
                           + ' Primarily used for building a server start script.')
 
-                  pipelinePath pipelineDir.canonicalPath
+                  pipelinePath pipelineBuildDir.canonicalPath
                   onlyIf { dir.exists() }
+                  dependsOn tg.getTaskName('pipelineSync')
 
                }
 
-               //project.build.dependsOn tg.getTaskName('deployScript')
+               project.build.dependsOn tg.getTaskName('pipelineScript')
 
                project.task(tg.getTaskName('pipelineZip'), type: Zip) {
                   group taskGroup
-                  description "Build a distribution ZIP file with a single KSQL 'create' script, as well as a KSQL 'drop' script."
+                  description "Build a distribution ZIP file with the pipeline source files, plus a single KSQL 'create' script."
                   appendix = project.extensions.confluent.pipelinePattern
                   includeEmptyDirs false
                   from pipelineBuildDir
@@ -169,8 +180,9 @@ class ConfluentPlugin implements Plugin<Project> {
                project.task(tg.getTaskName('pipelineExecute'), type: PipelineExecuteTask) {
                   group taskGroup
                   description = "Execute all KSQL pipelines from the provided source directory, in hierarchical order, proceeded by applicable DROP and TERMINATE commands."
-                  pipelinePath pipelineDir.canonicalPath
-                  onlyIf { dir.exists() }
+                  pipelinePath pipelineBuildDir.canonicalPath
+                  onlyIf { pipelineBuildDir.exists() }
+                  dependsOn tg.getTaskName('pipelineSync')
                }
             }
 
@@ -185,7 +197,15 @@ class ConfluentPlugin implements Plugin<Project> {
 
                   }
 
-                  project.deploy.dependsOn tg.getTaskName('pipelineExtract')
+                  project.task(tg.getTaskName('pipelineDeploy'), type: PipelineExecuteTask) {
+                     group taskGroup
+                     description = "Execute all KSQL pipelines from the provided source directory, in hierarchical order, proceeded by applicable DROP and TERMINATE commands."
+                     pipelinePath pipelineDeployDir.canonicalPath
+                     onlyIf { pipelineDeployDir.exists() }
+                     dependsOn tg.getTaskName('pipelineExtract')
+                  }
+
+                  project.deploy.dependsOn tg.getTaskName('pipelineDeploy')
                }
             }
 
