@@ -12,6 +12,24 @@ import org.gradle.api.tasks.options.Option
 class PipelineExecuteTask extends PipelineTask {
 
    /**
+    * The RESTful API URL for the KSQL Server.
+    */
+   @Input
+   @Option(option = "rest-url",
+           description = "The RESTful API URL for the KSQL Server."
+   )
+   String restUrl = project.extensions.confluent.pipelineEndpoint
+
+   /**
+    * If enabled, then set "ksql.streams.auto.offset.reset" to "earliest".
+    */
+   @Input
+   @Option(option = "from-beginning",
+           description = 'If enabled, then set "ksql.streams.auto.offset.reset" to "earliest".'
+   )
+   boolean fromBeginning = false
+
+   /**
     * When defined, DROP statements are not processed using a TERMINATE for all currently-running queries.
     */
    @Input

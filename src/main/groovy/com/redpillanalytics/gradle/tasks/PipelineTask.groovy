@@ -13,24 +13,6 @@ import org.gradle.api.tasks.options.Option
 class PipelineTask extends DefaultTask {
 
    /**
-    * The RESTful API URL for the KSQL Server.
-    */
-   @Input
-   @Option(option = "rest-url",
-           description = "The top-level directory containing the subdirectories--ordered alphanumerically--of pipeline processes."
-   )
-   String restUrl = project.extensions.confluent.pipelineEndpoint
-
-   /**
-    * If enabled, then set "ksql.streams.auto.offset.reset" to "earliest".
-    */
-   @Input
-   @Option(option = "from-beginning",
-           description = 'If enabled, then set "ksql.streams.auto.offset.reset" to "earliest".'
-   )
-   boolean fromBeginning = false
-
-   /**
     * The top-level directory containing the subdirectories--ordered alphanumerically--of pipeline processes.
     */
    @Input
@@ -142,34 +124,38 @@ class PipelineTask extends DefaultTask {
    }
 
    /**
-    * Returns a List of Map objects of "Comment Annotations" from the KSQL source directory. These annotations are of the form: "--@", and are used to control certain behaviors.
+    * Returns a List of Map objects of "Comment Directives" from the KSQL source directory. These directives are of the form: "--@", and are used to control certain behaviors.
     *
-    * @return List of Map objects of structure: [type: annotation type, object: stream or table name]. For instance: [type:DeleteTopic, object:events_per_min].
+    * @return List of Map objects of structure: [type: type, object: stream or table name]. For instance: [type:DeleteTopic, object:events_per_min].
     */
    @Internal
-   def getAnnotations() {
+   def getDirectives() {
 
-      List annotations = []
+      List directives = []
 
       tokenizedSql.each { String sql ->
-         sql.find(/(?i)(--@{1,1})(\w+)(\n)(CREATE{1,1})( {1,})(\w+)( {1,})(\w+)/) { match, annotation, annotationType, s1, create, s2, table, s3, object ->
-            if (match != null) annotations << [type: annotationType, object: object]
+         sql.find(/(?i)(--@{1,1})(\w+)(\n)(CREATE{1,1})( {1,})(\w+)( {1,})(\w+)/) { match, directive, directiveType, s1, create, s2, table, s3, object ->
+            if (match != null) directives << [type: directiveType, object: object]
          }
       }
 
-      return annotations
+      return directives
    }
 
    /**
-    * Returns a List tables or streams that should have the underlying topic deleted during {@pipelineExecute}. The annotation that controls this is: "--@DeleteTopic"
+    * Returns a List of tables or streams that have a specific directive for execution behavior. Directives are defined in SQL scripts using: "--@DirectiveName".
     *
-    * @return List of stream/table names that have the "--@DeleteTopic" annotation.
+    * For instance, the directive that controls whether or not an underlying topic is deleted during {@pipelineExecute} is: --@DeleteTopic.
+    *
+    * @param directiveType The type of directive to get included objects for.
+    *
+    * @return objects A list of tables/streams that have the specific directive.
     */
    @Internal
-   def getDeleteTopics() {
+   def getDirectiveObjects(String directiveType) {
 
-      annotations.collect { map ->
-         if (map.type == 'DeleteTopic') map.object
+      directives.collect { map ->
+         if (map.type == directiveType) map.object
       }
    }
 
@@ -185,7 +171,7 @@ class PipelineTask extends DefaultTask {
       List script = pipelineSql.collect { String sql ->
 
          sql.find(/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
-            "DROP $type IF EXISTS ${name}${deleteTopics.contains(name) ? ' DELETE TOPIC' : ''};\n"
+            "DROP $type IF EXISTS ${name}${getDirectiveObjects('DeleteTopic').contains(name) ? ' DELETE TOPIC' : ''};\n"
          }
       }
 
