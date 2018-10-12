@@ -40,11 +40,11 @@ class PipelineTask extends DefaultTask {
    String pipelinePath
 
    /**
-    * When defined, the DROPS script is not constructed in reverse order.
+    * When defined, DROP statements are not processed in reverse order of the CREATE statements, which is the default.
     */
    @Input
    @Option(option = 'no-reverse-drops',
-           description = 'When defined, the DROPS statements are not processed in reverse order of the CREATE statements, which is the default.'
+           description = 'When defined, DROP statements are not processed in reverse order of the CREATE statements, which is the default.'
    )
    boolean noReverseDrops
 
