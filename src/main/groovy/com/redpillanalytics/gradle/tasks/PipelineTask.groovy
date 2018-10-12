@@ -95,6 +95,25 @@ class PipelineTask extends DefaultTask {
    }
 
    /**
+    * Gets tokenized (based on ';') pipeline SQL statements using {@link #getPipelineFiles}.
+    *
+    * @return The List of tokenized pipeline SQL statements.
+    */
+   @Internal
+   def getTokenizedSql() {
+
+      //tokenize individual SQL statements out of each SQL script
+      def tokenized = []
+      getPipelineFiles().each { file ->
+         file.text.trim().tokenize(';').each {
+            tokenized << it
+         }
+      }
+      log.debug "parsed:"
+      tokenized.each { log.debug "sql: $it \n" }
+   }
+
+   /**
     * Gets the hierarchical collection of pipeline SQL statements--tokenized and normalized--and sorted using {@link #getPipelineFiles}.
     *
     * @return The List of pipeline SQL statements.
@@ -102,38 +121,30 @@ class PipelineTask extends DefaultTask {
    @Internal
    def getPipelineSql() {
 
-      //parse individual SQL statements out of each SQL script
-      def parsed = []
-      getPipelineFiles().each { file ->
-         file.text.trim().tokenize(';').each {
-            parsed << it
-         }
-      }
-      log.debug "parsed:"
-      parsed.each { log.debug "sql: $it \n" }
+      // clean up, removing an backslashes
+      def transformed = tokenizedSql.collect { sql ->
 
-      // remove comments, even those that begin in the middle of a line
-      def normalized = parsed.collect { sql ->
-         sql.replaceAll(/(?m)(\s)*(--)([^@])(.*)/) { all, begin, symbol, annotation, comment ->
-            (begin ?: '').trim()
-         }
+         // all the transformations of the statements after tokenization
+         sql
+                 .replaceAll(~/(\s)*(--)(.*)/) { all, begin, symbol, comment -> (begin ?: '') } // remove comments
+                 .trim() // basically trim things up
+                 .replace("\n", ' ') // replace newlines with spaces
+                 .replace('  ', ' ') // replace 2 spaces with 1
+                 .replace("\\", '') // remove backslashes if they exist (and they shouldn't)
       }
       // remove any null entries
-      normalized.removeAll([null])
+      transformed.removeAll([null])
 
-      // clean up, removing an backslashes
-      def cleaned = normalized.collect { sql ->
-
-         sql
-                 .replace("\\", '')
-                 .replace("\n", ' \n')
-                 .replace('  ', ' ')
-                 .replace('\n \n', '\n')
-      }
       log.debug "cleaned:"
-      cleaned.each { log.debug "sql: $it \n" }
+      transformed.each { log.debug "sql: $it \n" }
 
-      return cleaned
+      return transformed
+   }
+
+   @Internal
+   def getAnnotations() {
+
+
    }
 
    /**
