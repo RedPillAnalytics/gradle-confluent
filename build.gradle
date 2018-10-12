@@ -131,7 +131,7 @@ task publishDocs {
 
       exec {
          executable 'aws'
-         args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/current/"
+         args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/latest/"
       }
    }
 

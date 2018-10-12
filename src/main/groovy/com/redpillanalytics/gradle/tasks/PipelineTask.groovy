@@ -141,27 +141,51 @@ class PipelineTask extends DefaultTask {
       return transformed
    }
 
+   /**
+    * Returns a List of Map objects of "Comment Annotations" from the KSQL source directory. These annotations are of the form: "--@", and are used to control certain behaviors.
+    *
+    * @return List of Map objects of structure: [type: annotation type, object: stream or table name]. For instance: [type:DeleteTopic, object:events_per_min].
+    */
    @Internal
    def getAnnotations() {
 
+      List annotations = []
 
+      tokenizedSql.each { String sql ->
+         sql.find(/(?i)(--@{1,1})(\w+)(\n)(CREATE{1,1})( {1,})(\w+)( {1,})(\w+)/) { match, annotation, annotationType, s1, create, s2, table, s3, object ->
+            if (match != null) annotations << [type: annotationType, object: object]
+         }
+      }
+
+      return annotations
    }
 
    /**
-    * Accepts a List of CREATE KSQL statements, and returns an equivalent List of DROP KSQL statements. The default behavior is to return those DROP statements in the reverse order of the CREATE statement.
+    * Returns a List tables or streams that should have the underlying topic deleted during {@pipelineExecute}. The annotation that controls this is: "--@DeleteTopic"
     *
-    * @param pipelines The List of KSQL CREATE statements.
-    *
-    * @param reverse If 'true', then return the DROP statements in reverse order of the CREATE statements.
+    * @return List of stream/table names that have the "--@DeleteTopic" annotation.
+    */
+   @Internal
+   def getDeleteTopics() {
+
+      annotations.collect { map ->
+         if (map.type == 'DeleteTopic') map.object
+      }
+   }
+
+   /**
+    * Returns a List of DROP KSQL statements: one for each CREATE statement in the specified pipeline directory.
+    * The default behavior is to return those DROP statements in the reverse order of the CREATE statement.
+    * This can be disabled using {@noReverseDrops} in the API, or the task option '--no-reverse-drops'.
     *
     * @return The List of KSQL DROP statements.
     */
    List getDropSql() {
 
-      List script = pipelineSql.collect { sql ->
+      List script = pipelineSql.collect { String sql ->
 
-         sql.find(~/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
-            "DROP $type IF EXISTS $name;\n"
+         sql.find(/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
+            "DROP $type IF EXISTS ${name}${deleteTopics.contains(name) ? ' DELETE TOPIC' : ''};\n"
          }
       }
 

@@ -140,6 +140,18 @@ class ExecuteTest extends Specification {
 
    }
 
+   def "Execute :pipelineExecute and test for --@DeleteTopic annotation"() {
+
+      given:
+      taskName = 'pipelineExecute'
+      result = executeSingleTask(taskName, ['--no-create','-Si','--rerun-tasks'])
+
+      expect:
+      result.task(":${taskName}").outcome.name() != 'FAILED'
+      result.output.toLowerCase().contains('drop table if exists events_per_min delete topic')
+
+   }
+
    def "Execute :pipelineExecute task with custom REST endpoint"() {
 
       given:
