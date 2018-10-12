@@ -44,7 +44,7 @@ class PipelineTask extends DefaultTask {
     */
    @Input
    @Option(option = 'no-reverse-drops',
-           description = 'When defined, the DROPS script is not constructed in reverse order.'
+           description = 'When defined, the DROPS statements are not processed in reverse order of the CREATE statements, which is the default.'
    )
    boolean noReverseDrops
 
@@ -114,7 +114,7 @@ class PipelineTask extends DefaultTask {
 
       // remove comments, even those that begin in the middle of a line
       def normalized = parsed.collect { sql ->
-         sql.replaceAll(/(\s)*(--)(.*)/) { all, begin, symbol, comment ->
+         sql.replaceAll(/(?m)(\s)*(--)([^@])(.*)/) { all, begin, symbol, annotation, comment ->
             (begin ?: '').trim()
          }
       }
@@ -123,7 +123,12 @@ class PipelineTask extends DefaultTask {
 
       // clean up, removing an backslashes
       def cleaned = normalized.collect { sql ->
-         sql.replace("\\",'').replace("\n",' ').replace('  ',' ')
+
+         sql
+                 .replace("\\", '')
+                 .replace("\n", ' \n')
+                 .replace('  ', ' ')
+                 .replace('\n \n', '\n')
       }
       log.debug "cleaned:"
       cleaned.each { log.debug "sql: $it \n" }
