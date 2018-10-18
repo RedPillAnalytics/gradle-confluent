@@ -63,7 +63,7 @@ class PipelineTask extends DefaultTask {
    @Internal
    List getPipelineFiles() {
 
-      def tree = project.fileTree(dir: dir, includes: ['**/*.sql', '**/*.SQL'], exclude: createScript.path)
+      def tree = project.fileTree(dir: dir, includes: ['**/*.sql', '**/*.SQL'], exclude: project.extensions.confluent.pipelineCreateName)
 
       return tree.sort()
    }
