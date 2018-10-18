@@ -13,13 +13,6 @@ SELECT status, count(*) AS errors
 FROM clickstream window HOPPING ( size 60 second, advance by 5  second) 
 WHERE status > 400 GROUP BY status;
 
--- Aggregate (count&groupBy) using a TABLE-Window
-CREATE TABLE ENRICHED_ERROR_CODES_COUNT AS
-SELECT code, definition, COUNT(*) AS count 
-FROM ENRICHED_ERROR_CODES WINDOW TUMBLING (size 30 second) 
-GROUP BY code, definition 
-HAVING COUNT(*) > 1;
-
 -- Clickstream enriched with user account data
 CREATE STREAM customer_clickstream WITH (PARTITIONS=2) AS 
 SELECT userid, u.first_name, u.last_name, u.level, time, ip, request, status, agent 

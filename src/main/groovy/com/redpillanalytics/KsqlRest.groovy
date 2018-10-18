@@ -5,6 +5,7 @@ import com.mashape.unirest.http.Unirest
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
+import org.gradle.api.GradleException
 
 @Slf4j
 /**
@@ -24,7 +25,7 @@ class KsqlRest {
     *
     * @param properties Any KSQL parameters to include with the KSQL execution.
     *
-    * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
+    * @return Map with meaningful elements returned in the REST call, plus a 'body' key with the full JSON payload.
     */
    def execKsql(String sql, Map properties) {
 
@@ -42,28 +43,17 @@ class KsqlRest {
       def body = new JsonSlurper().parseText(response.body)
 
       def result = [
-              status        : response.status,
-              statusText    : response.statusText,
-              message       : body.message,
-              statementText : body.statementText,
-              commandStatus : body.commandStatus ? body.commandStatus.status[0] : '',
-              commandMessage: body.commandStatus ? body.commandStatus.message[0] : '',
-              body          : body
+              status    : response.status,
+              statusText: response.statusText,
+              body      : body
       ]
+      log.info "status: ${result.status}, statusText: ${result.statusText}"
 
-      if (result.statusText != 'OK' && (!result.message.toLowerCase()?.contains('cannot drop') || result.commandMessage?.toLowerCase()?.contains('does not exist') )) {
-         def newResult = [
-                 status: result.status,
-                 statusText: result.statusText,
-                 message: result.message,
-                 commandStatus: result.commandStatus,
-                 commandMessage: result.commandMessage
-         ]
-
-         log.info "result: $newResult"
-      }
+      log.debug "body: $result.body"
+      //log.warn "Status: ${response.commandStatus}"
 
       return result
+
    }
 
    /**
@@ -79,54 +69,6 @@ class KsqlRest {
 
       sql.each {
          execKsql(it, properties)
-      }
-   }
-
-   /**
-    * Executes a List of KSQL DROP statements using the KSQL RESTful API. Manages issuing TERMINATE statements as part of the DROP, if desired.
-    *
-    * @param sql the List of SQL DROP statements to execute.
-    *
-    * @param properties Any KSQL parameters to include with the KSQL execution.
-    *
-    * @param terminate Determines whether TERMINATE statements are issued, along with a retry of the DROP.
-    *
-    * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
-    */
-   def dropKsql(List sql, Map properties, Boolean terminate = true) {
-
-      sql.each {
-
-         def result = execKsql(it, properties)
-
-         log.debug "result: ${result}"
-
-         if (result.status == 400 && result.message.toLowerCase().contains('cannot drop') && terminate) {
-            //log a message first
-
-            // could also use the DESCRIBE command REST API results to get read and write queries to terminate
-            // but it's pretty easy to grab it from the DROP command REST API payload
-            def matches = result.message.findAll(~/(\[)([^\]]*)(\])/) { match, b1, list, b2 ->
-               list
-            }
-            // Two "string lists" are returned first
-            String read = matches[0]
-            String write = matches[1]
-
-            // Get a list of all queries currently executing
-            List queries = read.tokenize(',') + write.tokenize(',')
-            log.debug "queries: ${queries.toString()}"
-
-            // now terminate with extreme prejudice
-            queries.each { queryId ->
-               execKsql("TERMINATE ${queryId}", properties)
-            }
-
-            // now drop the table again
-            // this time using the non-explicit DROP method
-            // no Infinite Loops here
-            execKsql(it)
-         }
       }
    }
 
@@ -158,6 +100,143 @@ class KsqlRest {
 
       sql.each {
          execKsql(it, earliest)
+      }
+   }
+
+   /**
+    * Executes a KSQL statement using the KSQL RESTful API. Optimized for issuing CREATE TABLE/STREAM statements.
+    *
+    * @param sql the SQL statement to execute.
+    *
+    * @param properties Any KSQL parameters to include with the KSQL execution.
+    *
+    * @return Map with meaningful elements returned in the REST call, plus a 'body' key with the full JSON payload.
+    */
+   def createKsql(String sql, Map properties) {
+
+      def response = execKsql(sql, properties)
+
+      def result = [
+              status        : response.status,
+              statusText    : response.statusText,
+              error_code    : response.body.error_code,
+              message       : response.body.message,
+              statementText : response.body.statementText,
+              commandId     : response.body.commandId,
+              commandStatus : response.body.commandStatus,
+              commandMessage: response.body.commandStatus,
+              body          : response.body
+      ]
+
+      if (result.error_code.findResult { it }) {
+         throw new GradleException("error_code: ${result.error_code}: ${result.message}")
+      }
+
+      log.debug "result: $result"
+
+      return result
+   }
+
+   /**
+    * Executes a List of KSQL statements using the KSQL RESTful API. Optimized for issuing CREATE TABLE/STREAM statements.
+    *
+    * @param sql the List of SQL statements to execute.
+    *
+    * @param properties Any KSQL parameters to include with the KSQL execution.
+    *
+    * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
+    */
+   def createKsql(List sql, Map properties) {
+
+      sql.each {
+         createKsql(it, properties)
+      }
+   }
+
+   /**
+    * Executes a KSQL statement using the KSQL RESTful API. Optimized for issuing CREATE TABLE/STREAM statements.
+    *
+    * @param sql The SQL statement to execute.
+    *
+    * @param earliest Boolean dictating that the statement should set 'auto.offset.reset' to 'earliest'.
+    *
+    * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
+    */
+   def createKsql(String sql, Boolean earliest = false) {
+
+      def data = createKsql(sql, (earliest ? ["ksql.streams.auto.offset.reset": "earliest"] : [:]))
+      return data
+   }
+
+   /**
+    * Executes a List of KSQL statements using the KSQL RESTful API. Optimized for issuing CREATE TABLE/STREAM statements.
+    *
+    * @param sql the List of SQL statements to execute.
+    *
+    * @param earliest Boolean dictating that the statement should set 'auto.offset.reset' to 'earliest'.
+    *
+    * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
+    */
+   def createKsql(List sql, Boolean earliest = false) {
+
+      sql.each {
+         createKsql(it, earliest)
+      }
+   }
+
+   /**
+    * Executes a List of KSQL DROP statements using the KSQL RESTful API. Manages issuing TERMINATE statements as part of the DROP, if desired.
+    *
+    * @param sql the List of SQL DROP statements to execute.
+    *
+    * @param properties Any KSQL parameters to include with the KSQL execution.
+    *
+    * @param terminate Determines whether TERMINATE statements are issued, along with a retry of the DROP.
+    *
+    * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
+    */
+   def dropKsql(List sql, Map properties, Boolean terminate = true) {
+
+      sql.each {
+
+         def result = execKsql(it, properties)
+
+         log.debug "result: ${result}"
+
+         if (result.status == 400 && result.body.message.toLowerCase().contains('cannot drop')) {
+
+            if (terminate) {
+               //log a message first
+               log.warn "Queries exist. Terminating..."
+
+               // could also use the DESCRIBE command REST API results to get read and write queries to terminate
+               // but it's pretty easy to grab it from the DROP command REST API payload
+               def matches = result.body.message.findAll(~/(\[)([^\]]*)(\])/) { match, b1, list, b2 ->
+                  list
+               }
+               // Two "string lists" are returned first
+               String read = matches[0]
+               String write = matches[1]
+
+               // Get a list of all queries currently executing
+               List queries = read.tokenize(',') + write.tokenize(',')
+               log.debug "queries: ${queries.toString()}"
+
+               // now terminate with extreme prejudice
+               queries.each { queryId ->
+                  execKsql("TERMINATE ${queryId}", properties)
+               }
+               log.warn "Executing DROP again..."
+
+               // now drop the table again
+               // this time using the non-explicit DROP method
+               // no Infinite Loops here
+               execKsql(it)
+
+            } else {
+               log.warn "Queries exist, but '--no-terminate' option provided."
+            }
+         }
       }
    }
 
