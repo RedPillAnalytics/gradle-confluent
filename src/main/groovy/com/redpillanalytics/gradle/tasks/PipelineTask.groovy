@@ -1,6 +1,5 @@
 package com.redpillanalytics.gradle.tasks
 
-import com.redpillanalytics.KsqlRest
 import groovy.util.logging.Slf4j
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.*
@@ -13,11 +12,11 @@ import org.gradle.api.tasks.options.Option
 class PipelineTask extends DefaultTask {
 
    /**
-    * The top-level directory containing the subdirectories--ordered alphanumerically--of pipeline processes.
+    * The top-level directory containing files and subdirectories--ordered alphanumerically--of pipeline processes.
     */
    @Input
    @Option(option = "pipeline-dir",
-           description = "The top-level directory containing the subdirectories--ordered alphanumerically--of pipeline processes."
+           description = "The top-level directory containing files and subdirectories--ordered alphanumerically--of pipeline processes."
    )
    String pipelinePath
 
@@ -37,13 +36,18 @@ class PipelineTask extends DefaultTask {
     */
    @InputDirectory
    File getDir() {
-      return project.file(pipelinePath)
+
+      // first let's look for the existence in src/main/pipeline
+      File dir = project.file("${project.extensions.confluent.sourceBase}/${project.extensions.confluent.pipelineSourceName}/${pipelinePath}")
+
+      return dir.exists() ? dir : project.file(pipelinePath)
+
    }
 
    /**
-    * Returns a File object representation of the KSQL 'create' deployment artifact.
+    * Returns a File object representation of the KSQL create script.
     *
-    * @return The File object representation of the KSQL 'create' deployment artifact.
+    * @return The File object representation of the KSQL create script.
     */
    @OutputFile
    File getCreateScript() {
@@ -59,19 +63,7 @@ class PipelineTask extends DefaultTask {
    @Internal
    List getPipelineFiles() {
 
-      def tree = project.fileTree(dir: dir, includes: ['**/*.sql', '**/*.SQL'], exclude: createScript.path )
-
-      //todo Add content filtering here
-      // this would only be applicable with a copy of all the source files first to the build directory
-      // then do construction of all file stuff there
-
-//      tree.filter { String line ->
-//         !line.replaceAll(/(\s)*(--)(.*)/) { all, begin, symbol, comment ->
-//            (begin ?: '').trim() - '\\'
-//         }
-//         line.trim()
-//         line.tokenize(';')
-//      }
+      def tree = project.fileTree(dir: dir, includes: ['**/*.sql', '**/*.SQL'], exclude: project.extensions.confluent.pipelineCreateName)
 
       return tree.sort()
    }

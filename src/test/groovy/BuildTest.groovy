@@ -73,7 +73,7 @@ class BuildTest extends Specification {
       then:
       pipelineArtifact.exists()
       script.exists()
-      script.readLines().size() == 14
+      script.readLines().size() == 13
    }
 
    @Unroll

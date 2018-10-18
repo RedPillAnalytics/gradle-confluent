@@ -80,7 +80,7 @@ class PipelineExecuteTask extends PipelineTask {
       if (!noDrop) ksqlRest.dropKsql(dropSql, [:], !noTerminate)
 
       // now create the pipelines
-      if (!noCreate) ksqlRest.execKsql(pipelineSql, fromBeginning)
+      if (!noCreate) ksqlRest.createKsql(pipelineSql, fromBeginning)
 
    }
 }

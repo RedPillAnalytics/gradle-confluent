@@ -1,11 +1,12 @@
 import groovy.util.logging.Slf4j
 import org.gradle.testkit.runner.GradleRunner
-import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Stepwise
 import spock.lang.Title
 
 @Slf4j
+@Stepwise
 @Title("Execute :tasks")
 class ExecuteTest extends Specification {
 
@@ -33,8 +34,8 @@ class ExecuteTest extends Specification {
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
                |}
-               confluent.pipelineEndpoint = 'http://localhost:8088'
-        """.stripMargin())
+               |confluent.pipelineEndpoint = 'http://localhost:8088'
+               |""".stripMargin())
    }
 
    def setup() {
@@ -92,6 +93,19 @@ class ExecuteTest extends Specification {
 
    }
 
+   def "Execute :pipelineExecute task with --no-create"() {
+
+      given:
+      taskName = 'pipelineExecute'
+      result = executeSingleTask(taskName, ['--no-create','-Si','--rerun-tasks'])
+
+      expect:
+      result.task(":${taskName}").outcome.name() != 'FAILED'
+      !result.output.toLowerCase().contains('create table')
+      !result.output.toLowerCase().contains('insert into')
+
+   }
+
    def "Execute :pipelineExecute task with --no-drop"() {
 
       given:
@@ -104,19 +118,7 @@ class ExecuteTest extends Specification {
 
    }
 
-   def "Execute :pipelineExecute task with --no-terminate"() {
-
-      given:
-      taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--no-terminate','-Si','--rerun-tasks'])
-
-      expect:
-      result.task(":${taskName}").outcome.name() != 'FAILED'
-      !result.output.toLowerCase().contains('terminate')
-
-   }
-
-   def "Execute :pipelineExecute task with --no-create"() {
+   def "Execute :pipelineExecute task with --no-create again"() {
 
       given:
       taskName = 'pipelineExecute'
@@ -126,6 +128,18 @@ class ExecuteTest extends Specification {
       result.task(":${taskName}").outcome.name() != 'FAILED'
       !result.output.toLowerCase().contains('create table')
       !result.output.toLowerCase().contains('insert into')
+
+   }
+
+   def "Execute :pipelineExecute task with --no-terminate"() {
+
+      given:
+      taskName = 'pipelineExecute'
+      result = executeSingleTask(taskName, ['--no-terminate','-Si','--rerun-tasks'])
+
+      expect:
+      result.task(":${taskName}").outcome.name() != 'FAILED'
+      !result.output.toLowerCase().contains('terminate')
 
    }
 
