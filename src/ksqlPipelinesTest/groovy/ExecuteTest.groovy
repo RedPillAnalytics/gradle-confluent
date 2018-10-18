@@ -34,8 +34,8 @@ class ExecuteTest extends Specification {
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
                |}
-               confluent.pipelineEndpoint = 'http://localhost:8088'
-        """.stripMargin())
+               |confluent.pipelineEndpoint = 'http://localhost:8088'
+               |""".stripMargin())
    }
 
    def setup() {
