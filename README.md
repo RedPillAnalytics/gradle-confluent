@@ -25,7 +25,7 @@ plugins {
    id "com.redpillanalytics.gradle-confluent" version "0.9.18"
 }
 ```
- Now we can use the Gradle `./gradlew tasks` command to see if anything has changed.
+ Now we can use the Gradle `./gradlew tasks` command to see the new tasks available under the **Confluent** Task Group:
  
  ```gradle
 Confluent tasks
@@ -37,4 +37,3 @@ pipelineSync - Synchronize the pipeline build directory from the pipeline source
 pipelineZip - Build a distribution ZIP file with the pipeline source files, plus a single KSQL 'create' script.
 
  ```
- 
