@@ -156,6 +156,7 @@ class PipelineTask extends DefaultTask {
     *
     * @return The List of KSQL DROP statements.
     */
+   @Internal
    List getDropSql() {
 
       List script = pipelineSql.collect { String sql ->

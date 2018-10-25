@@ -47,7 +47,7 @@ class KsqlRest {
               statusText: response.statusText,
               body      : body
       ]
-      log.info "status: ${result.status}, statusText: ${result.statusText}"
+      log.debug "status: ${result.status}, statusText: ${result.statusText}"
 
       log.debug "body: $result.body"
       //log.warn "Status: ${response.commandStatus}"
@@ -207,7 +207,7 @@ class KsqlRest {
 
             if (terminate) {
                //log a message first
-               log.warn "Queries exist. Terminating..."
+               log.info "Queries exist. Terminating..."
 
                // could also use the DESCRIBE command REST API results to get read and write queries to terminate
                // but it's pretty easy to grab it from the DROP command REST API payload
@@ -226,7 +226,7 @@ class KsqlRest {
                queries.each { queryId ->
                   execKsql("TERMINATE ${queryId}", properties)
                }
-               log.warn "Executing DROP again..."
+               log.info "Executing DROP again..."
 
                // now drop the table again
                // this time using the non-explicit DROP method
@@ -234,7 +234,7 @@ class KsqlRest {
                execKsql(it)
 
             } else {
-               log.warn "Queries exist, but '--no-terminate' option provided."
+               log.info "Queries exist, but '--no-terminate' option provided."
             }
          }
       }
