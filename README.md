@@ -216,6 +216,3 @@ BUILD SUCCESSFUL in 3s
 Stopped 1 worker daemon(s).
 ==>
 ```
-
-# Building Artifacts
-We can do a simple build process by running `./gradlew build`, which gives us a zip file containing all our source KSQL scripts, but also a single script called `ksql-script.sql`. This allows KSQL code to be deployed a number of ways. First, we can simply
