@@ -183,6 +183,7 @@ class ConfluentPlugin implements Plugin<Project> {
                   pipelinePath pipelineBuildDir.canonicalPath
                   onlyIf { pipelineBuildDir.exists() }
                   dependsOn tg.getTaskName('pipelineSync')
+                  outputs.upToDateWhen { false }
                }
             }
 

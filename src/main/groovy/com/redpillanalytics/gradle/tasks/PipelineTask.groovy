@@ -96,7 +96,7 @@ class PipelineTask extends DefaultTask {
    def getPipelineSql() {
 
       // clean up, removing an backslashes
-      def transformed = tokenizedSql.collect { sql ->
+      def transformed = tokenizedSql.findResults { sql ->
 
          // all the transformations of the statements after tokenization
          sql
@@ -106,8 +106,6 @@ class PipelineTask extends DefaultTask {
                  .replace('  ', ' ') // replace 2 spaces with 1
                  .replace("\\", '') // remove backslashes if they exist (and they shouldn't)
       }
-      // remove any null entries
-      transformed.removeAll([null])
 
       log.debug "cleaned:"
       transformed.each { log.debug "sql: $it \n" }
@@ -158,6 +156,7 @@ class PipelineTask extends DefaultTask {
     *
     * @return The List of KSQL DROP statements.
     */
+   @Internal
    List getDropSql() {
 
       List script = pipelineSql.collect { String sql ->
