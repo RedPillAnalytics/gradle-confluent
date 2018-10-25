@@ -21,14 +21,13 @@ pipeline {
 
       stage('Build') {
          steps {
-            sh "$gradle build deployTest"
+            sh "$gradle build"
          }
       }
 
       stage('Integration') {
           steps {
-              sh "confluent start"
-              sh "$gradle ksqlServertest"
+              sh "$gradle ksqlServertest ksqlPipelinesTest deployTest"
           }
       }
 
