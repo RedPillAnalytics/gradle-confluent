@@ -58,19 +58,7 @@ pipelineZip - Build a distribution ZIP file with the pipeline source files, plus
  ```
 
 # Executing KSQL Pipelines
-The easiest wasy to use this plugin is to simply execute all of our persistent query statements--or a subset of them--in the correct order to ensure dependencies are met. We do this using the `pipelineExecute` task. Let's first run it with the defaults:
-
-```bash
-==> ./gradlew pipelineExecute --console=plain
-> Task :pipelineSync UP-TO-DATE
-> Task :pipelineExecute
-
-BUILD SUCCESSFUL in 5s
-2 actionable tasks: 1 executed, 1 up-to-date
-==>
-```
-
-I'm going to turn up the logging a bit so we can see exactly what's going on. Apologies in advance for the including all the screen output, as it's quite long, but I think it's worth it:
+The easiest wasy to use this plugin is to simply execute all of our persistent query statements--or a subset of them--in source control. We do this using the `pipelineExecute` task. I'm going to turn up the logging a bit so we can see exactly what's going on. Apologies in advance for the verbose screen output, but I think it's worth it:
 
 ```bash
 ==> ./gradlew pipelineExecute --console=plain -i
@@ -84,125 +72,63 @@ Skipping task ':pipelineSync' as it is up-to-date.
 Task ':pipelineExecute' is not up-to-date because:
   Task.upToDateWhen is false.
 Executing statement: DROP TABLE IF EXISTS CLICK_USER_SESSIONS;
-status: 400, statusText: Bad Request
 Queries exist. Terminating...
-Executing statement: TERMINATE CTAS_CLICK_USER_SESSIONS_49;
-status: 200, statusText: OK
+Executing statement: TERMINATE CTAS_CLICK_USER_SESSIONS_59;
 Executing DROP again...
 Executing statement: DROP TABLE IF EXISTS CLICK_USER_SESSIONS;
-status: 200, statusText: OK
 Executing statement: DROP TABLE IF EXISTS USER_IP_ACTIVITY;
-status: 400, statusText: Bad Request
 Queries exist. Terminating...
-Executing statement: TERMINATE CTAS_USER_IP_ACTIVITY_48;
-status: 200, statusText: OK
+Executing statement: TERMINATE CTAS_USER_IP_ACTIVITY_58;
 Executing DROP again...
 Executing statement: DROP TABLE IF EXISTS USER_IP_ACTIVITY;
-status: 200, statusText: OK
 Executing statement: DROP STREAM IF EXISTS USER_CLICKSTREAM;
-status: 400, statusText: Bad Request
-Queries exist. Terminating...
-Executing statement: TERMINATE CSAS_USER_CLICKSTREAM_47;
-status: 200, statusText: OK
-Executing DROP again...
-Executing statement: DROP STREAM IF EXISTS USER_CLICKSTREAM;
-status: 200, statusText: OK
 Executing statement: DROP STREAM IF EXISTS customer_clickstream;
-status: 400, statusText: Bad Request
-Queries exist. Terminating...
-Executing statement: TERMINATE CSAS_CUSTOMER_CLICKSTREAM_46;
-status: 200, statusText: OK
-Executing DROP again...
-Executing statement: DROP STREAM IF EXISTS customer_clickstream;
-status: 200, statusText: OK
 Executing statement: DROP table IF EXISTS ERRORS_PER_MIN;
-status: 400, statusText: Bad Request
-Queries exist. Terminating...
-Executing statement: TERMINATE CTAS_ERRORS_PER_MIN_45;
-status: 200, statusText: OK
-Executing DROP again...
-Executing statement: DROP table IF EXISTS ERRORS_PER_MIN;
-status: 200, statusText: OK
 Executing statement: DROP TABLE IF EXISTS ERRORS_PER_MIN_ALERT;
-status: 400, statusText: Bad Request
-Queries exist. Terminating...
-Executing statement: TERMINATE CTAS_ERRORS_PER_MIN_ALERT_44;
-status: 200, statusText: OK
-Executing DROP again...
-Executing statement: DROP TABLE IF EXISTS ERRORS_PER_MIN_ALERT;
-status: 200, statusText: OK
 Executing statement: DROP TABLE IF EXISTS WEB_USERS;
-status: 200, statusText: OK
 Executing statement: DROP TABLE IF EXISTS ENRICHED_ERROR_CODES_COUNT;
-status: 400, statusText: Bad Request
 Queries exist. Terminating...
-Executing statement: TERMINATE CTAS_ENRICHED_ERROR_CODES_COUNT_43;
-status: 200, statusText: OK
+Executing statement: TERMINATE CTAS_ENRICHED_ERROR_CODES_COUNT_71;
 Executing DROP again...
 Executing statement: DROP TABLE IF EXISTS ENRICHED_ERROR_CODES_COUNT;
-status: 200, statusText: OK
 Executing statement: DROP STREAM IF EXISTS ENRICHED_ERROR_CODES;
-status: 400, statusText: Bad Request
 Queries exist. Terminating...
-Executing statement: TERMINATE CSAS_ENRICHED_ERROR_CODES_42;
-status: 200, statusText: OK
+Executing statement: TERMINATE CSAS_ENRICHED_ERROR_CODES_70;
 Executing DROP again...
 Executing statement: DROP STREAM IF EXISTS ENRICHED_ERROR_CODES;
-status: 200, statusText: OK
 Executing statement: DROP TABLE IF EXISTS pages_per_min;
-status: 400, statusText: Bad Request
 Queries exist. Terminating...
-Executing statement: TERMINATE CTAS_PAGES_PER_MIN_41;
-status: 200, statusText: OK
+Executing statement: TERMINATE CTAS_PAGES_PER_MIN_69;
 Executing DROP again...
 Executing statement: DROP TABLE IF EXISTS pages_per_min;
-status: 200, statusText: OK
 Executing statement: DROP table IF EXISTS events_per_min DELETE TOPIC;
-status: 400, statusText: Bad Request
 Queries exist. Terminating...
-Executing statement: TERMINATE CTAS_EVENTS_PER_MIN_40;
-status: 200, statusText: OK
+Executing statement: TERMINATE CTAS_EVENTS_PER_MIN_68;
 Executing DROP again...
 Executing statement: DROP table IF EXISTS events_per_min DELETE TOPIC;
-status: 200, statusText: OK
 Executing statement: DROP TABLE IF EXISTS clickstream_codes;
-status: 200, statusText: OK
 Executing statement: DROP STREAM IF EXISTS clickstream;
-status: 200, statusText: OK
 Executing statement: CREATE STREAM clickstream (_time bigint,time varchar, ip varchar, request varchar, status int, userid int, bytes bigint, agent varchar) with (kafka_topic = 'clickstream', value_format = 'json');
-status: 200, statusText: OK
 Executing statement: CREATE TABLE clickstream_codes (code int, definition varchar) with (key='code', kafka_topic = 'clickstream_codes', value_format = 'json');
-status: 200, statusText: OK
 Executing statement: CREATE table events_per_min AS SELECT userid, count(*) AS events FROM clickstream window TUMBLING (size 60 second) GROUP BY userid;
-status: 200, statusText: OK
 Executing statement: CREATE TABLE pages_per_min AS SELECT userid, count(*) AS pages FROM clickstream WINDOW HOPPING (size 60 second, advance by 5 second) WHERE request like '%html%' GROUP BY userid;
-status: 200, statusText: OK
 Executing statement: CREATE STREAM ENRICHED_ERROR_CODES AS SELECT code, definition FROM clickstream LEFT JOIN clickstream_codes ON clickstream.status = clickstream_codes.code;
-status: 200, statusText: OK
 Executing statement: CREATE TABLE ENRICHED_ERROR_CODES_COUNT AS SELECT code, definition, COUNT(*) AS count FROM ENRICHED_ERROR_CODES WINDOW TUMBLING (size 30 second) GROUP BY code, definition HAVING COUNT(*) > 1;
-status: 200, statusText: OK
 Executing statement: CREATE TABLE WEB_USERS (user_id int, registered_At bigint, username varchar, first_name varchar, last_name varchar, city varchar, level varchar) with (key='user_id', kafka_topic = 'clickstream_users', value_format = 'json');
-status: 200, statusText: OK
 Executing statement: CREATE TABLE ERRORS_PER_MIN_ALERT AS SELECT status, count(*) AS errors FROM clickstream window HOPPING ( size 30 second, advance by 20 second) WHERE status > 400 GROUP BY status HAVING count(*) > 5 AND count(*) is not NULL;
-status: 200, statusText: OK
 Executing statement: CREATE table ERRORS_PER_MIN AS SELECT status, count(*) AS errors FROM clickstream window HOPPING ( size 60 second, advance by 5 second) WHERE status > 400 GROUP BY status;
-status: 200, statusText: OK
 Executing statement: CREATE STREAM customer_clickstream WITH (PARTITIONS=2) AS SELECT userid, u.first_name, u.last_name, u.level, time, ip, request, status, agent FROM clickstream c LEFT JOIN web_users u ON c.userid = u.user_id;
-status: 200, statusText: OK
 Executing statement: CREATE STREAM USER_CLICKSTREAM AS SELECT userid, u.username, ip, u.city, request, status, bytes FROM clickstream c LEFT JOIN web_users u ON c.userid = u.user_id;
-status: 200, statusText: OK
 Executing statement: CREATE TABLE USER_IP_ACTIVITY AS  SELECT username, ip, city, COUNT(*) AS count  FROM USER_CLICKSTREAM WINDOW TUMBLING (size 60 second)  GROUP BY username, ip, city  HAVING COUNT(*) > 1;
-status: 200, statusText: OK
 Executing statement: CREATE TABLE CLICK_USER_SESSIONS AS  SELECT username, count(*) AS events  FROM USER_CLICKSTREAM window SESSION (300 second)  GROUP BY username;
-status: 200, statusText: OK
-:pipelineExecute (Thread[Task worker for ':',5,main]) completed. Took 2.707 secs.
+:pipelineExecute (Thread[Task worker for ':',5,main]) completed. Took 2.202 secs.
 
-BUILD SUCCESSFUL in 3s
+BUILD SUCCESSFUL in 2s
 2 actionable tasks: 1 executed, 1 up-to-date
 ==>
 ```
 
-First thing to notice is that the plugin automatically issues the DROP statements for any applicable CREATE statement it sees. It runs all the DROP statements at the beginning, but also runs them in the reverse order of the CREATE statement dependency ordering: this just makes sense if you think about it. Additionally, if any DROP statements fail because there are currently persistent queries running involving that table or stream, then the plugin finds the query ID involved and issues the required TERMINATE statement. So there are a triad of statements that are run the CREATE, the DROP and the TERMINATE. This behavior can be controlled with command-line options. Here is the output from the help task command:
+First thing to notice is that the plugin automatically issues the DROP statements for any applicable CREATE statement encountered. It runs all the DROP statements at the beginning, but also runs them in the reverse order of the CREATE statement dependency ordering: this just makes sense if you think about it. Additionally, if any DROP statements fail because persistent queries exist involving that table or stream, the plugin finds the query ID involved and issues the required TERMINATE statement. So there are a triad of statements that are run: CREATE, DROP and TERMINATE. This behavior can be controlled with command-line options. Here is the output from the help task command:
 
 ```bash
 ==> ./gradlew help --task pipelineExecute
@@ -239,6 +165,55 @@ Group
 
 BUILD SUCCESSFUL in 0s
 1 actionable task: 1 executed
+==>
+```
+
+Seeing some of the command-line options, we can see how the `gradle-confluent` plugin is very helpful for developers during the KSQL development phase. We can process just a single directory of KSQL scripts easily as we iterate on our KSQL code.
+
+```bash
+==> ./gradlew pipelineExecute --console=plain -i --pipeline-dir 01-clickstream --from-beginning
+
+> Task :pipelineSync UP-TO-DATE
+Skipping task ':pipelineSync' as it is up-to-date.
+:pipelineSync (Thread[Task worker for ':',5,main]) completed. Took 0.002 secs.
+:pipelineExecute (Thread[Task worker for ':',5,main]) started.
+
+> Task :pipelineExecute
+Task ':pipelineExecute' is not up-to-date because:
+  Task.upToDateWhen is false.
+Executing statement: DROP TABLE IF EXISTS ENRICHED_ERROR_CODES_COUNT;
+Queries exist. Terminating...
+Executing statement: TERMINATE CTAS_ENRICHED_ERROR_CODES_COUNT_67;
+Executing DROP again...
+Executing statement: DROP TABLE IF EXISTS ENRICHED_ERROR_CODES_COUNT;
+Executing statement: DROP STREAM IF EXISTS ENRICHED_ERROR_CODES;
+Queries exist. Terminating...
+Executing statement: TERMINATE CSAS_ENRICHED_ERROR_CODES_66;
+Executing DROP again...
+Executing statement: DROP STREAM IF EXISTS ENRICHED_ERROR_CODES;
+Executing statement: DROP TABLE IF EXISTS pages_per_min;
+Queries exist. Terminating...
+Executing statement: TERMINATE CTAS_PAGES_PER_MIN_65;
+Executing DROP again...
+Executing statement: DROP TABLE IF EXISTS pages_per_min;
+Executing statement: DROP table IF EXISTS events_per_min DELETE TOPIC;
+Queries exist. Terminating...
+Executing statement: TERMINATE CTAS_EVENTS_PER_MIN_64;
+Executing DROP again...
+Executing statement: DROP table IF EXISTS events_per_min DELETE TOPIC;
+Executing statement: DROP TABLE IF EXISTS clickstream_codes;
+Executing statement: DROP STREAM IF EXISTS clickstream;
+Executing statement: CREATE STREAM clickstream (_time bigint,time varchar, ip varchar, request varchar, status int, userid int, bytes bigint, agent varchar) with (kafka_topic = 'clickstream', value_format = 'json');
+Executing statement: CREATE TABLE clickstream_codes (code int, definition varchar) with (key='code', kafka_topic = 'clickstream_codes', value_format = 'json');
+Executing statement: CREATE table events_per_min AS SELECT userid, count(*) AS events FROM clickstream window TUMBLING (size 60 second) GROUP BY userid;
+Executing statement: CREATE TABLE pages_per_min AS SELECT userid, count(*) AS pages FROM clickstream WINDOW HOPPING (size 60 second, advance by 5 second) WHERE request like '%html%' GROUP BY userid;
+Executing statement: CREATE STREAM ENRICHED_ERROR_CODES AS SELECT code, definition FROM clickstream LEFT JOIN clickstream_codes ON clickstream.status = clickstream_codes.code;
+Executing statement: CREATE TABLE ENRICHED_ERROR_CODES_COUNT AS SELECT code, definition, COUNT(*) AS count FROM ENRICHED_ERROR_CODES WINDOW TUMBLING (size 30 second) GROUP BY code, definition HAVING COUNT(*) > 1;
+:pipelineExecute (Thread[Task worker for ':',5,main]) completed. Took 1.141 secs.
+
+BUILD SUCCESSFUL in 3s
+2 actionable tasks: 1 executed, 1 up-to-date
+Stopped 1 worker daemon(s).
 ==>
 ```
 
