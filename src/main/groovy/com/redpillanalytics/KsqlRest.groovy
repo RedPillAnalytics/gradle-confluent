@@ -150,6 +150,7 @@ class KsqlRest {
 
       sql.each {
          createKsql(it, properties)
+         sleep(100)
       }
    }
 
