@@ -42,7 +42,7 @@ So let's start preparing our `build.gradle` file. First, we need to apply the `g
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.1'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.2'
 }
 ```
  Now we can use the `./gradlew tasks` command to see the new tasks available under the **Confluent** Task Group:
@@ -57,7 +57,7 @@ pipelineSync - Synchronize the pipeline build directory from the pipeline source
 pipelineZip - Build a distribution ZIP file with the pipeline source files, plus a single KSQL 'create' script.
  ```
 
-# Executing KSQL Pipelines
+## Executing KSQL Pipelines
 The easiest wasy to use this plugin is to simply execute all of our persistent query statements--or a subset of them--in source control. We do this using the `pipelineExecute` task, which uses the KSQL REST API to handle all of the heavy-lifting. I'll turn up the logging a bit so we can see exactly what's going on. Apologies in advance for the verbose screen output, but I think it's worth it:
 
 ```bash
@@ -130,7 +130,7 @@ BUILD SUCCESSFUL in 2s
 ==>
 ```
 
-First thing to notice is that the plugin automatically issues the DROP statements for any applicable CREATE statement encountered. It runs all the DROP statements at the beginning, but also runs them in the reverse order of the CREATE statement dependency ordering: this just makes sense if you think about it. Additionally, if any DROP statements fail because persistent queries exist involving that table or stream, the plugin finds the query ID involved and issues the required TERMINATE statement. So there are a triad of statements that are run: CREATE, DROP and TERMINATE. This behavior can be controlled with command-line options. Here is the output from the help task command:
+First thing to notice is that the plugin automatically constructs and issues the DROP statements for any applicable CREATE statement encountered: no need to write those yourself. It runs all the DROP statements at the beginning, but also runs them in the reverse order of the CREATE statement dependency ordering: this just makes sense if you think about it. Additionally, if any DROP statements fail because persistent queries exist involving that table or stream, the plugin finds the query ID involved and issues the required TERMINATE statement. So there are a triad of statements that are run: CREATE, DROP and TERMINATE. This behavior can be controlled with command-line options. Here is the output from the help task command:
 
 ```bash
 ==> ./gradlew help --task pipelineExecute
@@ -221,13 +221,13 @@ Stopped 1 worker daemon(s).
 ==>
 ```
 
-# Building Artifacts
+## Building Artifacts
 While executing KSQL scripts from our source repository is useful for developers using KSQL, and might even suffice for some deployment pipelines, `gradle-confluent` is really designed to build and publish artifacts for downstream deployment. We of course support this using Gradle's built-in support for Maven. We simply execute `./gradlew build` to build a .zip distribution artifact with all of our KSQL in it, or `./gradlew build publish` to build and publish the distribution artifact. Let's make a few changes to our `build.gradle` file to publish to a local Maven repository. Of course, a local Maven repository is not fit for real environments, and Gradle supports all major Maven repository servers, as well as AWS S3 and Google Cloud Storage as Maven artifact repositories. We're also hard-coding our version number in the `build.gradle` file... we would normally use a plugin to automatically handle version bumping.
 
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.1'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.2'
 }
 publishing {
     repositories {
@@ -334,14 +334,14 @@ drwxr-xr-x  2.0 unx        0 b- defN 18-Oct-25 16:18 02-clickstream-users/
 ==>
 ```
 
-Notice our zip file has all the source scripts, but it also have the single, normalized `ksql-script.sql` file, which can be used as our KSQL server start script if we choose to deploy in that way.
+Notice our zip file has all the source scripts, but it also has the single, normalized `ksql-script.sql` file, which can be used as a KSQL server start script if we choose to deploy in that manner.
 
-If we want to deploy our KSQL pipelines from Maven instead of Git (which let's face it, should be standard), the we can define a Gradle dependency on the `ksql-examples-pipeline` artifact so that Gradle will pull that artifact from Maven to use for deployment. We are changing our `build.gradle` file again. Notice we are adding the `repositories{}` and `dependencies{}` closures, and with our dependency version, we have specified '+' which simply pulls the most recent.
+If we want to deploy our KSQL pipelines from Maven instead of Git (which let's face it, should be standard), then we define a Gradle dependency on the `ksql-examples-pipeline` artifact (or whatever we named the Gradle project building our pipelines) so that Gradle can pull that artifact from Maven to use for deployment. We are changing our `build.gradle` file again. Notice we are adding the `repositories{}` and `dependencies{}` closures, and with our dependency version, we have specified '+' which simply pulls the most recent.
 
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.1'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.2'
 }
 publishing {
     repositories {
@@ -459,3 +459,9 @@ BUILD SUCCESSFUL in 4s
 2 actionable tasks: 2 executed
 ==>
 ```
+
+# KSQL User-Defined Functions (UDFs)
+Coming soon
+
+# Kafka Streams
+Coming soon
