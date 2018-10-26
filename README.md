@@ -42,7 +42,7 @@ So let's start preparing our `build.gradle` file. First, we need to apply the `g
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.2'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.3'
 }
 ```
  Now we can use the `./gradlew tasks` command to see the new tasks available under the **Confluent** Task Group:
@@ -227,7 +227,7 @@ While executing KSQL scripts from our source repository is useful for developers
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.2'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.3'
 }
 publishing {
     repositories {
@@ -336,12 +336,13 @@ drwxr-xr-x  2.0 unx        0 b- defN 18-Oct-25 16:18 02-clickstream-users/
 
 Notice our zip file has all the source scripts, but it also has the single, normalized `ksql-script.sql` file, which can be used as a KSQL server start script if we choose to deploy in that manner.
 
+## Deploying KSQL Artifacts
 If we want to deploy our KSQL pipelines from Maven instead of Git (which let's face it, should be standard), then we define a Gradle dependency on the `ksql-examples-pipeline` artifact (or whatever we named the Gradle project building our pipelines) so that Gradle can pull that artifact from Maven to use for deployment. We are changing our `build.gradle` file again. Notice we are adding the `repositories{}` and `dependencies{}` closures, and with our dependency version, we have specified '+' which simply pulls the most recent.
 
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.2'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.3'
 }
 publishing {
     repositories {
@@ -358,6 +359,20 @@ repositories {
 dependencies {
     archives group: 'com.redpillanalytics', name: 'ksql-examples-pipeline', version: '+'
 }
+```
+
+With our KSQL pipeline dependency added, we get a few more tasks in our **Confluent** task group when we run `./gradlew tasks`, specifically the `pipelineExtract` and `pipelineDeploy` tasks:
+
+```gradle
+Confluent tasks
+---------------
+deploy - Calls all dependent deployment tasks.
+pipelineDeploy - Execute all KSQL pipelines from the provided source directory, in hierarchical order, proceeded by applicable DROP and TERMINATE commands.
+pipelineExecute - Execute all KSQL pipelines from the provided source directory, in hierarchical order, proceeded by applicable DROP and TERMINATE commands.
+pipelineExtract - Extract the KSQL pipeline deployment dependency (or zip file) into the deployment directory.
+pipelineScript - Build a single KSQL deployment script with all the individual pipeline processes ordered. Primarily used for building a KSQL Server start script.
+pipelineSync - Synchronize the pipeline build directory from the pipeline source directory.
+pipelineZip - Build a distribution ZIP file with the pipeline source files, plus a single KSQL 'create' script.
 ```
 
 Now we can execute with a simple `./gradlew deploy` task:
