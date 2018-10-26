@@ -8,7 +8,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 
 /**
- * Use the KSQL RESTful API to execute all pipelines in a particular directory. Note: not functioning yet.
+ * Use the KSQL RESTful API to execute all pipelines in a particular directory.
  */
 @Slf4j
 class PipelineExecuteTask extends PipelineTask {
