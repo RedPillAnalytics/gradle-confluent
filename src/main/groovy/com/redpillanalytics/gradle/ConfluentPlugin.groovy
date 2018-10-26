@@ -155,7 +155,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
                   group taskGroup
                   description('Build a single KSQL deployment script with all the individual pipeline processes ordered.'
-                          + ' Primarily used for building a server start script.')
+                          + ' Primarily used for building a KSQL Server start script.')
 
                   pipelinePath pipelineBuildDir.canonicalPath
                   onlyIf { dir.exists() }
@@ -204,6 +204,7 @@ class ConfluentPlugin implements Plugin<Project> {
                      pipelinePath pipelineDeployDir.canonicalPath
                      onlyIf { pipelineDeployDir.exists() }
                      dependsOn tg.getTaskName('pipelineExtract')
+                     outputs.upToDateWhen { false }
                   }
 
                   project.deploy.dependsOn tg.getTaskName('pipelineDeploy')
