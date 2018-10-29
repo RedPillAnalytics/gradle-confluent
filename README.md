@@ -480,12 +480,11 @@ Because the `gradle-confluent` plugin auto-generates certain statements, we imme
 
 Directives are signalled using `--@` followed by a camel-case directive name just above the `CREATE STREAM/TABLE` command. In this way, directives are similar to *annotations* on classes or methods in Java.
 
-## DeleteTopic
-`--@DeleteTopic`
+## `--@DeleteTopic`
 When applied to a table or stream, then the `DELETE TOPIC` option is added to the `DROP STREAM/TABLE` command issued during `pipelineExecute` and `pipelineDeploy` tasks. An example of this can be seen in [this test script](src/test/resources/src/main/pipeline/01-clickstream/02-integrate.sql/). This would construct the following `DROP` command:
 
 ```SQL
-DROP TABLE events_per_min DELETE TOPIC;
+DROP TABLE IF EXISTS events_per_min DELETE TOPIC;
 ```
 
 # KSQL User-Defined Functions (UDFs)
