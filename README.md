@@ -24,6 +24,23 @@ Once these topics exist, the integration tests can be run using the following co
 # Motivation
 This plugin was motivated by a real-world project. We were stuggling to easily deploy all the pieces of our Confluent pipeline: KSQL scripts, KSQL user-defined functions (UDFs), and Kafka Streams microservices. The biggest gap we had was deploying KSQL scripts to downstream environments, so the majority of this plugin is for remedying that. Since Gradle already has functionality and plugins for compiling JARS (for UDFs) and building Java applications (for Kafka Streams microservices), this plugin addresses just a few gaps for those patterns.
 
+# Plugin Extension
+Configuration properties for the `gradle-confluent` plugin are specified using the `confluent{}` closure, which adds the `confluent` [*extension*](https://docs.gradle.org/current/userguide/custom_plugins.html#sec:getting_input_from_the_build) to the Gradle project [ExtensionContainer](https://docs.gradle.org/current/javadoc/org/gradle/api/plugins/ExtensionContainer.html). For instance, if I wanted to disable KSQL Function support and Kafka Streams support (see below), then I could add the following closure to my `build.gradle` file:
+
+```Gradle
+confluent {
+  enableFunctions = false
+  enableStreams = false
+}
+```
+or
+```Gradle
+confluent.enableFunctions = false
+confluent.enableStreams = false
+```
+
+All of the extension properties and their default values are listed [here](https://s3.amazonaws.com/documentation.redpillanalytics.com/gradle-confluent/latest/com/redpillanalytics/gradle/ConfluentPluginExtension.html).
+
 # Confluent KSQL
 Building streaming pipelines using KSQL is done with a series of SQL statements, similar to the below:
 
@@ -35,7 +52,7 @@ CREATE TABLE clickstream_codes (code int, definition varchar) with (key='code', 
 CREATE TABLE events_per_min AS SELECT userid, count(*) AS events FROM clickstream window TUMBLING (size 60 second) GROUP BY userid;
 ```
 
-These are called *persistent* queries in KSQL terminology, as they create or use underlying Kafka topics and initialize the streaming processes to persist data to those topics. Because of this, KSQL persistent query statements are regularly dependent on one or more other pesistent query statements. We wanted to eliminate the need for developers to concern themselves (much) with how to express these dependencies in their KSQL scripts: We didn't want them to have to write and test *driving* scripts, which is time-consuming and error-prone. We also wanted to make it easy for developers to tweak and rerun their individual pipelines. We considered many alternatives for expressing these dependencies, and even briefly considered using the [Gradle Task DAG](https://docs.gradle.org/current/userguide/build_lifecycle.html) to do this. In the end, we decided on using simple alphanumeric file and directory structure naming. We use Gradle's built-in [FileTree](https://docs.gradle.org/current/userguide/working_with_files.html#sec:file_trees) functionality which makes this very easy. You can see a sample of how this is achieved in [the KSQL scripts used for testing this plugin](src/test/resources/src/main/pipeline/). Scripts and directories can use any naming standard desired, but the script order dependency is managed by a simple `sort()` of the FileTree object.
+The third statement above is called a *persistent query* in KSQL terminology, as it selects data from a KSQL stream or table, creates or uses an underlying Kafka topic, and initialize the streaming processes to persist data to that topic. Because of this, KSQL persistent query statements are regularly dependent on the creation of other KSQL streams and tables. We wanted to eliminate the need for developers to concern themselves (much) with how to express these dependencies in their KSQL scripts. We didn't want them to have to write and test *driving* scripts, which included DROP statements or TERMINATE statements, which is time-consuming and error-prone. We also wanted to make it easy for developers to tweak and rerun their individual pipelines. So we knew we wanted our approach to auto-generate DROP and TERMINATE statements as a part of the development and deployment processes. We considered many alternatives for expressing these dependencies, and even briefly considered using the [Gradle Task DAG](https://docs.gradle.org/current/userguide/build_lifecycle.html) to do this. In the end, we decided on using simple alphanumeric file and directory structure naming. We use Gradle's built-in [FileTree](https://docs.gradle.org/current/userguide/working_with_files.html#sec:file_trees) functionality which makes this very easy. You can see a sample of how this is achieved in [the KSQL scripts used for testing this plugin](src/test/resources/src/main/pipeline/). Notice that none of these sample test scripts have DROP statements or any scripted dependencies. Scripts and directories can use any naming standard desired, but the script order dependency is managed by a simple `sort()` of the FileTree object.
 
 So let's start preparing our `build.gradle` file. First, we need to apply the `gradle-confluent` plugin, but we'll also apply the `maven-publish` plugin for handling our artifacts.
 
@@ -473,6 +490,18 @@ Skipping task ':deploy' as it has no actions.
 BUILD SUCCESSFUL in 4s
 2 actionable tasks: 2 executed
 ==>
+```
+
+# KSQL Directives
+Because the `gradle-confluent` plugin auto-generates certain statements, we immediately faced an issue defining how options around these statements would be managed. For the `DROP STREAM/TABLE` statement, for instance, we needed to control whether the `DELETE TOPIC` statement was issued as part of this statement. A simple command-line option for the Gradle `pipelineExecute` and `pipelineDeploy` tasks was not sufficient, because it didn't provide the stream/table-level granularity that's required. We introduced *directives* in our KSQL scripts: smart comments that could control certain behaviors. To date, we've only introduced the `--@DeleteTopic` directive, but others could be introduced as needed.
+
+Directives are signalled using `--@` followed by a camel-case directive name just above the `CREATE STREAM/TABLE` command. In this way, directives are similar to *annotations* on classes or methods in Java.
+
+## `--@DeleteTopic`
+When applied to a table or stream, then the `DELETE TOPIC` option is added to the `DROP STREAM/TABLE` command issued during `pipelineExecute` and `pipelineDeploy` tasks. An example of this can be seen in [this test script](src/test/resources/src/main/pipeline/01-clickstream/02-integrate.sql/). This would construct the following `DROP` command:
+
+```SQL
+DROP TABLE IF EXISTS events_per_min DELETE TOPIC;
 ```
 
 # KSQL User-Defined Functions (UDFs)
