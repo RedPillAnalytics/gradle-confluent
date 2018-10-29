@@ -24,6 +24,23 @@ Once these topics exist, the integration tests can be run using the following co
 # Motivation
 This plugin was motivated by a real-world project. We were stuggling to easily deploy all the pieces of our Confluent pipeline: KSQL scripts, KSQL user-defined functions (UDFs), and Kafka Streams microservices. The biggest gap we had was deploying KSQL scripts to downstream environments, so the majority of this plugin is for remedying that. Since Gradle already has functionality and plugins for compiling JARS (for UDFs) and building Java applications (for Kafka Streams microservices), this plugin addresses just a few gaps for those patterns.
 
+# Plugin Extension
+Configuration properties for the `gradle-confluent` plugin are specified using the `confluent{}` closure, which adds the `confluent` [*extension*](https://docs.gradle.org/current/userguide/custom_plugins.html#sec:getting_input_from_the_build) to the Gradle project [ExtensionContainer](https://docs.gradle.org/current/javadoc/org/gradle/api/plugins/ExtensionContainer.html). For instance, if I wanted to disable KSQL Function support and Kafka Streams support (see below), then I could add the following closure to my `build.gradle` file:
+
+```Gradle
+confluent {
+  enableFunctions = false
+  enableStreams = false
+}
+```
+or
+```Gradle
+confluent.enableFunctions = false
+confluent.enableStreams = false
+```
+
+All of the extension properties and their default values are listed [here](https://s3.amazonaws.com/documentation.redpillanalytics.com/gradle-confluent/latest/com/redpillanalytics/gradle/ConfluentPluginExtension.html).
+
 # Confluent KSQL
 Building streaming pipelines using KSQL is done with a series of SQL statements, similar to the below:
 
