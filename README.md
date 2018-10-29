@@ -475,6 +475,19 @@ BUILD SUCCESSFUL in 4s
 ==>
 ```
 
+# KSQL Directives
+Because the `gradle-confluent` plugin auto-generates certain statements, we immediately faced an issue defining how options around these statements would be managed. For the `DROP STREAM/TABLE` statement, for instance, we needed to control whether the `DELETE TOPIC` statement was issued as part of this statement. A simple command-line option for the Gradle `pipelineExecute` and `pipelineDeploy` tasks was not sufficient, because it didn't provide the stream/table-level granularity that's required. We introduced *directives* in our KSQL scripts: smart comments that could control certain behaviors. To date, we've only introduced the `--@DeleteTopic` directive, but others could be introduced as needed.
+
+Directives are signalled using `--@` followed by a camel-case directive name just above the `CREATE STREAM/TABLE` command. In this way, directives are similar to *annotations* on classes or methods in Java.
+
+## DeleteTopic
+`--@DeleteTopic`
+When applied to a table or stream, then the `DELETE TOPIC` option is added to the `DROP STREAM/TABLE` command issued during `pipelineExecute` and `pipelineDeploy` tasks. An example of this can be seen in [this test script](src/test/resources/src/main/pipeline/01-clickstream/02-integrate.sql/). This would construct the following `DROP` command:
+
+```SQL
+DROP TABLE events_per_min DELETE TOPIC;
+```
+
 # KSQL User-Defined Functions (UDFs)
 Coming soon
 
