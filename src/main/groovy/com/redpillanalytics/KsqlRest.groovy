@@ -134,7 +134,7 @@ class KsqlRest {
          throw new GradleException("error_code: ${result.error_code}: ${result.message}")
       }
 
-      while (getSourceDescription(getObjectName(sql)).toString() == null) sleep(5)
+      while (!getSourceDescription(getObjectName(sql))) sleep(5)
 
       log.debug "result: $result"
 
