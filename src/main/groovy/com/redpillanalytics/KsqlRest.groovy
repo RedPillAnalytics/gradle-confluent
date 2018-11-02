@@ -298,7 +298,8 @@ class KsqlRest {
     */
    def getReadQueries(String object) {
 
-      getSourceDescription(object).readQueries[0]
+      getSourceDescription(object)?.readQueries[0]
+
    }
 
    /**
@@ -308,9 +309,14 @@ class KsqlRest {
     */
    def getWriteQueries(String object) {
 
-      getSourceDescription(object).writeQueries[0]
+      getSourceDescription(object)?.writeQueries[0]
    }
 
+   /**
+    * Returns KSQL Server query IDs for all 'writeQueries' and 'readQueries' associated with a particular object.
+    *
+    * @return List of query IDs associated with a particular object.
+    */
    def getQueryIds(String object) {
 
       List queries = getReadQueries(object) + getWriteQueries(object)
