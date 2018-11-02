@@ -298,7 +298,7 @@ class KsqlRest {
     */
    def getReadQueries(String object) {
 
-      getSourceDescription(object)?.readQueries[0]
+      getSourceDescription(object)?.readQueries?.get(0)
 
    }
 
@@ -309,7 +309,7 @@ class KsqlRest {
     */
    def getWriteQueries(String object) {
 
-      getSourceDescription(object)?.writeQueries[0]
+      getSourceDescription(object)?.writeQueries?.get(0)
    }
 
    /**
