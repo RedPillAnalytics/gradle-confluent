@@ -53,7 +53,6 @@ class KsqlRest {
       log.debug "status: ${result.status}, statusText: ${result.statusText}"
 
       log.debug "body: $result.body"
-      //log.warn "Status: ${response.commandStatus}"
 
       return result
 
@@ -203,63 +202,40 @@ class KsqlRest {
     */
    def dropKsql(String sql, Map properties, Boolean terminate = true) {
 
+      // get object name from the query
+      String object = getObjectName(sql)
+
       // first terminate any persistent queries reading or writing to this table/stream
-      if (terminate) {
-         getQueryIds(getObjectName(sql)).each { query ->
-            log.info "Terminating query $query..."
-            execKsql("TERMINATE ${query}", properties)
+      List queryIds = getQueryIds(object)
+      if (!queryIds.isEmpty()) {
+         if (terminate) {
+            queryIds.each { query ->
+               log.info "Terminating query $query..."
+               execKsql("TERMINATE ${query}", properties)
+            }
+
+         } else log.info "Persistent queries exist, but '--no-terminate' option provided."
+      }
+
+      // describe the object first
+      def describe = getSourceDescription(object)
+
+      if (describe) {
+
+         def result = execKsql(sql, properties)
+
+         log.debug "result: ${result}"
+
+         if (result.status == 400 && result.body.message.contains('Incompatible data source type is STREAM')) {
+            log.info "Type is now STREAM. Issuing DROP STREAM..."
+            result = execKsql(sql.replace('TABLE', 'STREAM'), properties)
          }
 
-      } else log.info "'--no-terminate' option provided."
-
-      def result = execKsql(sql, properties)
-
-      log.debug "result: ${result}"
-
-      if (result.status == 400 && result.body.message.contains('Incompatible data source type is STREAM')) {
-         log.info "Type is now STREAM. Issuing DROP STREAM..."
-         result = execKsql(sql.replace('TABLE', 'STREAM'), properties)
+         if (result.status == 400 && result.body.message.contains('Incompatible data source type is TABLE')) {
+            log.info "Type is now TABLE. Issuing DROP TABLE..."
+            result = execKsql(sql.replace('STREAM', 'TABLE'), properties)
+         }
       }
-
-      if (result.status == 400 && result.body.message.contains('Incompatible data source type is TABLE')) {
-         log.info "Type is now TABLE. Issuing DROP TABLE..."
-         result = execKsql(sql.replace('STREAM', 'TABLE'), properties)
-      }
-
-//      if (result.status == 400 && result.body.message.toLowerCase().contains('cannot drop')) {
-//
-//         if (terminate) {
-//            //log a message first
-//            log.info "Queries exist. Terminating..."
-//
-//            // could also use the DESCRIBE command REST API results to get read and write queries to terminate
-//            // but it's pretty easy to grab it from the DROP command REST API payload
-//            def matches = result.body.message.findAll(~/(\[)([^\]]*)(\])/) { match, b1, list, b2 ->
-//               list
-//            }
-//            // Two "string lists" are returned first
-//            String read = matches[0]
-//            String write = matches[1]
-//
-//            // Get a list of all queries currently executing
-//            List queries = read.tokenize(',') + write.tokenize(',')
-//            log.debug "queries: ${queries.toString()}"
-//
-//            // now terminate with extreme prejudice
-//            queries.each { queryId ->
-//               execKsql("TERMINATE ${queryId}", properties)
-//            }
-//            log.info "Executing DROP again..."
-//
-//            // now drop the table again
-//            // this time using the non-explicit DROP method
-//            // no Infinite Loops here
-//            result = execKsql(sql)
-//
-//         } else {
-//            log.info "Queries exist, but '--no-terminate' option provided."
-//         }
-//      }
    }
 
    /**
@@ -319,11 +295,9 @@ class KsqlRest {
     */
    def getQueryIds(String object) {
 
-      List queries = getReadQueries(object) + getWriteQueries(object)
-
-      return queries.findResults { query ->
-         query.id
-      }
+      // null safe all the way
+      // Return any query IDs from either the write or read queries
+      return ([] + getReadQueries(object) + getWriteQueries(object)).findResults { query -> query?.id }
 
    }
 
