@@ -59,7 +59,7 @@ So let's start preparing our `build.gradle` file. First, we need to apply the `g
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.6'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.7'
 }
 ```
  Now we can use the `./gradlew tasks` command to see the new tasks available under the **Confluent** Task Group:
@@ -226,7 +226,7 @@ While executing KSQL scripts from our source repository is useful for developers
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.6'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.7'
 }
 publishing {
     repositories {
@@ -334,7 +334,7 @@ If we want to deploy our KSQL pipelines from Maven instead of Git (which let's f
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.3'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.7'
 }
 publishing {
     repositories {
