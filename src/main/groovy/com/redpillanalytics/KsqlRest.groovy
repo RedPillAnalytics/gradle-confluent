@@ -13,6 +13,8 @@ import org.gradle.api.GradleException
  */
 class KsqlRest {
 
+   static final String SQLREGEX = /(?i)(?:.*)(CREATE|DROP)(?:\s+)(table|stream)(?:\s+)(?:IF EXISTS\s+)?(\w+)/
+
    /**
     * The base REST endpoint for the KSQL server. Defaults to 'http://localhost:8088', which is handy when developing against Confluent CLI.
     */
@@ -30,7 +32,8 @@ class KsqlRest {
    def execKsql(String sql, Map properties) {
 
       def prepared = (sql + ';').replace('\n', '').replace(';;', ';')
-      log.info "Executing statement: $prepared"
+
+      if (['create', 'drop'].contains(getStatementType(sql))) log.info prepared
 
       HttpResponse<String> response = Unirest.post("${baseUrl}/ksql")
               .header("Content-Type", "application/vnd.ksql.v1+json")
@@ -50,7 +53,6 @@ class KsqlRest {
       log.debug "status: ${result.status}, statusText: ${result.statusText}"
 
       log.debug "body: $result.body"
-      //log.warn "Status: ${response.commandStatus}"
 
       return result
 
@@ -132,6 +134,8 @@ class KsqlRest {
          throw new GradleException("error_code: ${result.error_code}: ${result.message}")
       }
 
+      while (!getSourceDescription(getObjectName(sql))) sleep(5)
+
       log.debug "result: $result"
 
       return result
@@ -186,6 +190,55 @@ class KsqlRest {
    }
 
    /**
+    * Executes a KSQL DROP statement using the KSQL RESTful API. Manages issuing TERMINATE statements as part of the DROP, if desired.
+    *
+    * @param sql the SQL DROP statement to execute.
+    *
+    * @param properties Any KSQL parameters to include with the KSQL execution.
+    *
+    * @param terminate Determines whether TERMINATE statements are issued, along with a retry of the DROP.
+    *
+    * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key with the full JSON payload.
+    */
+   def dropKsql(String sql, Map properties, Boolean terminate = true) {
+
+      // get object name from the query
+      String object = getObjectName(sql)
+
+      // first terminate any persistent queries reading or writing to this table/stream
+      List queryIds = getQueryIds(object)
+      if (!queryIds.isEmpty()) {
+         if (terminate) {
+            queryIds.each { query ->
+               log.info "Terminating query $query..."
+               execKsql("TERMINATE ${query}", properties)
+            }
+
+         } else log.info "Persistent queries exist, but '--no-terminate' option provided."
+      }
+
+      // describe the object first
+      def describe = getSourceDescription(object)
+
+      if (describe) {
+
+         def result = execKsql(sql, properties)
+
+         log.debug "result: ${result}"
+
+         if (result.status == 400 && result.body.message.contains('Incompatible data source type is STREAM')) {
+            log.info "Type is now STREAM. Issuing DROP STREAM..."
+            result = execKsql(sql.replace('TABLE', 'STREAM'), properties)
+         }
+
+         if (result.status == 400 && result.body.message.contains('Incompatible data source type is TABLE')) {
+            log.info "Type is now TABLE. Issuing DROP TABLE..."
+            result = execKsql(sql.replace('STREAM', 'TABLE'), properties)
+         }
+      }
+   }
+
+   /**
     * Executes a List of KSQL DROP statements using the KSQL RESTful API. Manages issuing TERMINATE statements as part of the DROP, if desired.
     *
     * @param sql the List of SQL DROP statements to execute.
@@ -194,50 +247,13 @@ class KsqlRest {
     *
     * @param terminate Determines whether TERMINATE statements are issued, along with a retry of the DROP.
     *
-    * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
+    * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key with the full JSON payload.
     */
    def dropKsql(List sql, Map properties, Boolean terminate = true) {
 
       sql.each {
 
-         def result = execKsql(it, properties)
-
-         log.debug "result: ${result}"
-
-         if (result.status == 400 && result.body.message.toLowerCase().contains('cannot drop')) {
-
-            if (terminate) {
-               //log a message first
-               log.info "Queries exist. Terminating..."
-
-               // could also use the DESCRIBE command REST API results to get read and write queries to terminate
-               // but it's pretty easy to grab it from the DROP command REST API payload
-               def matches = result.body.message.findAll(~/(\[)([^\]]*)(\])/) { match, b1, list, b2 ->
-                  list
-               }
-               // Two "string lists" are returned first
-               String read = matches[0]
-               String write = matches[1]
-
-               // Get a list of all queries currently executing
-               List queries = read.tokenize(',') + write.tokenize(',')
-               log.debug "queries: ${queries.toString()}"
-
-               // now terminate with extreme prejudice
-               queries.each { queryId ->
-                  execKsql("TERMINATE ${queryId}", properties)
-               }
-               log.info "Executing DROP again..."
-
-               // now drop the table again
-               // this time using the non-explicit DROP method
-               // no Infinite Loops here
-               execKsql(it)
-
-            } else {
-               log.info "Queries exist, but '--no-terminate' option provided."
-            }
-         }
+         def result = dropKsql(it, properties, terminate)
       }
    }
 
@@ -258,7 +274,8 @@ class KsqlRest {
     */
    def getReadQueries(String object) {
 
-      getSourceDescription(object).readQueries[0]
+      getSourceDescription(object)?.readQueries?.get(0)
+
    }
 
    /**
@@ -268,7 +285,20 @@ class KsqlRest {
     */
    def getWriteQueries(String object) {
 
-      getSourceDescription(object).writeQueries[0]
+      getSourceDescription(object)?.writeQueries?.get(0)
+   }
+
+   /**
+    * Returns KSQL Server query IDs for all 'writeQueries' and 'readQueries' associated with a particular object.
+    *
+    * @return List of query IDs associated with a particular object.
+    */
+   def getQueryIds(String object) {
+
+      // null safe all the way
+      // Return any query IDs from either the write or read queries
+      return ([] + getReadQueries(object) + getWriteQueries(object)).findResults { query -> query?.id }
+
    }
 
    /**
@@ -326,5 +356,27 @@ class KsqlRest {
    String getRestUrl() {
 
       return getProperty('ksql.schema.registry.url')
+   }
+
+   /**
+    * Returns the object type from a KSQL CREATE or DROP statement.
+    *
+    * @return Either 'table' or 'stream'
+    */
+   String getObjectName(String sql) {
+
+      sql.find(SQLREGEX) { String all, String statement, String type, String name ->
+         name.toLowerCase()
+      }
+   }
+
+   /**
+    * Returns the statement type from a KSQL CREATE or DROP statement.
+    *
+    * @return Either 'create' or 'drop'
+    */
+   String getStatementType(String sql) {
+
+      return sql.find(SQLREGEX) { String all, String statement, String type, String name -> statement.toLowerCase() } ?: 'other'
    }
 }

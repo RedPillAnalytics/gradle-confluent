@@ -38,7 +38,7 @@ class PipelineExecuteTask extends PipelineTask {
     */
    @Input
    @Option(option = "from-beginning",
-           description = 'If enabled, then set "ksql.streams.auto.offset.reset" to "earliest".'
+           description = 'WHen defined, then set "ksql.streams.auto.offset.reset" to "earliest".'
    )
    boolean fromBeginning = false
 
