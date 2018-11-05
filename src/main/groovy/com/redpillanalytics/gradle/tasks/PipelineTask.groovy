@@ -95,17 +95,19 @@ class PipelineTask extends DefaultTask {
    @Internal
    def getPipelineSql() {
 
-      // clean up, removing an backslashes
+      // clean up, removing any backslashes
       def transformed = tokenizedSql.findResults { sql ->
 
          // all the transformations of the statements after tokenization
          sql
-                 .replaceAll(~/(\s)*(--)(.*)/) { all, begin, symbol, comment -> (begin ?: '') } // remove comments
+                 .replaceAll(~/(\s)*(?:--.*)?/) { all, statement -> (statement ?: '') } // remove comments
                  .trim() // basically trim things up
                  .replace("\n", ' ') // replace newlines with spaces
                  .replace('  ', ' ') // replace 2 spaces with 1
                  .replace("\\", '') // remove backslashes if they exist (and they shouldn't)
       }
+
+      transformed.removeAll('')
 
       log.debug "cleaned:"
       transformed.each { log.debug "sql: $it \n" }
