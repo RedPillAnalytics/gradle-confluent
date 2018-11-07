@@ -59,7 +59,7 @@ So let's start preparing our `build.gradle` file. First, we need to apply the `g
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.7'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.9'
 }
 ```
  Now we can use the `./gradlew tasks` command to see the new tasks available under the **Confluent** Task Group:
@@ -78,6 +78,7 @@ pipelineZip - Build a distribution ZIP file with the pipeline source files, plus
 The easiest wasy to use this plugin is to simply execute all of our persistent query statements--or a subset of them--in source control. We do this using the `pipelineExecute` task, which uses the KSQL REST API to handle all of the heavy-lifting. I'll turn up the logging a bit so we can see exactly what's going on. Apologies in advance for the verbose screen output, but I think it's worth it:
 
 ```bash
+==> ./gradlew pipelineExecute --console=plain -i
 > Configure project :
 Compiling build file '/Users/stewartbryson/Source/ksql-examples/build.gradle' using BuildScriptTransformer.
 All projects evaluated.
@@ -226,7 +227,7 @@ While executing KSQL scripts from our source repository is useful for developers
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.7'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.9'
 }
 publishing {
     repositories {
@@ -334,7 +335,7 @@ If we want to deploy our KSQL pipelines from Maven instead of Git (which let's f
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.7'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.9'
 }
 publishing {
     repositories {
@@ -367,7 +368,7 @@ pipelineSync - Synchronize the pipeline build directory from the pipeline source
 pipelineZip - Build a distribution ZIP file with the pipeline source files, plus a single KSQL 'create' script.
 ```
 
-Now we can execute with a simple `./gradlew deploy` task:
+Now we can execute with a simple `./gradlew deploy` task, which calls as a dependency the `pipelineDeploy` task, which functions identically to the `pipelineExecute` task, except that it operates on the contents of the ZIP artifact instead of what's in source control.
 
 ```bash
 ==> ./gradlew --console=plain -Si deploy
