@@ -368,7 +368,7 @@ pipelineSync - Synchronize the pipeline build directory from the pipeline source
 pipelineZip - Build a distribution ZIP file with the pipeline source files, plus a single KSQL 'create' script.
 ```
 
-Now we can execute with a simple `./gradlew deploy` task:
+Now we can execute with a simple `./gradlew deploy` task, which calls as a dependency the `pipelineDeploy` task, which functions identically to the `pipelineExecute` task, except that it operates on the contents of the ZIP artifact instead of what's in source control.
 
 ```bash
 ==> ./gradlew --console=plain -Si deploy
