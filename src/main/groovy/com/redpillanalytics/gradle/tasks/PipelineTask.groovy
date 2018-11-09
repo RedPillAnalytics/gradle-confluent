@@ -10,13 +10,12 @@ import org.gradle.api.tasks.options.Option
  */
 @Slf4j
 class PipelineTask extends DefaultTask {
-
    /**
-    * The top-level directory containing files and subdirectories--ordered alphanumerically--of pipeline processes.
+    * The base directory containing SQL scripts to execute, including recursive subdirectories. Default: {@getDir}.
     */
    @Input
    @Option(option = "pipeline-dir",
-           description = "The top-level directory containing files and subdirectories--ordered alphanumerically--of pipeline processes."
+           description = "The base directory containing SQL scripts to execute, including recursive subdirectories. Default: value of 'confluent.pipelineSourcePath' or 'src/main/pipeline'."
    )
    String pipelinePath
 

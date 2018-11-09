@@ -133,7 +133,7 @@ class ConfluentPlugin implements Plugin<Project> {
          project.task('deploy') {
 
             group taskGroup
-            description "Calls all dependent deployment tasks."
+            description "Execute any configured deployment tasks."
 
          }
 
@@ -200,7 +200,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
                   project.task(tg.getTaskName('pipelineDeploy'), type: PipelineExecuteTask) {
                      group taskGroup
-                     description = "Execute all KSQL pipelines from the provided source directory, in hierarchical order, proceeded by applicable DROP and TERMINATE commands."
+                     description = "Execute all KSQL pipelines extracted from an artifact dependency, in hierarchical order, proceeded by applicable DROP and TERMINATE commands."
                      pipelinePath pipelineDeployDir.canonicalPath
                      onlyIf { pipelineDeployDir.exists() }
                      dependsOn tg.getTaskName('pipelineExtract')
