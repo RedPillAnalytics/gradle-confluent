@@ -14,11 +14,11 @@ import org.gradle.api.tasks.options.Option
 class PipelineExecuteTask extends PipelineTask {
 
    /**
-    * The RESTful API URL for the KSQL Server.
+    * The REST API URL for the KSQL Server. Default: the extension property {@link com.redpillanalytics.gradle.ConfluentPluginExtension#pipelineEndpoint}.
     */
    @Input
    @Option(option = "rest-url",
-           description = "The RESTful API URL for the KSQL Server."
+           description = "The REST API URL for the KSQL Server. Default: value of 'confluent.pipelineEndpoint' or 'http://localhost:8088'."
    )
    String restUrl = project.extensions.confluent.pipelineEndpoint
 
@@ -34,11 +34,11 @@ class PipelineExecuteTask extends PipelineTask {
    }
 
    /**
-    * If enabled, then set "ksql.streams.auto.offset.reset" to "earliest".
+    * When defined, then set "ksql.streams.auto.offset.reset" to "earliest".
     */
    @Input
    @Option(option = "from-beginning",
-           description = 'WHen defined, then set "ksql.streams.auto.offset.reset" to "earliest".'
+           description = "When defined, set 'ksql.streams.auto.offset.reset' to 'earliest'."
    )
    boolean fromBeginning = false
 
