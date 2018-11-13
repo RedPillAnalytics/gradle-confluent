@@ -139,7 +139,7 @@ class ExecuteTest extends Specification {
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'
-      !result.output.toLowerCase().contains('terminate')
+      !result.output.toLowerCase().contains('terminating query')
 
    }
 

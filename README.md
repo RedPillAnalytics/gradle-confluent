@@ -59,7 +59,7 @@ So let's start preparing our `build.gradle` file. First, we need to apply the `g
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.10'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.11'
 }
 ```
  Now we can use the `./gradlew tasks` command to see the new tasks available under the **Confluent** Task Group:
@@ -75,7 +75,7 @@ pipelineZip - Build a distribution ZIP file with the pipeline source files, plus
  ```
 
 ## Executing KSQL Pipelines
-The easiest wasy to use this plugin is to simply execute all of our persistent query statements--or a subset of them--in source control. We do this using the `pipelineExecute` task, which uses the KSQL REST API to handle all of the heavy-lifting. I'll turn up the logging a bit so we can see exactly what's going on. Apologies in advance for the verbose screen output, but I think it's worth it:
+The easiest wasy to use this plugin is to simply execute all of our persistent query statements--or a subset of them--in source control. We do this using the `pipelineExecute` task, which uses the KSQL REST API to handle all of the heavy-lifting. I'll turn up the logging a bit this first time with the `-i` option so we can see exactly what's going on. Apologies in advance for the verbose screen output, but I think it's worth it:
 
 ```bash
 ==> ./gradlew pipelineExecute --console=plain -i
@@ -94,29 +94,31 @@ Skipping task ':pipelineSync' as it is up-to-date.
 > Task :pipelineExecute
 Task ':pipelineExecute' is not up-to-date because:
   Task.upToDateWhen is false.
-Terminating query CTAS_CLICK_USER_SESSIONS_499...
+Terminating query CTAS_CLICK_USER_SESSIONS_361...
 DROP TABLE IF EXISTS CLICK_USER_SESSIONS;
-Terminating query CTAS_USER_IP_ACTIVITY_498...
+Terminating query CTAS_USER_IP_ACTIVITY_360...
 DROP TABLE IF EXISTS USER_IP_ACTIVITY;
-Terminating query CSAS_USER_CLICKSTREAM_497...
+Terminating query CSAS_USER_CLICKSTREAM_359...
 DROP STREAM IF EXISTS USER_CLICKSTREAM;
-Terminating query CSAS_CUSTOMER_CLICKSTREAM_496...
+Terminating query CSAS_CUSTOMER_CLICKSTREAM_358...
 DROP STREAM IF EXISTS customer_clickstream;
-Terminating query CTAS_ERRORS_PER_MIN_495...
+Terminating query CTAS_ERRORS_PER_MIN_357...
 DROP table IF EXISTS ERRORS_PER_MIN;
-Terminating query CTAS_ERRORS_PER_MIN_ALERT_494...
+Terminating query CTAS_ERRORS_PER_MIN_ALERT_356...
 DROP TABLE IF EXISTS ERRORS_PER_MIN_ALERT;
 DROP TABLE IF EXISTS WEB_USERS;
-Terminating query CTAS_ENRICHED_ERROR_CODES_COUNT_493...
-DROP TABLE IF EXISTS ENRICHED_ERROR_CODES_COUNT;
-Terminating query CSAS_ENRICHED_ERROR_CODES_492...
+Terminating query CTAS_ENRICHED_ERROR_CODES_COUNT_355...
+DROP TABLE IF EXISTS ENRICHED_ERROR_CODES_COUNT DELETE TOPIC;
+Terminating query CSAS_ENRICHED_ERROR_CODES_354...
 DROP STREAM IF EXISTS ENRICHED_ERROR_CODES;
-Terminating query CTAS_PAGES_PER_MIN_491...
+Terminating query CTAS_PAGES_PER_MIN_353...
 DROP TABLE IF EXISTS pages_per_min;
-Terminating query CTAS_EVENTS_PER_MIN_490...
-DROP table IF EXISTS events_per_min DELETE TOPIC;
+Terminating query CTAS_EVENTS_PER_MIN_352...
+DROP table IF EXISTS events_per_min;
 DROP TABLE IF EXISTS clickstream_codes;
 DROP STREAM IF EXISTS clickstream;
+10 queries terminated.
+13 objects dropped.
 CREATE STREAM clickstream (_time bigint,time varchar, ip varchar, request varchar, status int, userid int, bytes bigint, agent varchar) with (kafka_topic = 'clickstream', value_format = 'json');
 CREATE TABLE clickstream_codes (code int, definition varchar) with (key='code', kafka_topic = 'clickstream_codes', value_format = 'json');
 CREATE table events_per_min AS SELECT userid, count(*) AS events FROM clickstream window TUMBLING (size 60 second) GROUP BY userid;
@@ -130,6 +132,7 @@ CREATE STREAM customer_clickstream WITH (PARTITIONS=2) AS SELECT userid, u.first
 CREATE STREAM USER_CLICKSTREAM AS SELECT userid, u.username, ip, u.city, request, status, bytes FROM clickstream c LEFT JOIN web_users u ON c.userid = u.user_id;
 CREATE TABLE USER_IP_ACTIVITY AS  SELECT username, ip, city, COUNT(*) AS count  FROM USER_CLICKSTREAM WINDOW TUMBLING (size 60 second)  GROUP BY username, ip, city  HAVING COUNT(*) > 1;
 CREATE TABLE CLICK_USER_SESSIONS AS  SELECT username, count(*) AS events  FROM USER_CLICKSTREAM window SESSION (300 second)  GROUP BY username;
+13 objects created.
 :pipelineExecute (Thread[Task worker for ':',5,main]) completed. Took 3.97 secs.
 
 BUILD SUCCESSFUL in 13s
@@ -178,46 +181,14 @@ BUILD SUCCESSFUL in 3s
 Seeing some of the command-line options, we can see how the `gradle-confluent` plugin is very helpful for developers during the KSQL development phase. We can process just a single directory of KSQL scripts easily as we iterate on our KSQL code.
 
 ```bash
-==> ./gradlew pipelineExecute --console=plain -i --pipeline-dir 01-clickstream --from-beginning
-> Configure project :
-Evaluating root project 'ksql-examples' using build file '/Users/stewartbryson/Source/ksql-examples/build.gradle'.
-Selected primary task ':jar' from project :
-All projects evaluated.
-Selected primary task 'pipelineExecute' from project :
-Tasks to be executed: [task ':pipelineSync', task ':pipelineExecute']
-:pipelineSync (Thread[Task worker for ':',5,main]) started.
-
-> Task :pipelineSync UP-TO-DATE
-Skipping task ':pipelineSync' as it is up-to-date.
-:pipelineSync (Thread[Task worker for ':',5,main]) completed. Took 0.006 secs.
-:pipelineExecute (Thread[Task worker for ':',5,main]) started.
+==> ./gradlew pipelineExecute --pipeline-dir 01-clickstream --from-beginning
 
 > Task :pipelineExecute
-Task ':pipelineExecute' is not up-to-date because:
-  Task.upToDateWhen is false.
-Terminating query CTAS_ENRICHED_ERROR_CODES_COUNT_503...
-DROP TABLE IF EXISTS ENRICHED_ERROR_CODES_COUNT;
-Terminating query CSAS_ENRICHED_ERROR_CODES_502...
-DROP STREAM IF EXISTS ENRICHED_ERROR_CODES;
-Terminating query CTAS_PAGES_PER_MIN_501...
-DROP TABLE IF EXISTS pages_per_min;
-Terminating query CTAS_EVENTS_PER_MIN_500...
-DROP table IF EXISTS events_per_min DELETE TOPIC;
-DROP TABLE IF EXISTS clickstream_codes;
-Terminating query CSAS_USER_CLICKSTREAM_507...
-Terminating query CTAS_ERRORS_PER_MIN_505...
-Terminating query CSAS_CUSTOMER_CLICKSTREAM_506...
-Terminating query CTAS_ERRORS_PER_MIN_ALERT_504...
-DROP STREAM IF EXISTS clickstream;
-CREATE STREAM clickstream (_time bigint,time varchar, ip varchar, request varchar, status int, userid int, bytes bigint, agent varchar) with (kafka_topic = 'clickstream', value_format = 'json');
-CREATE TABLE clickstream_codes (code int, definition varchar) with (key='code', kafka_topic = 'clickstream_codes', value_format = 'json');
-CREATE table events_per_min AS SELECT userid, count(*) AS events FROM clickstream window TUMBLING (size 60 second) GROUP BY userid;
-CREATE TABLE pages_per_min AS SELECT userid, count(*) AS pages FROM clickstream WINDOW HOPPING (size 60 second, advance by 5 second) WHERE request like '%html%' GROUP BY userid;
-CREATE STREAM ENRICHED_ERROR_CODES AS SELECT code, definition FROM clickstream LEFT JOIN clickstream_codes ON clickstream.status = clickstream_codes.code;
-CREATE TABLE ENRICHED_ERROR_CODES_COUNT AS SELECT code, definition, COUNT(*) AS count FROM ENRICHED_ERROR_CODES WINDOW TUMBLING (size 30 second) GROUP BY code, definition HAVING COUNT(*) > 1;
-:pipelineExecute (Thread[Task worker for ':',5,main]) completed. Took 2.155 secs.
+8 queries terminated.
+6 objects dropped.
+6 objects created.
 
-BUILD SUCCESSFUL in 3s
+BUILD SUCCESSFUL in 2s
 2 actionable tasks: 1 executed, 1 up-to-date
 ```
 
@@ -227,7 +198,7 @@ While executing KSQL scripts from our source repository is useful for developers
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.10'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.11'
 }
 publishing {
     repositories {
@@ -241,70 +212,19 @@ version = '1.0.0'
 Now we can build and publish the artifacts with a single Gradle statement:
 
 ```bash
-==> ./gradlew --console=plain -Si build publish
-> Configure project :
-Evaluating root project 'ksql-examples' using build file '/Users/stewartbryson/Source/ksql-examples/build.gradle'.
-Selected primary task ':jar' from project :
-All projects evaluated.
-Selected primary task 'build' from project :
-Selected primary task 'publish' from project :
-Tasks to be executed: [task ':assemble', task ':check', task ':pipelineSync', task ':pipelineScript', task ':pipelineZip', task ':build', task ':generatePomFileForPipelinePublication', task ':publishPipelinePublicationToMavenLocalRepository', task ':publish']
-:assemble (Thread[Task worker for ':',5,main]) started.
-
+==> ./gradlew --console=plain build publish
 > Task :assemble UP-TO-DATE
-Skipping task ':assemble' as it has no actions.
-:assemble (Thread[Task worker for ':',5,main]) completed. Took 0.002 secs.
-:check (Thread[Task worker for ':',5,main]) started.
-
 > Task :check UP-TO-DATE
-Skipping task ':check' as it has no actions.
-:check (Thread[Task worker for ':',5,main]) completed. Took 0.0 secs.
-:pipelineSync (Thread[Task worker for ':',5,main]) started.
-
 > Task :pipelineSync UP-TO-DATE
-Skipping task ':pipelineSync' as it is up-to-date.
-:pipelineSync (Thread[Task worker for ':',5,main]) completed. Took 0.002 secs.
-:pipelineScript (Thread[Task worker for ':',5,main]) started.
-
-> Task :pipelineScript UP-TO-DATE
-Skipping task ':pipelineScript' as it is up-to-date.
-:pipelineScript (Thread[Task worker for ':',5,main]) completed. Took 0.001 secs.
-:pipelineZip (Thread[Task worker for ':',5,main]) started.
-
-> Task :pipelineZip UP-TO-DATE
-Skipping task ':pipelineZip' as it is up-to-date.
-:pipelineZip (Thread[Task worker for ':',5,main]) completed. Took 0.001 secs.
-:build (Thread[Task worker for ':',5,main]) started.
-
-> Task :build UP-TO-DATE
-Skipping task ':build' as it has no actions.
-:build (Thread[Task worker for ':',5,main]) completed. Took 0.0 secs.
-:generatePomFileForPipelinePublication (Thread[Task worker for ':',5,main]) started.
-
+> Task :pipelineScript
+> Task :pipelineZip
+> Task :build
 > Task :generatePomFileForPipelinePublication
-Task ':generatePomFileForPipelinePublication' is not up-to-date because:
-  Task.upToDateWhen is false.
-:generatePomFileForPipelinePublication (Thread[Task worker for ':',5,main]) completed. Took 0.001 secs.
-:publishPipelinePublicationToMavenLocalRepository (Thread[Task worker for ':',5,main]) started.
-
 > Task :publishPipelinePublicationToMavenLocalRepository
-Task ':publishPipelinePublicationToMavenLocalRepository' is not up-to-date because:
-  Task has not declared any outputs despite executing actions.
-Publishing to repository 'MavenLocal' (file:/Users/stewartbryson/.m2/repository/)
-Deploying to file:/Users/stewartbryson/.m2/repository/
-Uploading: com/redpillanalytics/ksql-examples-pipeline/1.0.0/ksql-examples-pipeline-1.0.0.zip to repository remote at file:/Users/stewartbryson/.m2/repository/
-Uploading: com/redpillanalytics/ksql-examples-pipeline/1.0.0/ksql-examples-pipeline-1.0.0.pom to repository remote at file:/Users/stewartbryson/.m2/repository/
-Downloading: com/redpillanalytics/ksql-examples-pipeline/maven-metadata.xml from repository remote at file:/Users/stewartbryson/.m2/repository/
-Uploading: com/redpillanalytics/ksql-examples-pipeline/maven-metadata.xml to repository remote at file:/Users/stewartbryson/.m2/repository/
-:publishPipelinePublicationToMavenLocalRepository (Thread[Task worker for ':',5,main]) completed. Took 0.05 secs.
-:publish (Thread[Task worker for ':',5,main]) started.
-
 > Task :publish
-Skipping task ':publish' as it has no actions.
-:publish (Thread[Task worker for ':',5,main]) completed. Took 0.0 secs.
 
-BUILD SUCCESSFUL in 0s
-5 actionable tasks: 2 executed, 3 up-to-date
+BUILD SUCCESSFUL in 1s
+5 actionable tasks: 4 executed, 1 up-to-date
 ```
 
 We can now see our zip distribution file in the `build/distributions` directory:
@@ -335,7 +255,7 @@ If we want to deploy our KSQL pipelines from Maven instead of Git (which let's f
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.10'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.11'
 }
 publishing {
     repositories {
@@ -371,66 +291,15 @@ pipelineZip - Build a distribution ZIP file with the pipeline source files, plus
 Now we can execute with a simple `./gradlew deploy` task, which calls as a dependency the `pipelineDeploy` task, which functions identically to the `pipelineExecute` task, except that it operates on the contents of the ZIP artifact instead of what's in source control.
 
 ```bash
-==> ./gradlew --console=plain -Si deploy
-> Configure project :
-Evaluating root project 'ksql-examples' using build file '/Users/stewartbryson/Source/ksql-examples/build.gradle'.
-Selected primary task ':jar' from project :
-Compiling build file '/Users/stewartbryson/Source/ksql-examples/build.gradle' using BuildScriptTransformer.
-All projects evaluated.
-Selected primary task 'deploy' from project :
-Tasks to be executed: [task ':pipelineExtract', task ':pipelineDeploy', task ':deploy']
-:pipelineExtract (Thread[Task worker for ':',5,main]) started.
-
-> Task :pipelineExtract
-Task ':pipelineExtract' is not up-to-date because:
-  Input property 'rootSpec$1' file /Users/stewartbryson/.m2/repository/com/redpillanalytics/ksql-examples-pipeline/1.0.0/ksql-examples-pipeline-1.0.0.zip has changed.
-:pipelineExtract (Thread[Task worker for ':',5,main]) completed. Took 0.021 secs.
-:pipelineDeploy (Thread[Task worker for ':',5,main]) started.
+==> ./gradlew deploy
 
 > Task :pipelineDeploy
-Task ':pipelineDeploy' is not up-to-date because:
-  Task.upToDateWhen is false.
-Terminating query CTAS_CLICK_USER_SESSIONS_509...
-DROP TABLE IF EXISTS CLICK_USER_SESSIONS;
-Terminating query CTAS_USER_IP_ACTIVITY_508...
-DROP TABLE IF EXISTS USER_IP_ACTIVITY;
-DROP STREAM IF EXISTS USER_CLICKSTREAM;
-DROP STREAM IF EXISTS customer_clickstream;
-DROP table IF EXISTS ERRORS_PER_MIN;
-DROP TABLE IF EXISTS ERRORS_PER_MIN_ALERT;
-DROP TABLE IF EXISTS WEB_USERS;
-Terminating query CTAS_ENRICHED_ERROR_CODES_COUNT_513...
-DROP TABLE IF EXISTS ENRICHED_ERROR_CODES_COUNT;
-Terminating query CSAS_ENRICHED_ERROR_CODES_512...
-DROP STREAM IF EXISTS ENRICHED_ERROR_CODES;
-Terminating query CTAS_PAGES_PER_MIN_511...
-DROP TABLE IF EXISTS pages_per_min;
-Terminating query CTAS_EVENTS_PER_MIN_510...
-DROP table IF EXISTS events_per_min DELETE TOPIC;
-DROP TABLE IF EXISTS clickstream_codes;
-DROP STREAM IF EXISTS clickstream;
-CREATE STREAM clickstream (_time bigint,time varchar, ip varchar, request varchar, status int, userid int, bytes bigint, agent varchar) with (kafka_topic = 'clickstream', value_format = 'json');
-CREATE TABLE clickstream_codes (code int, definition varchar) with (key='code', kafka_topic = 'clickstream_codes', value_format = 'json');
-CREATE table events_per_min AS SELECT userid, count(*) AS events FROM clickstream window TUMBLING (size 60 second) GROUP BY userid;
-CREATE TABLE pages_per_min AS SELECT userid, count(*) AS pages FROM clickstream WINDOW HOPPING (size 60 second, advance by 5 second) WHERE request like '%html%' GROUP BY userid;
-CREATE STREAM ENRICHED_ERROR_CODES AS SELECT code, definition FROM clickstream LEFT JOIN clickstream_codes ON clickstream.status = clickstream_codes.code;
-CREATE TABLE ENRICHED_ERROR_CODES_COUNT AS SELECT code, definition, COUNT(*) AS count FROM ENRICHED_ERROR_CODES WINDOW TUMBLING (size 30 second) GROUP BY code, definition HAVING COUNT(*) > 1;
-CREATE TABLE WEB_USERS (user_id int, registered_At bigint, username varchar, first_name varchar, last_name varchar, city varchar, level varchar) with (key='user_id', kafka_topic = 'clickstream_users', value_format = 'json');
-CREATE TABLE ERRORS_PER_MIN_ALERT AS SELECT status, count(*) AS errors FROM clickstream window HOPPING ( size 30 second, advance by 20 second) WHERE status > 400 GROUP BY status HAVING count(*) > 5 AND count(*) is not NULL;
-CREATE table ERRORS_PER_MIN AS SELECT status, count(*) AS errors FROM clickstream window HOPPING ( size 60 second, advance by 5 second) WHERE status > 400 GROUP BY status;
-CREATE STREAM customer_clickstream WITH (PARTITIONS=2) AS SELECT userid, u.first_name, u.last_name, u.level, time, ip, request, status, agent FROM clickstream c LEFT JOIN web_users u ON c.userid = u.user_id;
-CREATE STREAM USER_CLICKSTREAM AS SELECT userid, u.username, ip, u.city, request, status, bytes FROM clickstream c LEFT JOIN web_users u ON c.userid = u.user_id;
-CREATE TABLE USER_IP_ACTIVITY AS  SELECT username, ip, city, COUNT(*) AS count  FROM USER_CLICKSTREAM WINDOW TUMBLING (size 60 second)  GROUP BY username, ip, city  HAVING COUNT(*) > 1;
-CREATE TABLE CLICK_USER_SESSIONS AS  SELECT username, count(*) AS events  FROM USER_CLICKSTREAM window SESSION (300 second)  GROUP BY username;
-:pipelineDeploy (Thread[Task worker for ':',5,main]) completed. Took 3.279 secs.
-:deploy (Thread[Task worker for ':',5,main]) started.
-
-> Task :deploy
-Skipping task ':deploy' as it has no actions.
-:deploy (Thread[Task worker for ':',5,main]) completed. Took 0.0 secs.
+10 queries terminated.
+13 objects dropped.
+13 objects created.
 
 BUILD SUCCESSFUL in 4s
-2 actionable tasks: 2 executed
+2 actionable tasks: 1 executed, 1 up-to-date
 ```
 
 # KSQL Directives
