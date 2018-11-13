@@ -168,8 +168,8 @@ class KsqlRest {
 
       sql.each {
          createKsql(it, properties)
-         //sleep(500)
       }
+      log.warn "${sql.size()} objects created."
    }
 
    /**
@@ -183,8 +183,7 @@ class KsqlRest {
     */
    def createKsql(String sql, Boolean earliest = false) {
 
-      def data = createKsql(sql, (earliest ? ["ksql.streams.auto.offset.reset": "earliest"] : [:]))
-      return data
+      createKsql(sql, (earliest ? ["ksql.streams.auto.offset.reset": "earliest"] : [:]))
    }
 
    /**
@@ -201,6 +200,7 @@ class KsqlRest {
       sql.each {
          createKsql(it, earliest)
       }
+      log.warn "${sql.size()} objects created."
    }
 
    /**
@@ -219,6 +219,9 @@ class KsqlRest {
       // get object name from the query
       String object = getObjectName(sql)
 
+      // number of queries terminated
+      Integer numTerminated = 0
+
       // first terminate any persistent queries reading or writing to this table/stream
       List queryIds = getQueryIds(object)
       if (!queryIds.isEmpty()) {
@@ -227,6 +230,8 @@ class KsqlRest {
                log.info "Terminating query $query..."
                execKsql("TERMINATE ${query}", properties)
             }
+
+            numTerminated = queryIds.size()
 
          } else log.info "Persistent queries exist, but '--no-terminate' option provided."
       }
@@ -249,7 +254,18 @@ class KsqlRest {
             log.info "Type is now TABLE. Issuing DROP TABLE..."
             result = execKsql(sql.replace('STREAM', 'TABLE'), properties)
          }
+
+         result.numTerminated = numTerminated
+         result.numDropped = 1
+
+         log.debug "final result: ${result}"
+
+         return result
+
       }
+
+      return [numTerminated: numTerminated, numDropped: 0]
+
    }
 
    /**
@@ -265,10 +281,17 @@ class KsqlRest {
     */
    def dropKsql(List sql, Map properties, Boolean terminate = true) {
 
+      Integer numTerminated = 0
+      Integer numDropped = 0
       sql.each {
 
          def result = dropKsql(it, properties, terminate)
+         numTerminated = numTerminated + result.numTerminated
+         numDropped = numDropped + result.numDropped
       }
+
+      log.warn "${numTerminated} queries terminated."
+      log.warn "${numDropped} objects dropped."
    }
 
    /**
