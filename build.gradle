@@ -6,7 +6,7 @@ plugins {
    id "com.github.breadmoirai.github-release" version "2.0.1"
    id 'org.unbroken-dome.test-sets' version '1.5.1'
    id "com.github.ben-manes.versions" version "0.20.0"
-   id "com.redpillanalytics.gradle-analytics" version "1.1.9"
+   id "com.redpillanalytics.gradle-analytics" version "1.1.16"
 }
 
 // send analytics
@@ -46,6 +46,10 @@ dependencies {
    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.15'
    compile group: 'org.slf4j', name: 'slf4j-simple', version: '+'
    compile 'com.mashape.unirest:unirest-java:+'
+
+   // Gradle Analytics plugin
+   // It also has the Common library in it, thus the dependency here
+   compile "gradle.plugin.com.redpillanalytics:gradle-analytics:+"
 
    testCompile 'org.spockframework:spock-core:1.1-groovy-2.4'
    testCompile 'org.testcontainers:kafka:1.9.1'

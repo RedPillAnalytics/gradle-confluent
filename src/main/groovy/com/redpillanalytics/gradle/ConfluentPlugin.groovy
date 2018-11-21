@@ -1,5 +1,6 @@
 package com.redpillanalytics.gradle
 
+import com.redpillanalytics.common.GradleUtils
 import com.redpillanalytics.gradle.containers.TaskGroupContainer
 import com.redpillanalytics.gradle.tasks.PipelineExecuteTask
 import com.redpillanalytics.gradle.tasks.PipelineScriptTask
@@ -7,7 +8,6 @@ import com.redpillanalytics.gradle.tasks.LoadConfigTask
 import groovy.util.logging.Slf4j
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.artifacts.UnknownConfigurationException
 import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
@@ -33,52 +33,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
          // Go look for any -P properties that have "confluent." in them
          // If so... update the extension value
-         project.ext.properties.each { key, value ->
-
-            if (key =~ /confluent\./) {
-
-               def (extension, property) = key.toString().split(/\./)
-
-               if (extension == 'confluent' && project.confluent.hasProperty(property)) {
-
-                  log.debug "Setting configuration property for extension: $extension, property: $property, value: $value"
-
-                  if (project.extensions.getByName(extension)."$property" instanceof Boolean) {
-
-                     project.extensions.getByName(extension)."$property" = value.toBoolean()
-                  } else if (project.extensions.getByName(extension)."$property" instanceof Integer) {
-
-                     project.extensions.getByName(extension)."$property" = value.toInteger()
-                  } else {
-
-                     project.extensions.getByName(extension)."$property" = value
-                  }
-               }
-            }
-         }
-
-         def getDependency = { configuration, regexp ->
-
-            return project.configurations."$configuration".find { File file -> file.absolutePath =~ regexp }
-         }
-
-         def isUsableConfiguration = { configuration, regexp ->
-
-            try {
-
-               if (getDependency(configuration, regexp)) {
-
-                  return true
-               } else {
-
-                  return false
-               }
-
-            } catch (UnknownConfigurationException e) {
-
-               return false
-            }
-         }
+         GradleUtils.setParameters(project, 'confluent')
 
          // add task to show configurations
          project.task('showConfigurations') {
@@ -188,12 +143,12 @@ class ConfluentPlugin implements Plugin<Project> {
             }
 
             if (enablePipelines && tg.isDeployEnv) {
-               if (isUsableConfiguration('archives', pipelinePattern)) {
+               if (GradleUtils.isUsableConfiguration(project, 'archives', pipelinePattern)) {
 
                   project.task(tg.getTaskName('pipelineExtract'), type: Copy) {
                      group taskGroup
                      description = "Extract the KSQL pipeline deployment dependency (or zip file) into the deployment directory."
-                     from project.zipTree(getDependency('archives', pipelinePattern))
+                     from project.zipTree(GradleUtils.getDependency(project, 'archives', pipelinePattern))
                      into { pipelineDeployDir }
 
                   }
@@ -211,12 +166,12 @@ class ConfluentPlugin implements Plugin<Project> {
                }
             }
 
-            if (isUsableConfiguration('archives', functionPattern) && enableFunctions && tg.isDeployEnv) {
+            if (GradleUtils.isUsableConfiguration(project, 'archives', functionPattern) && enableFunctions && tg.isDeployEnv) {
 
                project.task(tg.getTaskName('functionCopy'), type: Copy) {
                   group taskGroup
                   description = "Copy the KSQL custom function deployment dependency (or JAR file) into the deployment directory."
-                  from getDependency('archives', functionPattern)
+                  from GradleUtils.getDependency(project, 'archives', functionPattern)
                   into { functionDeployDir }
                   if (project.extensions.confluent.functionArtifactName) rename {
                      project.extensions.confluent.functionArtifactName
