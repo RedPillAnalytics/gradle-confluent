@@ -3,31 +3,34 @@ import org.gradle.testkit.runner.GradleRunner
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Title
-import spock.lang.Unroll
 
 @Slf4j
 @Title("Check basic configuration")
 class LoadConfigTest extends Specification {
 
    @Shared
-   File projectDir, buildDir, resourcesDir, buildFile, artifact, absoluteDir, absoluteFile, relativeFile, processed, unixScript, windowsScript
+   File projectDir, buildDir, pipelineDir, pipelineScript, resourcesDir, buildFile, settingsFile, artifact, absoluteDir, absoluteFile, relativeFile, processed, unixScript, windowsScript
 
    @Shared
    def result, taskList
 
+   @Shared
+   String projectName = 'load-config'
+
    def setupSpec() {
 
-      projectDir = new File("${System.getProperty("projectDir")}/load-config")
+      projectDir = new File("${System.getProperty("projectDir")}/$projectName")
       buildDir = new File(projectDir, 'build')
-      buildFile = new File(projectDir, 'build.gradle')
+      pipelineDir = new File(buildDir, 'pipeline')
+      pipelineScript = new File(pipelineDir, 'ksql-script.sql')
       artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
       taskList = ['clean', 'assemble', 'check', 'pipelineScript', 'pipelineZip', 'build']
       absoluteDir = new File(System.getProperty("projectDir"))
       absoluteFile = new File(absoluteDir, 'streams.config')
       relativeFile = new File(projectDir, 'streams.config')
       processed = new File(buildDir, 'resources/main/streams.properties')
-      unixScript = new File(buildDir,'scripts/load-config')
-      windowsScript = new File(buildDir,'scripts/load-config.bat')
+      unixScript = new File(buildDir, 'scripts/load-config')
+      windowsScript = new File(buildDir, 'scripts/load-config.bat')
 
       resourcesDir = new File('src/test/resources')
 
@@ -35,7 +38,9 @@ class LoadConfigTest extends Specification {
          fileset(dir: resourcesDir)
       }
 
-      buildFile.write("""
+      settingsFile = new File(projectDir, 'settings.gradle').write("""rootProject.name = '$projectName'""")
+
+      buildFile = new File(projectDir, 'build.gradle').write("""
             plugins {
                id 'com.redpillanalytics.gradle-confluent'
                id 'maven-publish'
@@ -45,18 +50,6 @@ class LoadConfigTest extends Specification {
             archivesBaseName = 'test'
             group = 'com.redpillanalytics'
             version = '1.0.0'
-            
-            dependencies {
-
-               //standard groovy
-               compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.15'
-               compile group: 'org.slf4j', name: 'slf4j-simple', version: '+'
-            
-            }
-            
-            repositories {
-               jcenter()
-            }
             
             mainClassName = "streams.TestClass"
         """)

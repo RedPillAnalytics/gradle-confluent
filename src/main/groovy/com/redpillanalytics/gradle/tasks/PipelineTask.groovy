@@ -29,6 +29,17 @@ class PipelineTask extends DefaultTask {
    boolean noReverseDrops
 
    /**
+    * Returns a File object representation of the {@project.extensions.confluent.pipelineBuildName} parameter.
+    *
+    * @return The File object representation of the {@project.extensions.confluent.pipelineBuildName} parameter.
+    */
+   @Internal
+   File getPipelineBuildDir() {
+
+      return project.file("${project.buildDir}/${project.extensions.confluent.pipelineBuildName}")
+   }
+
+   /**
     * Returns a File object representation of the {@pipelinePath} parameter.
     *
     * @return The File object representation of the {@pipelinePath} parameter.
@@ -37,7 +48,8 @@ class PipelineTask extends DefaultTask {
    File getDir() {
 
       // first let's look for the existence in src/main/pipeline
-      File dir = project.file("${project.extensions.confluent.sourceBase}/${project.extensions.confluent.pipelineSourceName}/${pipelinePath}")
+      File dir = new File(pipelineBuildDir, pipelinePath)
+      //File dir = project.file("${project.extensions.confluent.sourceBase}/${project.extensions.confluent.pipelineSourceName}/${pipelinePath}")
 
       return dir.exists() ? dir : project.file(pipelinePath)
 

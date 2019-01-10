@@ -86,10 +86,8 @@ class ConfluentPlugin implements Plugin<Project> {
 
          // create deploy task
          project.task('deploy') {
-
             group taskGroup
             description "Execute any configured deployment tasks."
-
          }
 
          // configure build groups
@@ -102,6 +100,9 @@ class ConfluentPlugin implements Plugin<Project> {
                   description = "Synchronize the pipeline build directory from the pipeline source directory."
                   from pipelineDir
                   into pipelineBuildDir
+                  doFirst {
+                     log.info "Synchronizing '$pipelineBuildDir' from '$pipelineDir'."
+                  }
                }
 
                project.build.dependsOn tg.getTaskName('pipelineSync')
@@ -115,7 +116,6 @@ class ConfluentPlugin implements Plugin<Project> {
                   pipelinePath pipelineBuildDir.canonicalPath
                   onlyIf { dir.exists() }
                   dependsOn tg.getTaskName('pipelineSync')
-
                }
 
                project.build.dependsOn tg.getTaskName('pipelineScript')
@@ -176,7 +176,6 @@ class ConfluentPlugin implements Plugin<Project> {
                   if (project.extensions.confluent.functionArtifactName) rename {
                      project.extensions.confluent.functionArtifactName
                   }
-
                }
 
                project.deploy.dependsOn tg.getTaskName('functionCopy')
@@ -213,9 +212,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
                pipeline(MavenPublication) {
                   artifact project.pipelineZip {
-
                      artifactId project.archivesBaseName + '-' + pipelinePattern
-
                   }
                }
             }

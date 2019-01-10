@@ -11,7 +11,10 @@ import spock.lang.Title
 class ExecuteTest extends Specification {
 
    @Shared
-   File projectDir, buildDir, buildFile, resourcesDir
+   File projectDir, buildDir, buildFile, settingsFile, resourcesDir
+
+   @Shared
+   String projectName = 'execute-test'
 
    @Shared
    String taskName
@@ -21,16 +24,17 @@ class ExecuteTest extends Specification {
 
    def setupSpec() {
 
-      projectDir = new File("${System.getProperty("projectDir")}/execute-test")
+      projectDir = new File("${System.getProperty("projectDir")}/$projectName")
       buildDir = new File(projectDir, 'build')
-      buildFile = new File(projectDir, 'build.gradle')
       taskList = ['pipelineExecute']
 
       resourcesDir = new File('src/test/resources')
 
       copySource()
 
-      buildFile.write("""
+      settingsFile = new File(projectDir, 'settings.gradle').write("""rootProject.name = '$projectName'""")
+
+      buildFile = new File(projectDir, 'build.gradle').write("""
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
                |}
@@ -75,7 +79,7 @@ class ExecuteTest extends Specification {
 
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['-Si','--rerun-tasks'])
+      result = executeSingleTask(taskName, ['-Si', '--rerun-tasks'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'
@@ -86,7 +90,7 @@ class ExecuteTest extends Specification {
 
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--pipeline-dir=src/main/pipeline/01-clickstream','-Si','--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--pipeline-dir=src/main/pipeline/01-clickstream', '-Si', '--rerun-tasks'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'
@@ -97,7 +101,7 @@ class ExecuteTest extends Specification {
 
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--no-create','-Si','--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--no-create', '-Si', '--rerun-tasks'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'
@@ -110,7 +114,7 @@ class ExecuteTest extends Specification {
 
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--no-drop','-Si','--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--no-drop', '-Si', '--rerun-tasks'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'
@@ -122,7 +126,7 @@ class ExecuteTest extends Specification {
 
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--no-create','-Si','--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--no-create', '-Si', '--rerun-tasks'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'
@@ -135,7 +139,7 @@ class ExecuteTest extends Specification {
 
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--no-terminate','-Si','--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--no-terminate', '-Si', '--rerun-tasks'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'
@@ -147,7 +151,7 @@ class ExecuteTest extends Specification {
 
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--from-beginning','-Si','--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--from-beginning', '-Si', '--rerun-tasks'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'
@@ -158,7 +162,7 @@ class ExecuteTest extends Specification {
 
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--no-create','-Si','--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--no-create', '-Si', '--rerun-tasks'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'
@@ -177,7 +181,7 @@ class ExecuteTest extends Specification {
         """.stripMargin())
 
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ["-Pconfluent.pipelineEndpoint=http://localhost:8088",'-Si','--rerun-tasks'])
+      result = executeSingleTask(taskName, ["-Pconfluent.pipelineEndpoint=http://localhost:8088", '-Si', '--rerun-tasks'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'

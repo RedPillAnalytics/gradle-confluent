@@ -12,16 +12,18 @@ import spock.lang.Unroll
 class TasksTest extends Specification {
 
    @Shared
-   File projectDir, buildDir, resourcesDir, buildFile, artifact
+   File projectDir, buildDir, settingsFile, resourcesDir, buildFile, artifact
 
    @Shared
    def result, tasks, taskList
 
+   @Shared
+   String projectName = 'run-tasks'
+
    def setupSpec() {
 
-      projectDir = new File("${System.getProperty("projectDir")}/run-tasks")
+      projectDir = new File("${System.getProperty("projectDir")}/$projectName")
       buildDir = new File(projectDir, 'build')
-      buildFile = new File(projectDir, 'build.gradle')
       artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
       taskList = ['clean', 'assemble', 'check', 'pipelineScript', 'pipelineZip', 'build']
 
@@ -31,7 +33,9 @@ class TasksTest extends Specification {
          fileset(dir: resourcesDir)
       }
 
-      buildFile.write("""
+      settingsFile = new File(projectDir, 'settings.gradle').write("""rootProject.name = '$projectName'""")
+
+      buildFile = new File(projectDir, 'build.gradle').write("""
             plugins {
                id 'com.redpillanalytics.gradle-confluent'
                id 'maven-publish'

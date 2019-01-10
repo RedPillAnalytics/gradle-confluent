@@ -9,16 +9,18 @@ import spock.lang.Title
 class DeployTest extends Specification {
 
    @Shared
-   File projectDir, buildDir, resourcesDir, buildFile, artifact
+   File projectDir, buildDir, resourcesDir, buildFile, settingsFile, artifact
 
    @Shared
    def result, tasks, taskList
 
+   @Shared
+   String projectName = 'simple-deploy'
+
    def setupSpec() {
 
-      projectDir = new File("${System.getProperty("projectDir")}/simple-deploy")
+      projectDir = new File("${System.getProperty("projectDir")}/$projectName")
       buildDir = new File(projectDir, 'build')
-      buildFile = new File(projectDir, 'build.gradle')
       artifact = new File(buildDir, 'distributions/simple-deploy-pipeline.zip')
       taskList = ['functionCopy', 'pipelineExtract', 'pipelineDeploy', 'deploy']
 
@@ -28,7 +30,9 @@ class DeployTest extends Specification {
          fileset(dir: resourcesDir)
       }
 
-      buildFile.write("""
+      settingsFile = new File(projectDir, 'settings.gradle').write("""rootProject.name = '$projectName'""")
+
+      buildFile = new File(projectDir, 'build.gradle').write("""
             plugins {
                id 'com.redpillanalytics.gradle-confluent'
                id 'maven-publish'
