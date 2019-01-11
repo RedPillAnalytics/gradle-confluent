@@ -64,7 +64,7 @@ plugins {
 ```
  Now we can use the `./gradlew tasks` command to see the new tasks available under the **Confluent** Task Group:
  
- ```gradle
+ ```
 Confluent tasks
 ---------------
 deploy - Calls all dependent deployment tasks.
@@ -79,14 +79,6 @@ The easiest wasy to use this plugin is to simply execute all of our persistent q
 
 ```bash
 ==> ./gradlew pipelineExecute --console=plain -i
-Initialized native services in: /Users/stewartbryson/.gradle/native
-The client will now receive all logging from the daemon (pid: 84094). The daemon log file: /Users/stewartbryson/.gradle/daemon/5.1/daemon-84094.out.log
-Starting 7th build in daemon [uptime: 9 mins 9.384 secs, performance: 100%, no major garbage collections]
-Using 8 worker leases.
-Starting Build
-Settings evaluated using settings file '/Users/stewartbryson/Source/ksql-examples/settings.gradle'.
-Projects loaded. Root project using build file '/Users/stewartbryson/Source/ksql-examples/build.gradle'.
-Included projects: [root project 'ksql-examples']
 
 > Configure project :
 Evaluating root project 'ksql-examples' using build file '/Users/stewartbryson/Source/ksql-examples/build.gradle'.
@@ -290,7 +282,7 @@ dependencies {
 
 With our KSQL pipeline dependency added, we get a few more tasks in our **Confluent** task group when we run `./gradlew tasks`, specifically the `pipelineExtract` and `pipelineDeploy` tasks:
 
-```gradle
+```
 Confluent tasks
 ---------------
 deploy - Execute any configured deployment tasks.
@@ -332,14 +324,6 @@ See the output generated below:
 
 ```bash
 ==> ./gradlew pipelineExecute --pipeline-dir 01-clickstream -i
-Initialized native services in: /Users/stewartbryson/.gradle/native
-The client will now receive all logging from the daemon (pid: 84094). The daemon log file: /Users/stewartbryson/.gradle/daemon/5.1/daemon-84094.out.log
-Starting 16th build in daemon [uptime: 22 mins 28.621 secs, performance: 100%, no major garbage collections]
-Using 8 worker leases.
-Starting Build
-Settings evaluated using settings file '/Users/stewartbryson/Source/ksql-examples/settings.gradle'.
-Projects loaded. Root project using build file '/Users/stewartbryson/Source/ksql-examples/build.gradle'.
-Included projects: [root project 'ksql-examples']
 
 > Configure project :
 Evaluating root project 'ksql-examples' using build file '/Users/stewartbryson/Source/ksql-examples/build.gradle'.
