@@ -59,7 +59,7 @@ So let's start preparing our `build.gradle` file. First, we need to apply the `g
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.11'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.13'
 }
 ```
  Now we can use the `./gradlew tasks` command to see the new tasks available under the **Confluent** Task Group:
@@ -79,41 +79,55 @@ The easiest wasy to use this plugin is to simply execute all of our persistent q
 
 ```bash
 ==> ./gradlew pipelineExecute --console=plain -i
+Initialized native services in: /Users/stewartbryson/.gradle/native
+The client will now receive all logging from the daemon (pid: 84094). The daemon log file: /Users/stewartbryson/.gradle/daemon/5.1/daemon-84094.out.log
+Starting 7th build in daemon [uptime: 9 mins 9.384 secs, performance: 100%, no major garbage collections]
+Using 8 worker leases.
+Starting Build
+Settings evaluated using settings file '/Users/stewartbryson/Source/ksql-examples/settings.gradle'.
+Projects loaded. Root project using build file '/Users/stewartbryson/Source/ksql-examples/build.gradle'.
+Included projects: [root project 'ksql-examples']
+
 > Configure project :
-Compiling build file '/Users/stewartbryson/Source/ksql-examples/build.gradle' using BuildScriptTransformer.
+Evaluating root project 'ksql-examples' using build file '/Users/stewartbryson/Source/ksql-examples/build.gradle'.
+Selected primary task ':jar' from project :
 All projects evaluated.
 Selected primary task 'pipelineExecute' from project :
 Tasks to be executed: [task ':pipelineSync', task ':pipelineExecute']
-:pipelineSync (Thread[Task worker for ':',5,main]) started.
+:pipelineSync (Thread[Execution worker for ':',5,main]) started.
 
-> Task :pipelineSync UP-TO-DATE
-Skipping task ':pipelineSync' as it is up-to-date.
-:pipelineSync (Thread[Task worker for ':',5,main]) completed. Took 0.011 secs.
-:pipelineExecute (Thread[Task worker for ':',5,main]) started.
+> Task :pipelineSync
+Deleting stale output file: /Users/stewartbryson/Source/ksql-examples/build/pipeline
+Task ':pipelineSync' is not up-to-date because:
+  No history is available.
+Custom actions are attached to task ':pipelineSync'.
+Synchronizing '/Users/stewartbryson/Source/ksql-examples/build/pipeline' from '/Users/stewartbryson/Source/ksql-examples/src/main/pipeline'.
+:pipelineSync (Thread[Execution worker for ':',5,main]) completed. Took 0.018 secs.
+:pipelineExecute (Thread[Execution worker for ':',5,main]) started.
 
 > Task :pipelineExecute
 Task ':pipelineExecute' is not up-to-date because:
   Task.upToDateWhen is false.
-Terminating query CTAS_CLICK_USER_SESSIONS_361...
+Terminating query CTAS_CLICK_USER_SESSIONS_107...
 DROP TABLE IF EXISTS CLICK_USER_SESSIONS;
-Terminating query CTAS_USER_IP_ACTIVITY_360...
+Terminating query CTAS_USER_IP_ACTIVITY_106...
 DROP TABLE IF EXISTS USER_IP_ACTIVITY;
-Terminating query CSAS_USER_CLICKSTREAM_359...
+Terminating query CSAS_USER_CLICKSTREAM_105...
 DROP STREAM IF EXISTS USER_CLICKSTREAM;
-Terminating query CSAS_CUSTOMER_CLICKSTREAM_358...
+Terminating query CSAS_CUSTOMER_CLICKSTREAM_104...
 DROP STREAM IF EXISTS customer_clickstream;
-Terminating query CTAS_ERRORS_PER_MIN_357...
+Terminating query CTAS_ERRORS_PER_MIN_103...
 DROP table IF EXISTS ERRORS_PER_MIN;
-Terminating query CTAS_ERRORS_PER_MIN_ALERT_356...
+Terminating query CTAS_ERRORS_PER_MIN_ALERT_102...
 DROP TABLE IF EXISTS ERRORS_PER_MIN_ALERT;
 DROP TABLE IF EXISTS WEB_USERS;
-Terminating query CTAS_ENRICHED_ERROR_CODES_COUNT_355...
+Terminating query CTAS_ENRICHED_ERROR_CODES_COUNT_101...
 DROP TABLE IF EXISTS ENRICHED_ERROR_CODES_COUNT DELETE TOPIC;
-Terminating query CSAS_ENRICHED_ERROR_CODES_354...
+Terminating query CSAS_ENRICHED_ERROR_CODES_100...
 DROP STREAM IF EXISTS ENRICHED_ERROR_CODES;
-Terminating query CTAS_PAGES_PER_MIN_353...
+Terminating query CTAS_PAGES_PER_MIN_99...
 DROP TABLE IF EXISTS pages_per_min;
-Terminating query CTAS_EVENTS_PER_MIN_352...
+Terminating query CTAS_EVENTS_PER_MIN_98...
 DROP table IF EXISTS events_per_min;
 DROP TABLE IF EXISTS clickstream_codes;
 DROP STREAM IF EXISTS clickstream;
@@ -133,10 +147,11 @@ CREATE STREAM USER_CLICKSTREAM AS SELECT userid, u.username, ip, u.city, request
 CREATE TABLE USER_IP_ACTIVITY AS  SELECT username, ip, city, COUNT(*) AS count  FROM USER_CLICKSTREAM WINDOW TUMBLING (size 60 second)  GROUP BY username, ip, city  HAVING COUNT(*) > 1;
 CREATE TABLE CLICK_USER_SESSIONS AS  SELECT username, count(*) AS events  FROM USER_CLICKSTREAM window SESSION (300 second)  GROUP BY username;
 13 objects created.
-:pipelineExecute (Thread[Task worker for ':',5,main]) completed. Took 3.97 secs.
+:pipelineExecute (Thread[Execution worker for ':',5,main]) completed. Took 5.798 secs.
 
-BUILD SUCCESSFUL in 13s
-2 actionable tasks: 1 executed, 1 up-to-date
+BUILD SUCCESSFUL in 7s
+2 actionable tasks: 2 executed
+==>
 ```
 
 First thing to notice is that the plugin automatically constructs and issues the DROP statements for any applicable CREATE statement encountered: no need to write those yourself. It runs all the DROP statements at the beginning, but also runs them in the reverse order of the CREATE statement dependency ordering: this just makes sense if you think about it. Additionally, if any DROP statements have persistent queries involving that table or stream, the plugin finds the query ID involved and issues the required TERMINATE statement. So there are a triad of statements that are run: TERMINATE, DROP and CREATE. This behavior can be controlled with command-line options. Here is the output from the help task command:
@@ -154,7 +169,7 @@ Type
      PipelineExecuteTask (com.redpillanalytics.gradle.tasks.PipelineExecuteTask)
 
 Options
-     --from-beginning     WHen defined, then set "ksql.streams.auto.offset.reset" to "earliest".
+     --from-beginning     When defined, set 'ksql.streams.auto.offset.reset' to 'earliest'.
 
      --no-create     When defined, CREATE statements are not processed.
 
@@ -164,9 +179,9 @@ Options
 
      --no-terminate     When defined, DROP statements are not processed using a TERMINATE for all currently-running queries.
 
-     --pipeline-dir     The top-level directory containing files and subdirectories--ordered alphanumerically--of pipeline processes.
+     --pipeline-dir     The base directory containing SQL scripts to execute, including recursive subdirectories. Default: value of 'confluent.pipelineSourcePath' or 'src/main/pipeline'.
 
-     --rest-url     The RESTful API URL for the KSQL Server.
+     --rest-url     The REST API URL for the KSQL Server. Default: value of 'confluent.pipelineEndpoint' or 'http://localhost:8088'.
 
 Description
      Execute all KSQL pipelines from the provided source directory, in hierarchical order, proceeded by applicable DROP and TERMINATE commands.
@@ -174,7 +189,7 @@ Description
 Group
      confluent
 
-BUILD SUCCESSFUL in 3s
+BUILD SUCCESSFUL in 1s
 1 actionable task: 1 executed
 ```
 
@@ -188,7 +203,7 @@ Seeing some of the command-line options, we can see how the `gradle-confluent` p
 6 objects dropped.
 6 objects created.
 
-BUILD SUCCESSFUL in 2s
+BUILD SUCCESSFUL in 3s
 2 actionable tasks: 1 executed, 1 up-to-date
 ```
 
@@ -198,7 +213,7 @@ While executing KSQL scripts from our source repository is useful for developers
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.11'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.13'
 }
 publishing {
     repositories {
@@ -231,20 +246,19 @@ We can now see our zip distribution file in the `build/distributions` directory:
 
 ```bash
 ==> cd build/distributions/
-==> zipinfo ksql-examples-pipeline.zip
-Archive:  ksql-examples-pipeline.zip
-Zip file size: 3733 bytes, number of entries: 9
-drwxr-xr-x  2.0 unx        0 b- defN 18-Oct-25 16:18 01-clickstream/
--rw-r--r--  2.0 unx      448 b- defN 18-Oct-25 16:18 01-clickstream/01-create.sql
--rw-r--r--  2.0 unx      969 b- defN 18-Oct-25 16:18 01-clickstream/02-integrate.sql
--rw-r--r--  2.0 unx      562 b- defN 18-Oct-25 16:18 01-clickstream/03-deliver.sql
-drwxr-xr-x  2.0 unx        0 b- defN 18-Oct-25 16:18 02-clickstream-users/
--rw-r--r--  2.0 unx      247 b- defN 18-Oct-25 16:18 02-clickstream-users/01-create.sql
--rw-r--r--  2.0 unx      962 b- defN 18-Oct-25 16:18 02-clickstream-users/02-integrate.sql
--rw-r--r--  2.0 unx      472 b- defN 18-Oct-25 16:18 02-clickstream-users/03-deliver.sql
--rw-r--r--  2.0 unx     2312 b- defN 18-Oct-25 16:18 ksql-script.sql
-9 files, 5972 bytes uncompressed, 2537 bytes compressed:  57.5%
-==>
+==> zipinfo ksql-examples-pipeline-1.0.0.zip
+Archive:  ksql-examples-pipeline-1.0.0.zip
+Zip file size: 3632 bytes, number of entries: 9
+drwxr-xr-x  2.0 unx        0 b- defN 19-Jan-11 04:00 01-clickstream/
+-rw-r--r--  2.0 unx      449 b- defN 19-Jan-11 04:00 01-clickstream/01-create.sql
+-rw-r--r--  2.0 unx      633 b- defN 19-Jan-11 04:00 01-clickstream/02-integrate.sql
+-rw-r--r--  2.0 unx      257 b- defN 19-Jan-11 04:00 01-clickstream/03-deliver.sql
+drwxr-xr-x  2.0 unx        0 b- defN 19-Jan-11 04:00 02-clickstream-users/
+-rw-r--r--  2.0 unx      248 b- defN 19-Jan-11 04:00 02-clickstream-users/01-create.sql
+-rw-r--r--  2.0 unx      960 b- defN 19-Jan-11 04:00 02-clickstream-users/02-integrate.sql
+-rw-r--r--  2.0 unx      473 b- defN 19-Jan-11 04:00 02-clickstream-users/03-deliver.sql
+-rw-r--r--  2.0 unx     2312 b- defN 19-Jan-11 04:07 ksql-script.sql
+9 files, 5332 bytes uncompressed, 2436 bytes compressed:  54.3%
 ```
 
 Notice our zip file has all the source scripts, but it also has the single, normalized `ksql-script.sql` file, which can be used as a KSQL server start script if we choose to deploy in that manner.
@@ -255,7 +269,7 @@ If we want to deploy our KSQL pipelines from Maven instead of Git (which let's f
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.0.11'
+   id "com.redpillanalytics.gradle-confluent" version '1.0.13'
 }
 publishing {
     repositories {
@@ -279,8 +293,8 @@ With our KSQL pipeline dependency added, we get a few more tasks in our **Conflu
 ```gradle
 Confluent tasks
 ---------------
-deploy - Calls all dependent deployment tasks.
-pipelineDeploy - Execute all KSQL pipelines from the provided source directory, in hierarchical order, proceeded by applicable DROP and TERMINATE commands.
+deploy - Execute any configured deployment tasks.
+pipelineDeploy - Execute all KSQL pipelines extracted from an artifact dependency, in hierarchical order, proceeded by applicable DROP and TERMINATE commands.
 pipelineExecute - Execute all KSQL pipelines from the provided source directory, in hierarchical order, proceeded by applicable DROP and TERMINATE commands.
 pipelineExtract - Extract the KSQL pipeline deployment dependency (or zip file) into the deployment directory.
 pipelineScript - Build a single KSQL deployment script with all the individual pipeline processes ordered. Primarily used for building a KSQL Server start script.
@@ -294,12 +308,12 @@ Now we can execute with a simple `./gradlew deploy` task, which calls as a depen
 ==> ./gradlew deploy
 
 > Task :pipelineDeploy
-10 queries terminated.
+6 queries terminated.
 13 objects dropped.
 13 objects created.
 
 BUILD SUCCESSFUL in 4s
-2 actionable tasks: 1 executed, 1 up-to-date
+2 actionable tasks: 2 executed
 ```
 
 # KSQL Directives
@@ -311,7 +325,67 @@ Directives are signalled using `--@` followed by a camel-case directive name jus
 When applied to a table or stream, then the `DELETE TOPIC` option is added to the `DROP STREAM/TABLE` command issued during `pipelineExecute` and `pipelineDeploy` tasks. An example of this can be seen in [this test script](src/test/resources/src/main/pipeline/01-clickstream/02-integrate.sql/). This would construct the following `DROP` command:
 
 ```SQL
-DROP TABLE IF EXISTS events_per_min DELETE TOPIC;
+DROP table IF EXISTS events_per_min DELETE TOPIC;
+```
+
+See the output generated below:
+
+```bash
+==> ./gradlew pipelineExecute --pipeline-dir 01-clickstream -i
+Initialized native services in: /Users/stewartbryson/.gradle/native
+The client will now receive all logging from the daemon (pid: 84094). The daemon log file: /Users/stewartbryson/.gradle/daemon/5.1/daemon-84094.out.log
+Starting 16th build in daemon [uptime: 22 mins 28.621 secs, performance: 100%, no major garbage collections]
+Using 8 worker leases.
+Starting Build
+Settings evaluated using settings file '/Users/stewartbryson/Source/ksql-examples/settings.gradle'.
+Projects loaded. Root project using build file '/Users/stewartbryson/Source/ksql-examples/build.gradle'.
+Included projects: [root project 'ksql-examples']
+
+> Configure project :
+Evaluating root project 'ksql-examples' using build file '/Users/stewartbryson/Source/ksql-examples/build.gradle'.
+Selected primary task ':jar' from project :
+All projects evaluated.
+Selected primary task 'pipelineExecute' from project :
+Tasks to be executed: [task ':pipelineSync', task ':pipelineExecute']
+:pipelineSync (Thread[Execution worker for ':',5,main]) started.
+
+> Task :pipelineSync
+Task ':pipelineSync' is not up-to-date because:
+  Input property 'rootSpec$1' file /Users/stewartbryson/Source/ksql-examples/src/main/pipeline/01-clickstream/01-create.sql has changed.
+  Input property 'rootSpec$1' file /Users/stewartbryson/Source/ksql-examples/src/main/pipeline/01-clickstream/02-integrate.sql has changed.
+  Input property 'rootSpec$1' file /Users/stewartbryson/Source/ksql-examples/src/main/pipeline/01-clickstream/03-deliver.sql has changed.
+Custom actions are attached to task ':pipelineSync'.
+Synchronizing '/Users/stewartbryson/Source/ksql-examples/build/pipeline' from '/Users/stewartbryson/Source/ksql-examples/src/main/pipeline'.
+:pipelineSync (Thread[Execution worker for ':',5,main]) completed. Took 0.013 secs.
+:pipelineExecute (Thread[Execution worker for ':',5,main]) started.
+
+> Task :pipelineExecute
+Task ':pipelineExecute' is not up-to-date because:
+  Task.upToDateWhen is false.
+Terminating query CTAS_ENRICHED_ERROR_CODES_COUNT_149...
+DROP TABLE IF EXISTS ENRICHED_ERROR_CODES_COUNT;
+Terminating query CSAS_ENRICHED_ERROR_CODES_148...
+DROP STREAM IF EXISTS ENRICHED_ERROR_CODES;
+Terminating query CTAS_PAGES_PER_MIN_147...
+DROP TABLE IF EXISTS pages_per_min;
+Terminating query CTAS_EVENTS_PER_MIN_146...
+DROP table IF EXISTS events_per_min DELETE TOPIC;
+DROP TABLE IF EXISTS clickstream_codes;
+DROP STREAM IF EXISTS clickstream;
+4 queries terminated.
+6 objects dropped.
+CREATE STREAM clickstream (_time bigint,time varchar, ip varchar, request varchar, status int, userid int, bytes bigint, agent varchar) with (kafka_topic = 'clickstream', value_format = 'json');
+CREATE TABLE clickstream_codes (code int, definition varchar) with (key='code', kafka_topic = 'clickstream_codes', value_format = 'json');
+CREATE table events_per_min AS SELECT userid, count(*) AS events FROM clickstream window TUMBLING (size 60 second) GROUP BY userid;
+CREATE TABLE pages_per_min AS SELECT userid, count(*) AS pages FROM clickstream WINDOW HOPPING (size 60 second, advance by 5 second) WHERE request like '%html%' GROUP BY userid;
+CREATE STREAM ENRICHED_ERROR_CODES AS SELECT code, definition FROM clickstream LEFT JOIN clickstream_codes ON clickstream.status = clickstream_codes.code;
+CREATE TABLE ENRICHED_ERROR_CODES_COUNT AS SELECT code, definition, COUNT(*) AS count FROM ENRICHED_ERROR_CODES WINDOW TUMBLING (size 30 second) GROUP BY code, definition HAVING COUNT(*) > 1;
+6 objects created.
+:pipelineExecute (Thread[Execution worker for ':',5,main]) completed. Took 1.446 secs.
+
+BUILD SUCCESSFUL in 2s
+2 actionable tasks: 2 executed
+==>
 ```
 
 # KSQL User-Defined Functions (UDFs)
