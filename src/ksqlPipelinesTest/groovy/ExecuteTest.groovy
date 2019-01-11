@@ -34,7 +34,9 @@ class ExecuteTest extends Specification {
 
       settingsFile = new File(projectDir, 'settings.gradle').write("""rootProject.name = '$projectName'""")
 
-      buildFile = new File(projectDir, 'build.gradle').write("""
+      buildFile = new File(projectDir, 'build.gradle')
+
+      buildFile.write("""
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
                |}
