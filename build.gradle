@@ -1,12 +1,22 @@
+// added because the github-release plugin used implementation instead of api/compile for plugin dependencies
+// An issue exists for this, so hopefully it will be corrected soon
+buildscript {
+   dependencies {
+      classpath 'com.squareup.okhttp3:okhttp:3.12.0'
+      classpath 'com.j256.simplemagic:simplemagic:1.10'
+      classpath 'org.zeroturnaround:zt-exec:1.10'
+   }
+}
+
 plugins {
    id 'groovy'
    id 'java-gradle-plugin'
    id "com.gradle.plugin-publish" version "0.10.0"
-   id "pl.allegro.tech.build.axion-release" version "1.9.3"
-   id "com.github.breadmoirai.github-release" version "2.0.1"
-   id 'org.unbroken-dome.test-sets' version '1.5.1'
+   id "pl.allegro.tech.build.axion-release" version "1.10.0"
+   id "com.github.breadmoirai.github-release" version "2.2.3"
+   id 'org.unbroken-dome.test-sets' version '2.0.3'
    id "com.github.ben-manes.versions" version "0.20.0"
-   id "com.redpillanalytics.gradle-analytics" version "1.1.16"
+   id "com.redpillanalytics.gradle-analytics" version "1.1.19"
 }
 
 // send analytics
@@ -43,7 +53,8 @@ githubRelease {
 dependencies {
 
    compile gradleApi()
-   compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.15'
+   compile localGroovy()
+
    compile group: 'org.slf4j', name: 'slf4j-simple', version: '+'
    compile 'com.mashape.unirest:unirest-java:+'
 
@@ -51,9 +62,9 @@ dependencies {
    // It also has the Common library in it, thus the dependency here
    compile "gradle.plugin.com.redpillanalytics:gradle-analytics:+"
 
-   testCompile 'org.spockframework:spock-core:1.1-groovy-2.4'
-   testCompile 'org.testcontainers:kafka:1.9.1'
-   testCompile 'org.testcontainers:spock:1.9.1'
+   testCompile 'org.spockframework:spock-core:1.2-groovy-2.5'
+//   testCompile 'org.testcontainers:kafka:1.9.1'
+//   testCompile 'org.testcontainers:spock:1.9.1'
 }
 
 // Default artifact naming.

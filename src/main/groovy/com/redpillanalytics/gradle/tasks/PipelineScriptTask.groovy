@@ -5,21 +5,10 @@ import org.gradle.api.tasks.*
 
 
 /**
- * Generate CREATE and DROP scripts used for deployment to KSQL Servers. Note: the DROP script is not currently being used... slated for future enhancements.
+ * Generate CREATE and DROP scripts used for deployment to KSQL Servers.
  */
 @Slf4j
 class PipelineScriptTask extends PipelineTask {
-
-   /**
-    * Returns a File object representation of the {@project.extensions.confluent.pipelineBuildName} parameter.
-    *
-    * @return The File object representation of the {@project.extensions.confluent.pipelineBuildName} parameter.
-    */
-   @OutputDirectory
-   File getBuildDir() {
-
-      return project.file("${project.buildDir}/${project.extensions.confluent.pipelineBuildName}")
-   }
 
    /**
     * Builds the KSQL script for the directory or directories.

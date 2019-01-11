@@ -10,16 +10,18 @@ import spock.lang.Unroll
 class BuildTest extends Specification {
 
    @Shared
-   File projectDir, buildDir, resourcesDir, buildFile, pipelineArtifact, script
+   File projectDir, buildDir, resourcesDir, buildFile, settingsFile, pipelineArtifact, script
+
+   @Shared
+   String projectName = 'simple-build'
 
    @Shared
    def result
 
    def setupSpec() {
 
-      projectDir = new File("${System.getProperty("projectDir")}/simple-build")
+      projectDir = new File("${System.getProperty("projectDir")}/$projectName")
       buildDir = new File(projectDir, 'build')
-      buildFile = new File(projectDir, 'build.gradle')
       pipelineArtifact = new File(buildDir, 'distributions/simple-build-pipeline-1.0.0.zip')
       script = new File(buildDir, 'pipeline/ksql-script.sql')
 
@@ -29,7 +31,9 @@ class BuildTest extends Specification {
          fileset(dir: resourcesDir)
       }
 
-      buildFile.write("""
+      settingsFile = new File(projectDir, 'settings.gradle').write("""rootProject.name = '$projectName'""")
+
+      buildFile = new File(projectDir, 'build.gradle').write("""
             plugins {
                id 'com.redpillanalytics.gradle-confluent'
                id 'maven-publish'
@@ -52,7 +56,7 @@ class BuildTest extends Specification {
 
       result = GradleRunner.create()
               .withProjectDir(projectDir)
-              .withArguments('-Si', 'clean', 'build', 'publish', '--rerun-tasks')
+              .withArguments('-Si', 'build', 'publish')
               .withPluginClasspath()
               .build()
 
@@ -61,14 +65,7 @@ class BuildTest extends Specification {
 
    def "Verify the correctness of artifacts"() {
 
-      when:
-      result = GradleRunner.create()
-              .withProjectDir(projectDir)
-              .withArguments('-Si', 'build', 'publish')
-              .withPluginClasspath()
-              .build()
-
-      log.warn result.getOutput()
+      when: 1==1
 
       then:
       pipelineArtifact.exists()
@@ -79,14 +76,7 @@ class BuildTest extends Specification {
    @Unroll
    def "Verify the following result: #task"() {
 
-      when:
-      result = GradleRunner.create()
-              .withProjectDir(projectDir)
-              .withArguments('-Si', 'clean', 'build', '--rerun-tasks')
-              .withPluginClasspath()
-              .build()
-
-      log.warn result.getOutput()
+      when: 1==1
 
       then:
       !task.outcome != 'FAILURE'
