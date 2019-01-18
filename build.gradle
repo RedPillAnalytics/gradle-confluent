@@ -110,13 +110,6 @@ tasks.withType(Test) {
    systemProperty 'projectDir', temporaryDir
 }
 
-//release.onlyIf { gradle.rootProject.extensions.analytics.gitBranch == 'master' }
-//publishPlugins.onlyIf { gradle.rootProject.extensions.analytics.gitBranch == 'master' }
-//
-//release.doLast {
-//   logger.info "branch: ${gradle.rootProject.extensions.analytics.gitBranch}"
-//}
-
 testSets {
    ksqlServerTest
    ksqlPipelinesTest
@@ -154,3 +147,12 @@ task publishDocs {
 }
 
 tasks.publishPlugins.dependsOn publishDocs
+
+task runAllTests {
+   description 'Run all defined tests.'
+   group 'verification'
+}
+
+tasks.withType(Test) {
+   runAllTests.dependsOn it
+}

@@ -27,7 +27,7 @@ pipeline {
 
       stage('Integration') {
           steps {
-              sh "$gradle ksqlServertest ksqlPipelinesTest deployTest"
+              sh "$gradle runAllTests"
           }
       }
 
