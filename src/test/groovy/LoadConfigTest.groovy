@@ -15,7 +15,7 @@ class LoadConfigTest extends Specification {
    def result, taskList
 
    @Shared
-   String projectName = 'load-config'
+   String taskName, projectName = 'load-config'
 
    def setupSpec() {
 
@@ -62,6 +62,26 @@ class LoadConfigTest extends Specification {
       processed.delete()
    }
 
+   // helper method
+   def executeSingleTask(String taskName, List args, Boolean logOutput = true) {
+
+      args.add(0, taskName)
+
+      log.warn "runner arguments: ${args.toString()}"
+
+      // execute the Gradle test build
+      result = GradleRunner.create()
+              .withProjectDir(projectDir)
+              .withArguments(args)
+              .withPluginClasspath()
+              .build()
+
+      // log the results
+      if (logOutput) log.warn result.getOutput()
+
+      return result
+   }
+
    def "Application Plugin expand works with default file"() {
 
       given:
@@ -71,16 +91,11 @@ class LoadConfigTest extends Specification {
       TOPIC_PREFIX = 'dev-'
       """)
 
-      result = GradleRunner.create()
-              .withProjectDir(projectDir)
-              .withArguments('-Si', 'build', '--rerun-tasks')
-              .withPluginClasspath()
-              .build()
-
-      log.warn result.getOutput()
+      taskName = 'build'
+      result = executeSingleTask(taskName, ['--rerun-tasks', '-Si'])
 
       expect:
-      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":build").outcome.toString())
+      result.task(":${taskName}").outcome.name() != 'FAILED'
       processed.exists()
       processed.text.contains('APPLICATION_ID = dev-application')
       processed.text.contains('TOPIC_PREFIX = dev-')
@@ -95,21 +110,18 @@ class LoadConfigTest extends Specification {
       TOPIC_PREFIX = 'dev-'
       """)
 
-      result = GradleRunner.create()
-              .withProjectDir(projectDir)
-              .withArguments('-Si', 'build', "-P.confluent.configPath=streams.config", '--rerun-tasks')
-              .withPluginClasspath()
-              .build()
-
-      log.warn result.getOutput()
+      taskName = 'build'
+      result = executeSingleTask(taskName, ['--rerun-tasks', '-Si', "-Pconfluent.configPath=streams.config"])
 
       expect:
-      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":build").outcome.toString())
+      result.task(":${taskName}").outcome.name() != 'FAILED'
       processed.exists()
       processed.text.contains('APPLICATION_ID = dev-application')
       processed.text.contains('TOPIC_PREFIX = dev-')
    }
 
+   // using executeTask is not working for this test
+   // something to do with the "-P" parameter referencing a variable.
    def "Application Plugin expand works with absolute file"() {
 
       given:
@@ -134,6 +146,8 @@ class LoadConfigTest extends Specification {
       processed.text.contains('TOPIC_PREFIX = dev-')
    }
 
+   // using executeTask is not working for this test
+   // something to do with the "-P" parameter referencing a variable.
    def "Application Plugin expand works with absolute file and environment"() {
 
       given:
@@ -165,6 +179,8 @@ class LoadConfigTest extends Specification {
       processed.text.contains('TOPIC_PREFIX = test-')
    }
 
+   // using executeTask is not working for this test
+   // something to do with the "-P" parameter referencing a variable.
    def "Application Plugin expand works with absolute file and bogus environment"() {
 
       given:
@@ -206,16 +222,11 @@ class LoadConfigTest extends Specification {
       applicationDefaultJvmArgs = '-Djava.io.tmpdir=/tmp'
       """)
 
-      result = GradleRunner.create()
-              .withProjectDir(projectDir)
-              .withArguments('-Si', 'build', '--rerun-tasks')
-              .withPluginClasspath()
-              .build()
-
-      log.warn result.getOutput()
+      taskName = 'build'
+      result = executeSingleTask(taskName, ['--rerun-tasks', '-Si'])
 
       expect:
-      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":build").outcome.toString())
+      result.task(":${taskName}").outcome.name() != 'FAILED'
       unixScript.exists()
       unixScript.text.contains('''DEFAULT_JVM_OPTS="-Djava.io.tmpdir=/tmp"''')
       windowsScript.exists()
