@@ -43,35 +43,32 @@ class PipelineExecuteTask extends PipelineTask {
    boolean fromBeginning = false
 
    /**
-    * When defined, DROP statements are not processed using a TERMINATE for all currently-running queries.
+    * When defined, applicable TERMINATE statements are not auto-generated and executed.
     */
    @Input
    @Option(option = 'no-terminate',
-           description = 'When defined, DROP statements are not processed using a TERMINATE for all currently-running queries.'
+           description = 'When defined, applicable TERMINATE statements are not auto-generated and executed.'
    )
    boolean noTerminate
 
    /**
-    * When defined, DROP statements are not processed.
+    * When defined, applicable DROP statements are not auto-generated and executed.
     */
    @Input
    @Option(option = 'no-drop',
-           description = 'When defined, DROP statements are not processed.'
+           description = 'When defined, applicable DROP statements are not auto-generated and executed.'
    )
    boolean noDrop
 
    /**
-    * When defined, CREATE statements are not processed.
+    * When defined, CREATE statements found in SQL scripts are not executed. Used primarily for auto-generating and executing applicable DROP and/or TERMINATE statements.
     */
    @Input
    @Option(option = 'no-create',
-           description = 'When defined, CREATE statements are not processed.'
+           description = 'When defined, CREATE statements in SQL scripts are not executed. Used primarily for auto-generating and executing applicable DROP and/or TERMINATE statements.'
    )
    boolean noCreate
 
-   /**
-    * The main Gradle Task method.
-    */
    @TaskAction
    def executePipelines() {
 

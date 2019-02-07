@@ -1,22 +1,13 @@
-// added because the github-release plugin used implementation instead of api/compile for plugin dependencies
-// An issue exists for this, so hopefully it will be corrected soon
-buildscript {
-   dependencies {
-      classpath 'com.squareup.okhttp3:okhttp:3.12.0'
-      classpath 'com.j256.simplemagic:simplemagic:1.10'
-      classpath 'org.zeroturnaround:zt-exec:1.10'
-   }
-}
-
 plugins {
    id 'groovy'
    id 'java-gradle-plugin'
-   id "com.gradle.plugin-publish" version "0.10.0"
+   id "com.gradle.plugin-publish" version "0.10.1"
    id "pl.allegro.tech.build.axion-release" version "1.10.0"
-   id "com.github.breadmoirai.github-release" version "2.2.3"
+   id "com.github.breadmoirai.github-release" version "2.2.4"
    id 'org.unbroken-dome.test-sets' version '2.0.3'
+   id "com.avast.gradle.docker-compose" version "0.8.13"
    id "com.github.ben-manes.versions" version "0.20.0"
-   id "com.redpillanalytics.gradle-analytics" version "1.1.19"
+   id "com.redpillanalytics.gradle-analytics" version "1.1.21"
 }
 
 // send analytics
@@ -151,6 +142,8 @@ tasks.publishPlugins.dependsOn publishDocs
 task runAllTests {
    description 'Run all defined tests.'
    group 'verification'
+   dependsOn composeUp
+   finalizedBy composeDown
 }
 
 tasks.withType(Test) {

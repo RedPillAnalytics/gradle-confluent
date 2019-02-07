@@ -1,9 +1,3 @@
-rootProject.name = 'gradle-confluent'
-
 if (file('../gradle-analytics').exists()) {
-   includeBuild('../gradle-analytics') {
-      dependencySubstitution {
-         substitute module('gradle.plugin.com.redpillanalytics:gradle-analytics') with project(':')
-      }
-   }
+   includeBuild('../gradle-analytics')
 }
