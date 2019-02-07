@@ -23,9 +23,6 @@ class PipelineScriptTask extends PipelineTask {
       return createScript
    }
 
-   /**
-    * The main Gradle Task method.
-    */
    @TaskAction
    def pipelineScript() {
       createScript()
