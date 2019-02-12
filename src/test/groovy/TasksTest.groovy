@@ -51,12 +51,20 @@ class TasksTest extends Specification {
             version = '1.0.0'
             
             dependencies {
-               archives group: 'com.redpillanalytics', name: 'ksql-functions', version: '+'
-               archives group: 'com.redpillanalytics', name: 'test-pipeline', version: '+'
+               archives group: 'com.redpillanalytics', name: 'simple-build', version: '+'
+               archives group: 'com.redpillanalytics', name: 'simple-build-pipeline', version: '+'
             }
             
             repositories {
-              mavenLocal()
+               jcenter()
+               mavenLocal()
+               maven {
+                  name 'test'
+                  url 's3://maven.redpillanalytics.com/demo/maven2'
+                  authentication {
+                     awsIm(AwsImAuthentication)
+                  }
+              }
             }
             
             mainClassName = "streams.TestClass"

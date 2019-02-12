@@ -7,19 +7,11 @@ You can run the unit tests by executing:
 ```bash
 ./gradlew test
 ```
-There are a series of integration tests that require the Confluent Platform with KSQL installed. These also require that the [clickstream quickstart](https://docs.confluent.io/current/ksql/docs/tutorials/clickstream-docker.html#ksql-clickstream-docker) topics have been built using the `ksql-datagen` utility. Our integration docker container uses the following statements to load the topics:
+
+There are a series of integration tests that use the topics from the [Confluent clickstream quickstart](https://docs.confluent.io/current/ksql/docs/tutorials/clickstream-docker.html#ksql-clickstream-docker). These integration tests can be run with the command below, and this command also automatically spins up a Confluent environment with docker-compose that is used for running those tests:
 
 ```bash
-ksql-datagen -daemon quickstart=clickstream format=avro topic=clickstream maxInterval=100 iterations=500000
-ksql-datagen quickstart=clickstream_codes format=avro topic=clickstream_codes maxInterval=20 iterations=100
-ksql-datagen quickstart=clickstream_users format=avro topic=clickstream_users maxInterval=10 iterations=1000
-```
-Once these topics exist, the integration tests can be run using the following commands:
-
-```bash
-./gradlew ksqlServerTest
-./gradlew deployTest
-./gradlew ksqlPipelinesTest
+./gradlew runAllTests
 ```
 # Motivation
 This plugin was motivated by a real-world project. We were stuggling to easily deploy all the pieces of our Confluent pipeline: KSQL scripts, KSQL user-defined functions (UDFs), and Kafka Streams microservices. The biggest gap we had was deploying KSQL scripts to downstream environments, so the majority of this plugin is for remedying that. Since Gradle already has functionality and plugins for compiling JARS (for UDFs) and building Java applications (for Kafka Streams microservices), this plugin addresses just a few gaps for those patterns.

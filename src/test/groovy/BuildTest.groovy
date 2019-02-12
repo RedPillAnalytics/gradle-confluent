@@ -31,26 +31,53 @@ class BuildTest extends Specification {
          fileset(dir: resourcesDir)
       }
 
-      settingsFile = new File(projectDir, 'settings.gradle').write("""rootProject.name = '$projectName'""")
+      settingsFile = new File(projectDir, 'settings.gradle').write("""
+         |rootProject.name = '$projectName'
+      """.stripMargin())
 
       buildFile = new File(projectDir, 'build.gradle').write("""
             plugins {
                id 'com.redpillanalytics.gradle-confluent'
                id 'maven-publish'
                id 'application'
+               id 'groovy'
             }
+            dependencies {
+               compile localGroovy()
+               compile group: 'org.slf4j', name: 'slf4j-simple', version: '+'
+            }
+
             publishing {
+               publications {
+                  groovy(MavenPublication) {
+                     from components.java
+                  }
+               }
               repositories {
                 mavenLocal()
+                maven {
+                  name 'test'
+                  url 's3://maven.redpillanalytics.com/demo/maven2'
+                  authentication {
+                     awsIm(AwsImAuthentication)
+                  }
+                }
               }
             }
             group = 'com.redpillanalytics'
             version = '1.0.0'
             
             repositories {
-              mavenLocal()
+               jcenter()
+               mavenLocal()
+               maven {
+               name 'test'
+               url 's3://maven.redpillanalytics.com/demo/maven2'
+               authentication {
+                  awsIm(AwsImAuthentication)
+               }
+              }
             }
-            
             mainClassName = "streams.TestClass"
         """)
 

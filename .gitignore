@@ -17,6 +17,8 @@ gradle-app.setting
 # Ignore all hidden files, except this one
 .*
 !.gitignore
+!.travis.yml
+!.circleci/
 
 # Visual Studio Code build directory
 bin

@@ -8,6 +8,7 @@ plugins {
    id "com.avast.gradle.docker-compose" version "0.8.13"
    id "com.github.ben-manes.versions" version "0.20.0"
    id "com.redpillanalytics.gradle-analytics" version "1.1.21"
+   id 'com.adarshr.test-logger' version '1.6.0'
 }
 
 // send analytics
@@ -54,8 +55,6 @@ dependencies {
    compile "gradle.plugin.com.redpillanalytics:gradle-analytics:+"
 
    testCompile 'org.spockframework:spock-core:1.2-groovy-2.5'
-//   testCompile 'org.testcontainers:kafka:1.9.1'
-//   testCompile 'org.testcontainers:spock:1.9.1'
 }
 
 // Default artifact naming.
