@@ -1,6 +1,14 @@
 version: 2.0
 
 jobs:
+    release:
+        machine: true
+        branches:
+            only:
+                - master
+        steps:
+            - checkout
+            - run: ./gradlew release -Prelease.disableChecks -Prelease.localOnly
     build:
         machine: true
         steps:
