@@ -29,6 +29,7 @@ jobs:
         steps:
             - run: ./gradlew publishPlugins githubRelease
     cache:
+        machine: true
         steps:
             - save_cache:
                   paths:
@@ -41,15 +42,18 @@ workflows:
         jobs:
             - checkout
             - release:
+                  requires: checkout
                   filters:
                       branches:
                           only:
                               - master
-            - build
+            - build:
+                  requires: release
             - publish:
+                  requires: build
                   filters:
                       branches:
                           only:
                               - master
             - cache
-            - cache
+
