@@ -55,8 +55,6 @@ dependencies {
    compile "gradle.plugin.com.redpillanalytics:gradle-analytics:+"
 
    testCompile 'org.spockframework:spock-core:1.2-groovy-2.5'
-//   testCompile 'org.testcontainers:kafka:1.9.1'
-//   testCompile 'org.testcontainers:spock:1.9.1'
 }
 
 // Default artifact naming.

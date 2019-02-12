@@ -46,12 +46,24 @@ class DeployTest extends Specification {
             version = '1.0.0'
             
             repositories {
-              mavenLocal()
+               jcenter()
+               mavenLocal()
+               maven {
+                  name 'test'
+                  url 's3://maven.redpillanalytics.com/demo/maven2'
+                  authentication {
+                     awsIm(AwsImAuthentication)
+                  }
+              }
             }
             
             dependencies {
-               archives group: 'com.redpillanalytics', name: 'ksql-functions', version: '+'
+               archives group: 'com.redpillanalytics', name: 'simple-build', version: '+'
                archives group: 'com.redpillanalytics', name: 'simple-build-pipeline', version: '+'
+            }
+
+            confluent {
+               functionPattern 'simple-build'
             }
         """)
    }

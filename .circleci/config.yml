@@ -12,6 +12,7 @@ jobs:
             - save_cache:
                 paths:
                     - ~/.gradle
+                    - ~/.m2
                 key: gradle-{{ checksum "build.gradle" }}
             - store_artifacts:
                 path: build/distributions
@@ -20,4 +21,4 @@ jobs:
                 path: build/libs
                 destination: libs
             - store_test_results:
-                path: build/test-results/**/
+                path: build/test-results
