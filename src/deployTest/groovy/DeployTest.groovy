@@ -68,7 +68,7 @@ class DeployTest extends Specification {
         """)
    }
 
-   def "Deploy test using mavenLocal()"() {
+   def "Deploy test S3"() {
 
       given:
 
