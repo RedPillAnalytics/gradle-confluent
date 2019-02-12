@@ -37,3 +37,10 @@ jobs:
                 - master
         steps:
             - run: ./gradlew publishPlugins githubRelease
+workflows:
+    version: 2
+    workflow:
+        jobs:
+            - release
+            - build
+            - publish
