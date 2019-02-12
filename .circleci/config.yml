@@ -1,39 +1,54 @@
 version: 2.0
 
 jobs:
-    release:
-        machine: true
-        branches:
-            only:
-                - master
-        steps:
-            - checkout
-            - run: ./gradlew release -Prelease.disableChecks -Prelease.localOnly
-    build:
+    checkout:
         machine: true
         steps:
             - checkout
             - restore_cache:
-                keys:
-                    - gradle-{{ checksum "build.gradle" }}-{{ checksum "settings.gradle" }}
+                  keys:
+                      - gradle-{{ checksum "build.gradle" }}-{{ checksum "settings.gradle" }}
+    release:
+        machine: true
+        steps:
+            - run: ./gradlew release -Prelease.disableChecks -Prelease.localOnly
+    build:
+        machine: true
+        steps:
             - run: ./gradlew build runAllTests
-            - save_cache:
-                paths:
-                    - ~/.gradle
-                    - ~/.m2
-                key: gradle-{{ checksum "build.gradle" }}-{{ checksum "settings.gradle" }}
             - store_artifacts:
-                path: build/distributions
-                destination: distributions
+                  path: build/distributions
+                  destination: distributions
             - store_artifacts:
-                path: build/libs
-                destination: libs
+                  path: build/libs
+                  destination: libs
             - store_test_results:
-                path: build/test-results
+                  path: build/test-results
     publish:
         machine: true
-        branches:
-            only:
-                - master
         steps:
             - run: ./gradlew publishPlugins githubRelease
+    cache:
+        steps:
+            - save_cache:
+                  paths:
+                      - ~/.gradle
+                      - ~/.m2
+                  key: gradle-{{ checksum "build.gradle" }}-{{ checksum "settings.gradle" }}
+workflows:
+    version: 2
+    release-build-publish:
+        jobs:
+            - checkout
+            - release:
+                  filters:
+                      branches:
+                          only:
+                              - master
+            - build
+            - publish:
+                  filters:
+                      branches:
+                          only:
+                              - master
+            - cache
