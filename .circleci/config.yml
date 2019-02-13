@@ -48,10 +48,10 @@ workflows:
           filters:
             branches:
               only: master
-      - build
+      - build:
           requires:
             - release
-      - test
+      - test:
           requires:
             - build
       - publish:
