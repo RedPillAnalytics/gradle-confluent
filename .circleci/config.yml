@@ -1,10 +1,13 @@
 version: 2.0
 
 jobs:
-    release:
+    checkout:
         machine: true
         steps:
             - checkout
+    release:
+        machine: true
+        steps:
             - restore_cache:
                 keys:
                     - gradle-{{ checksum "build.gradle" }}-{{ checksum "settings.gradle" }}
@@ -44,7 +47,10 @@ workflows:
   version: 2
   build-deploy:
     jobs:
+      - checkout
       - release:
+          requires:
+            - checkout
           filters:
             branches:
               only: master
