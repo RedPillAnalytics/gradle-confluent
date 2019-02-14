@@ -116,28 +116,36 @@ ext.bucket = 's3://documentation.redpillanalytics.com'
 ext.bucketPath = 'gradle-confluent'
 
 
-task publishDocs {
+task publishVersionDocs {
 
-   description = 'Upload Groovydocs to s3.'
+   description = 'Upload version Groovydocs to s3.'
    group = 'documentation'
 
    doLast {
-
       exec {
          executable 'aws'
          args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/${version}/"
       }
+   }
+   dependsOn groovydoc
+}
 
+task publishLatestDocs {
+
+   description = 'Upload latest Groovydocs to s3.'
+   group = 'documentation'
+
+   doLast {
       exec {
          executable 'aws'
          args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/latest/"
       }
    }
-
    dependsOn groovydoc
+   onlyIf { gitBranchName == 'master' }
 }
 
-tasks.publishPlugins.dependsOn publishDocs
+tasks.publishPlugins.dependsOn publishVersionDocs, publishLatestDocs
 
 task runAllTests {
    description 'Run all defined tests.'
