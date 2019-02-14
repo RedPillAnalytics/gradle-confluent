@@ -9,6 +9,7 @@ plugins {
    id "com.github.ben-manes.versions" version "0.20.0"
    id "com.redpillanalytics.gradle-analytics" version "1.1.21"
    id 'com.adarshr.test-logger' version '1.6.0'
+   id "com.moonlitdoor.git-version" version "0.1.1"
 }
 
 // send analytics
@@ -115,28 +116,36 @@ ext.bucket = 's3://documentation.redpillanalytics.com'
 ext.bucketPath = 'gradle-confluent'
 
 
-task publishDocs {
+task publishVersionDocs {
 
-   description = 'Upload Groovydocs to s3.'
+   description = 'Upload version Groovydocs to s3.'
    group = 'documentation'
 
    doLast {
-
       exec {
          executable 'aws'
          args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/${version}/"
       }
+   }
+   dependsOn groovydoc
+}
 
+task publishLatestDocs {
+
+   description = 'Upload latest Groovydocs to s3.'
+   group = 'documentation'
+
+   doLast {
       exec {
          executable 'aws'
          args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/latest/"
       }
    }
-
    dependsOn groovydoc
+   onlyIf { gitBranchName == 'master' }
 }
 
-tasks.publishPlugins.dependsOn publishDocs
+tasks.publishPlugins.dependsOn publishVersionDocs, publishLatestDocs
 
 task runAllTests {
    description 'Run all defined tests.'
@@ -148,3 +157,8 @@ task runAllTests {
 tasks.withType(Test) {
    runAllTests.dependsOn it
 }
+
+// Only execute certain tasks if we are on the master branch
+tasks.release.configure { onlyIf { gitBranchName == 'master' } }
+tasks.publishPlugins.configure { onlyIf { gitBranchName == 'master' } }
+tasks.githubRelease.configure { onlyIf { gitBranchName == 'master' } }
