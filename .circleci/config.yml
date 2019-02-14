@@ -21,7 +21,7 @@ jobs:
                 command: ./gradlew build runAllTests
             - run:
                 name: Publish
-                command: ./gradlew publishPlugins githubRelease -Pgradle.publish.key=${GRADLE_KEY} -Pgradle.publish.secret=${GRADLE_SECRET}
+                command: ./gradlew publishPlugins githubRelease -Pgradle.publish.key=${GRADLE_KEY} -Pgradle.publish.secret=${GRADLE_SECRET} -PgithubToken=${GITHUB_TOKEN}
             - save_cache:
                 paths:
                     - ~/.gradle
