@@ -6,56 +6,35 @@ executors:
     working_directory: ~/workspace
 
 jobs:
-    release:
+    build-test-publish:
         executor: release-build-test-publish
         steps:
             - checkout
-            - restore_cache:
-                keys:
-                    - gradle-{{ checksum "build.gradle" }}-{{ checksum "settings.gradle" }}
-            - run: ./gradlew release -Prelease.disableChecks -Prelease.localOnly
-    build:
-        executor: release-build-test-publish
-        steps:
+            - run:
+                name: Release
+                command: ./gradlew release -Prelease.disableChecks -Prelease.localOnly
             - run:
                 name: Build and Test
-                command: ./gradlew build
+                command: ./gradlew build runAllTests
+            - run:
+                name: Publish
+                command: ./gradlew publishPlugins githubRelease
+            - save_cache:
+                paths:
+                    - ~/.gradle
+                    - ~/.m2
+                key: gradle-{{ checksum "build.gradle" }}-{{ checksum "settings.gradle" }}
             - store_artifacts:
                 path: build/distributions
                 destination: distributions
             - store_artifacts:
                 path: build/libs
                 destination: libs
-    test:
-        executor: release-build-test-publish
-        steps:
-            - run:
-                name: Build and Test
-                command: ./gradlew build runAllTests
-            - save_cache:
-                paths:
-                    - ~/.gradle
-                    - ~/.m2
-                key: gradle-{{ checksum "build.gradle" }}-{{ checksum "settings.gradle" }}
             - store_test_results:
                 path: build/test-results
-    publish:
-        executor: release-build-test-publish
-        steps:
-            - run: ./gradlew publishPlugins githubRelease
-
 
 workflows:
   version: 2
-  release-build-test-publish:
+  build-test-publish:
     jobs:
-      - release
-      - build:
-          requires:
-            - release
-      - test:
-          requires:
-            - build
-      - publish:
-          requires:
-            - test
+      - build-test-publish
