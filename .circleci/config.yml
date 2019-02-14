@@ -1,24 +1,21 @@
 version: 2.1
 
 executors:
-  build-test: # declares a reusable executor
+  release-build-test-publish: # declares a reusable executor
     machine: true
     working_directory: ~/workspace
 
 jobs:
-    checkout:
-        executor: build-test
+    release:
+        executor: release-build-test-publish
         steps:
             - checkout
-    release:
-        executor: build-test
-        steps:
             - restore_cache:
                 keys:
                     - gradle-{{ checksum "build.gradle" }}-{{ checksum "settings.gradle" }}
             - run: ./gradlew release -Prelease.disableChecks -Prelease.localOnly
     build:
-        executor: build-test
+        executor: release-build-test-publish
         steps:
             - run:
                 name: Build and Test
@@ -30,7 +27,7 @@ jobs:
                 path: build/libs
                 destination: libs
     test:
-        executor: build-test
+        executor: release-build-test-publish
         steps:
             - run:
                 name: Build and Test
@@ -43,22 +40,16 @@ jobs:
             - store_test_results:
                 path: build/test-results
     publish:
-        executor: build-test
+        executor: release-build-test-publish
         steps:
             - run: ./gradlew publishPlugins githubRelease
 
 
 workflows:
   version: 2
-  build-deploy:
+  release-build-test-publish:
     jobs:
-      - checkout
-      - release:
-          requires:
-            - checkout
-          filters:
-            branches:
-              only: master
+      - release
       - build:
           requires:
             - release
@@ -68,6 +59,3 @@ workflows:
       - publish:
           requires:
             - test
-          filters:
-            branches:
-              only: master
