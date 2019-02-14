@@ -10,6 +10,9 @@ jobs:
         executor: release-build-test-publish
         steps:
             - checkout
+           - restore_cache:
+                keys:
+                    - gradle-{{ checksum "build.gradle" }}-{{ checksum "settings.gradle" }}
             - run:
                 name: Release
                 command: ./gradlew release -Prelease.disableChecks -Prelease.localOnly
@@ -18,7 +21,7 @@ jobs:
                 command: ./gradlew build runAllTests
             - run:
                 name: Publish
-                command: ./gradlew publishPlugins githubRelease
+                command: ./gradlew publishPlugins githubRelease -Pgradle.publish.key=${GRADLE_KEY} -Pgradle.publish.secret=${GRADLE_SECRET}
             - save_cache:
                 paths:
                     - ~/.gradle
