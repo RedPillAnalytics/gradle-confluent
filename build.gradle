@@ -151,6 +151,6 @@ tasks.withType(Test) {
 }
 
 // Only execute certain tasks if we are on the master branch
-tasks.release.configure { onlyIf { gitBranchName == 'master' } }
-tasks.publishPlugins.configure { onlyIf { gitBranchName == 'master' } }
-tasks.githubRelease.configure { onlyIf { gitBranchName == 'master' } }
+tasks.release.configure { onlyIf { gitBranch == 'master' } }
+tasks.publishPlugins.configure { onlyIf { gitBranch == 'master' } }
+tasks.githubRelease.configure { onlyIf { gitBranch == 'master' } }
