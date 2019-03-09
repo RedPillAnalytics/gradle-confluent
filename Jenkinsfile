@@ -3,7 +3,7 @@ def properties = "-Panalytics.buildId=${env.BUILD_TAG}"
 def gradle = "./gradlew ${options} ${properties}"
 
 pipeline {
-   agent { label 'java-compile' }
+   agent { label 'container-build' }
 
    environment {
       GOOGLE_APPLICATION_CREDENTIALS = '/var/lib/jenkins/.gcp/gradle-analytics-build-user.json'
@@ -26,7 +26,7 @@ pipeline {
 
       stage('Integration') {
           steps {
-              sh "$gradle runAllTests"
+              sh "$gradle composeUp runAllTests"
           }
       }
 
@@ -46,6 +46,9 @@ pipeline {
          archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true
          sh "$gradle cleanJunit"
          sh "$gradle producer"
+      }
+      cleanup {
+        sh "$gradle composeDown"
       }
    }
 

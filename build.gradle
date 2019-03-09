@@ -9,8 +9,9 @@ plugins {
    id "com.github.ben-manes.versions" version "0.20.0"
    id "com.redpillanalytics.gradle-analytics" version "1.1.21"
    id 'com.adarshr.test-logger' version '1.6.0'
-   id "com.moonlitdoor.git-version" version "0.1.1"
 }
+
+ext.githubToken = 'hidden'
 
 // send analytics
 analytics {
@@ -142,7 +143,7 @@ task publishLatestDocs {
       }
    }
    dependsOn groovydoc
-   onlyIf { gitBranchName == 'master' }
+   onlyIf { gitBranch == 'master' }
 }
 
 tasks.publishPlugins.dependsOn publishVersionDocs, publishLatestDocs
@@ -150,8 +151,6 @@ tasks.publishPlugins.dependsOn publishVersionDocs, publishLatestDocs
 task runAllTests {
    description 'Run all defined tests.'
    group 'verification'
-   dependsOn composeUp
-   finalizedBy composeDown
 }
 
 tasks.withType(Test) {
@@ -159,6 +158,6 @@ tasks.withType(Test) {
 }
 
 // Only execute certain tasks if we are on the master branch
-tasks.release.configure { onlyIf { gitBranchName == 'master' } }
-tasks.publishPlugins.configure { onlyIf { gitBranchName == 'master' } }
-tasks.githubRelease.configure { onlyIf { gitBranchName == 'master' } }
+tasks.release.configure { onlyIf { gitBranch == 'master' } }
+tasks.publishPlugins.configure { onlyIf { gitBranch == 'master' } }
+tasks.githubRelease.configure { onlyIf { gitBranch == 'master' } }

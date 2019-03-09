@@ -1,7 +1,3 @@
-if (file('../gradle-analytics').exists()) {
-   includeBuild('../gradle-analytics')
-}
-
 ext.isCiServer = System.getenv().containsKey("CI")
 
  buildCache {

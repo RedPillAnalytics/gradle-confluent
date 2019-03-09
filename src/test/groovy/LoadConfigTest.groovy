@@ -22,7 +22,7 @@ class LoadConfigTest extends Specification {
       projectDir = new File("${System.getProperty("projectDir")}/$projectName")
       buildDir = new File(projectDir, 'build')
       pipelineDir = new File(buildDir, 'pipeline')
-      pipelineScript = new File(pipelineDir, 'ksql-script.sql')
+      pipelineScript = new File(pipelineDir, 'ksql-script.ksql')
       artifact = new File(buildDir, 'distributions/build-test-pipeline.zip')
       taskList = ['clean', 'assemble', 'check', 'pipelineScript', 'pipelineZip', 'build']
       absoluteDir = new File(System.getProperty("projectDir"))
