@@ -69,25 +69,25 @@ class PipelineTask extends DefaultTask {
    /**
     * Gets the hierarchical collection of pipeline files, sorted using folder structure and alphanumeric logic.
     *
-    * @return The List of pipeline SQL files.
+    * @return The List of pipeline KSQL files.
     */
    @Internal
    List getPipelineFiles() {
 
-      def tree = project.fileTree(dir: dir, includes: ['**/*.sql', '**/*.SQL'], exclude: project.extensions.confluent.pipelineCreateName)
+      def tree = project.fileTree(dir: dir, includes: ['**/*.sql', '**/*.SQL', '**/*.ksql','**/*.KSQL'], exclude: project.extensions.confluent.pipelineCreateName)
 
       return tree.sort()
    }
 
    /**
-    * Gets tokenized (based on ';') pipeline SQL statements using {@link #getPipelineFiles}.
+    * Gets tokenized (based on ';') pipeline KSQL statements using {@link #getPipelineFiles}.
     *
-    * @return The List of tokenized pipeline SQL statements.
+    * @return The List of tokenized pipeline KSQL statements.
     */
    @Internal
    def getTokenizedSql() {
 
-      //tokenize individual SQL statements out of each SQL script
+      //tokenize individual KSQL statements out of each SQL script
       def tokenized = []
       getPipelineFiles().each { file ->
          file.text.trim().tokenize(';').each {
@@ -101,7 +101,7 @@ class PipelineTask extends DefaultTask {
    /**
     * Gets the hierarchical collection of pipeline SQL statements--tokenized and normalized--and sorted using {@link #getPipelineFiles}.
     *
-    * @return The List of pipeline SQL statements.
+    * @return The List of pipeline KSQL statements.
     */
    @Internal
    def getPipelineSql() {
@@ -146,7 +146,7 @@ class PipelineTask extends DefaultTask {
    }
 
    /**
-    * Returns a List of tables or streams that have a specific directive for execution behavior. Directives are defined in SQL scripts using: "--@DirectiveName".
+    * Returns a List of tables or streams that have a specific directive for execution behavior. Directives are defined in KSQL scripts using: "--@DirectiveName".
     *
     * For instance, the directive that controls whether or not an underlying topic is deleted during {@pipelineExecute} is: --@DeleteTopic.
     *

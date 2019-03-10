@@ -13,7 +13,7 @@ import org.gradle.api.GradleException
  */
 class KsqlRest {
 
-   static final String SQLREGEX = /(?i)(?:.*)(create|drop|insert)(?:\s+)(table|stream|into)(?:\s+)(?:IF EXISTS\s+)?(\w+)/
+   static final String KSQLREGEX = /(?i)(?:.*)(create|drop|insert)(?:\s+)(table|stream|into)(?:\s+)(?:IF EXISTS\s+)?(\w+)/
 
    /**
     * The base REST endpoint for the KSQL server. Defaults to 'http://localhost:8088', which is handy when developing against Confluent CLI.
@@ -23,17 +23,17 @@ class KsqlRest {
    /**
     * Executes a KSQL statement using the KSQL RESTful API.
     *
-    * @param sql the SQL statement to execute.
+    * @param ksql the KSQL statement to execute.
     *
     * @param properties Any KSQL parameters to include with the KSQL execution.
     *
     * @return Map with meaningful elements returned in the REST call, plus a 'body' key with the full JSON payload.
     */
-   def execKsql(String sql, Map properties) {
+   def execKsql(String ksql, Map properties) {
 
-      def prepared = (sql + ';').replace('\n', '').replace(';;', ';')
+      def prepared = (ksql + ';').replace('\n', '').replace(';;', ';')
 
-      if (['create', 'drop'].contains(getStatementType(sql))) log.info prepared
+      if (['create', 'drop'].contains(getStatementType(ksql))) log.info prepared
 
       HttpResponse<String> response = Unirest.post("${baseUrl}/ksql")
               .header("Content-Type", "application/vnd.ksql.v1+json")
@@ -61,15 +61,15 @@ class KsqlRest {
    /**
     * Executes a List of KSQL statements using the KSQL RESTful API.
     *
-    * @param sql the List of SQL statements to execute.
+    * @param ksql the List of KSQL statements to execute.
     *
     * @param properties Any KSQL parameters to include with the KSQL execution.
     *
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
-   def execKsql(List sql, Map properties) {
+   def execKsql(List ksql, Map properties) {
 
-      sql.each {
+      ksql.each {
          execKsql(it, properties)
       }
    }
@@ -77,30 +77,30 @@ class KsqlRest {
    /**
     * Executes a KSQL statement using the KSQL RESTful API.
     *
-    * @param sql The SQL statement to execute.
+    * @param ksql The KSQL statement to execute.
     *
     * @param earliest Boolean dictating that the statement should set 'auto.offset.reset' to 'earliest'.
     *
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
-   def execKsql(String sql, Boolean earliest = false) {
+   def execKsql(String ksql, Boolean earliest = false) {
 
-      def data = execKsql(sql, (earliest ? ["ksql.streams.auto.offset.reset": "earliest"] : [:]))
+      def data = execKsql(ksql, (earliest ? ["ksql.streams.auto.offset.reset": "earliest"] : [:]))
       return data
    }
 
    /**
     * Executes a List of KSQL statements using the KSQL RESTful API.
     *
-    * @param sql the List of SQL statements to execute.
+    * @param ksql the List of KSQL statements to execute.
     *
     * @param earliest Boolean dictating that the statement should set 'auto.offset.reset' to 'earliest'.
     *
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
-   def execKsql(List sql, Boolean earliest = false) {
+   def execKsql(List ksql, Boolean earliest = false) {
 
-      sql.each {
+      ksql.each {
          execKsql(it, earliest)
       }
    }
@@ -108,15 +108,15 @@ class KsqlRest {
    /**
     * Executes a KSQL statement using the KSQL RESTful API. Optimized for issuing CREATE TABLE/STREAM statements.
     *
-    * @param sql the SQL statement to execute.
+    * @param ksql the KSQL statement to execute.
     *
     * @param properties Any KSQL parameters to include with the KSQL execution.
     *
     * @return Map with meaningful elements returned in the REST call, plus a 'body' key with the full JSON payload.
     */
-   def createKsql(String sql, Map properties) {
+   def createKsql(String ksql, Map properties) {
 
-      def response = execKsql(sql, properties)
+      def response = execKsql(ksql, properties)
 
       def result = [
               status        : response.status,
@@ -135,7 +135,7 @@ class KsqlRest {
       }
 
       // get the object name
-      String object = getObjectName(sql)
+      String object = getObjectName(ksql)
 
       // groovy doesn't yet have a do-while loop (it will in 3.0)
       // hack to do bottom-checking loop
@@ -158,55 +158,55 @@ class KsqlRest {
    /**
     * Executes a List of KSQL statements using the KSQL RESTful API. Optimized for issuing CREATE TABLE/STREAM statements.
     *
-    * @param sql the List of SQL statements to execute.
+    * @param ksql the List of KSQL statements to execute.
     *
     * @param properties Any KSQL parameters to include with the KSQL execution.
     *
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
-   def createKsql(List sql, Map properties) {
+   def createKsql(List ksql, Map properties) {
 
-      sql.each {
+      ksql.each {
          createKsql(it, properties)
       }
-      log.warn "${sql.size()} objects created."
+      log.warn "${ksql.size()} objects created."
    }
 
    /**
     * Executes a KSQL statement using the KSQL RESTful API. Optimized for issuing CREATE TABLE/STREAM statements.
     *
-    * @param sql The SQL statement to execute.
+    * @param ksql The KSQL statement to execute.
     *
     * @param earliest Boolean dictating that the statement should set 'auto.offset.reset' to 'earliest'.
     *
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
-   def createKsql(String sql, Boolean earliest = false) {
+   def createKsql(String ksql, Boolean earliest = false) {
 
-      createKsql(sql, (earliest ? ["ksql.streams.auto.offset.reset": "earliest"] : [:]))
+      createKsql(ksql, (earliest ? ["ksql.streams.auto.offset.reset": "earliest"] : [:]))
    }
 
    /**
     * Executes a List of KSQL statements using the KSQL RESTful API. Optimized for issuing CREATE TABLE/STREAM statements.
     *
-    * @param sql the List of SQL statements to execute.
+    * @param ksql the List of KSQL statements to execute.
     *
     * @param earliest Boolean dictating that the statement should set 'auto.offset.reset' to 'earliest'.
     *
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
-   def createKsql(List sql, Boolean earliest = false) {
+   def createKsql(List ksql, Boolean earliest = false) {
 
-      sql.each {
+      ksql.each {
          createKsql(it, earliest)
       }
-      log.warn "${sql.size()} objects created."
+      log.warn "${ksql.size()} objects created."
    }
 
    /**
     * Executes a KSQL DROP statement using the KSQL RESTful API. Manages issuing TERMINATE statements as part of the DROP, if desired.
     *
-    * @param sql the SQL DROP statement to execute.
+    * @param ksql the KSQL DROP statement to execute.
     *
     * @param properties Any KSQL parameters to include with the KSQL execution.
     *
@@ -214,10 +214,10 @@ class KsqlRest {
     *
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key with the full JSON payload.
     */
-   def dropKsql(String sql, Map properties, Boolean terminate = true) {
+   def dropKsql(String ksql, Map properties, Boolean terminate = true) {
 
       // get object name from the query
-      String object = getObjectName(sql)
+      String object = getObjectName(ksql)
 
       // number of queries terminated
       Integer numTerminated = 0
@@ -241,18 +241,18 @@ class KsqlRest {
 
       if (describe) {
 
-         def result = execKsql(sql, properties)
+         def result = execKsql(ksql, properties)
 
          log.debug "result: ${result}"
 
          if (result.status == 400 && result.body.message.contains('Incompatible data source type is STREAM')) {
             log.info "Type is now STREAM. Issuing DROP STREAM..."
-            result = execKsql(sql.replace('TABLE', 'STREAM'), properties)
+            result = execKsql(ksql.replace('TABLE', 'STREAM'), properties)
          }
 
          if (result.status == 400 && result.body.message.contains('Incompatible data source type is TABLE')) {
             log.info "Type is now TABLE. Issuing DROP TABLE..."
-            result = execKsql(sql.replace('STREAM', 'TABLE'), properties)
+            result = execKsql(ksql.replace('STREAM', 'TABLE'), properties)
          }
 
          result.numTerminated = numTerminated
@@ -271,7 +271,7 @@ class KsqlRest {
    /**
     * Executes a List of KSQL DROP statements using the KSQL RESTful API. Manages issuing TERMINATE statements as part of the DROP, if desired.
     *
-    * @param sql the List of SQL DROP statements to execute.
+    * @param ksql the List of KSQL DROP statements to execute.
     *
     * @param properties Any KSQL parameters to include with the KSQL execution.
     *
@@ -279,11 +279,11 @@ class KsqlRest {
     *
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key with the full JSON payload.
     */
-   def dropKsql(List sql, Map properties, Boolean terminate = true) {
+   def dropKsql(List ksql, Map properties, Boolean terminate = true) {
 
       Integer numTerminated = 0
       Integer numDropped = 0
-      sql.each {
+      ksql.each {
 
          def result = dropKsql(it, properties, terminate)
          numTerminated = numTerminated + result.numTerminated
@@ -402,7 +402,7 @@ class KsqlRest {
     */
    String getObjectName(String sql) {
 
-      sql.find(SQLREGEX) { String all, String statement, String type, String name -> name.toLowerCase() }
+      sql.find(KSQLREGEX) { String all, String statement, String type, String name -> name.toLowerCase() }
    }
 
    /**
@@ -412,6 +412,6 @@ class KsqlRest {
     */
    String getStatementType(String sql) {
 
-      return sql.find(SQLREGEX) { String all, String statement, String type, String name -> statement.toLowerCase() } ?: 'other'
+      return sql.find(KSQLREGEX) { String all, String statement, String type, String name -> statement.toLowerCase() } ?: 'other'
    }
 }

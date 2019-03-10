@@ -61,18 +61,18 @@ class PipelineExecuteTask extends PipelineTask {
    boolean noDrop
 
    /**
-    * When defined, CREATE statements found in SQL scripts are not executed. Used primarily for auto-generating and executing applicable DROP and/or TERMINATE statements.
+    * When defined, CREATE statements found in KSQL scripts are not executed. Used primarily for auto-generating and executing applicable DROP and/or TERMINATE statements.
     */
    @Input
    @Option(option = 'no-create',
-           description = 'When defined, CREATE statements in SQL scripts are not executed. Used primarily for auto-generating and executing applicable DROP and/or TERMINATE statements.'
+           description = 'When defined, CREATE statements in KSQL scripts are not executed. Used primarily for auto-generating and executing applicable DROP and/or TERMINATE statements.'
    )
    boolean noCreate
 
    @TaskAction
    def executePipelines() {
 
-      // first execute the DROP SQL statements
+      // first execute the DROP KSQL statements
       // this also catches running statements and terminates them
       if (!noDrop) ksqlRest.dropKsql(dropSql, [:], !noTerminate)
 

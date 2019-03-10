@@ -6,7 +6,7 @@ pipeline {
    agent { label 'java-compile' }
 
    environment {
-      GOOGLE_APPLICATION_CREDENTIALS = '/var/lib/jenkins/.gcp/gradle-analytics-build-user.json'
+      GOOGLE_APPLICATION_CREDENTIALS = './gradle-analytics-build-user.json'
    }
 
    stages {
@@ -20,12 +20,13 @@ pipeline {
 
       stage('Build') {
          steps {
-            sh "$gradle build"
+            sh "$gradle build copyBuildResources"
          }
       }
 
       stage('Integration') {
           steps {
+              sh "$gradle composeUp"
               sh "$gradle runAllTests"
           }
       }
@@ -46,6 +47,9 @@ pipeline {
          archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true
          sh "$gradle cleanJunit"
          sh "$gradle producer"
+      }
+      cleanup {
+        sh "$gradle composeDown"
       }
    }
 

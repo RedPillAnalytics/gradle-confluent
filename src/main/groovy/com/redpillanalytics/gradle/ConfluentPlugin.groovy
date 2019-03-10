@@ -50,7 +50,7 @@ class ConfluentPlugin implements Plugin<Project> {
          // get the taskGroup
          String taskGroup = project.extensions.confluent.taskGroup
 
-         // get the location of the SQL source files
+         // get the location of the KSQL source files
          File pipelineDir = project.file(project.extensions.confluent.getPipelinePath())
          log.debug "pipelineDir: ${pipelineDir.getCanonicalPath()}"
 
