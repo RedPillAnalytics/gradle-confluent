@@ -3,7 +3,7 @@ def properties = "-Panalytics.buildId=${env.BUILD_TAG}"
 def gradle = "./gradlew ${options} ${properties}"
 
 pipeline {
-   agent { label 'container-build' }
+   agent { label 'java-compile' }
 
    environment {
       GOOGLE_APPLICATION_CREDENTIALS = '/var/lib/jenkins/.gcp/gradle-analytics-build-user.json'

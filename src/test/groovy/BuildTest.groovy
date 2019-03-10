@@ -23,7 +23,7 @@ class BuildTest extends Specification {
       projectDir = new File("${System.getProperty("projectDir")}/$projectName")
       buildDir = new File(projectDir, 'build')
       pipelineArtifact = new File(buildDir, 'distributions/simple-build-pipeline-1.0.0.zip')
-      script = new File(buildDir, 'pipeline/ksql-script.ksql')
+      script = new File(buildDir, 'pipeline/ksql-script.sql')
 
       resourcesDir = new File('src/test/resources')
 

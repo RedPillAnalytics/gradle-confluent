@@ -115,6 +115,7 @@ task('cleanJunit', type: Delete) {
 
 ext.bucket = 's3://documentation.redpillanalytics.com'
 ext.bucketPath = 'gradle-confluent'
+ext.resourceBucket = 's3://rpa-build-resources'
 
 
 task publishVersionDocs {
@@ -151,6 +152,21 @@ tasks.publishPlugins.dependsOn publishVersionDocs, publishLatestDocs
 task runAllTests {
    description 'Run all defined tests.'
    group 'verification'
+}
+
+task copyBuildResources {
+   description 'Copy build resource files from S3.'
+   group 'build'
+   doLast {
+      exec {
+         executable 'aws'
+         args 's3', 'cp',"${resourceBucket}/gradle-analytics-build-user.json", "."
+      }
+      exec {
+         executable 'aws'
+         args 's3', 'cp',"${resourceBucket}/gradle.properties", "."
+      }
+   }
 }
 
 tasks.withType(Test) {

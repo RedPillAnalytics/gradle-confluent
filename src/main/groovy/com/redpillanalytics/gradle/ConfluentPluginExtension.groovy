@@ -61,9 +61,9 @@ class ConfluentPluginExtension {
    String functionArtifactName
 
    /**
-    * The name of the Pipeline deployment 'create' script, which contains all the persistent statements that need to be executed. Default: 'ksql-script.ksql'.
+    * The name of the Pipeline deployment 'create' script, which contains all the persistent statements that need to be executed. Default: 'ksql-script.sql'.
     */
-   String pipelineCreateName = 'ksql-script.ksql'
+   String pipelineCreateName = 'ksql-script.sql'
 
    /**
     * RESTful endpoint for the KSQL Server. Default: 'http://localhost:8088'.
