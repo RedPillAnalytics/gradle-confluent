@@ -1,7 +1,1 @@
-ext.isCiServer = System.getenv().containsKey("CI")
-
- buildCache {
-     local {
-         enabled = !isCiServer
-     }
- }
+rootProject.name = 'gradle-confluent'
