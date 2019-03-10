@@ -6,7 +6,7 @@ pipeline {
    agent { label 'java-compile' }
 
    environment {
-      GOOGLE_APPLICATION_CREDENTIALS = '/var/lib/jenkins/.gcp/gradle-analytics-build-user.json'
+      GOOGLE_APPLICATION_CREDENTIALS = './gradle-analytics-build-user.json'
    }
 
    stages {
@@ -26,7 +26,8 @@ pipeline {
 
       stage('Integration') {
           steps {
-              sh "$gradle composeUp runAllTests"
+              sh "$gradle composeUp"
+              sh "$gradle runAllTests"
           }
       }
 
