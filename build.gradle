@@ -11,8 +11,6 @@ plugins {
    id 'com.adarshr.test-logger' version '1.6.0'
 }
 
-ext.githubToken = 'hidden'
-
 // send analytics
 analytics {
    organization = 'Red Pill Analytics'
@@ -27,7 +25,7 @@ scmVersion {
       prefix = 'v'
       versionSeparator = ''
    }
-   ignoreUncommittedChanges = false
+   ignoreUncommittedChanges = true
 }
 
 //set Gradle version to SCM Version
