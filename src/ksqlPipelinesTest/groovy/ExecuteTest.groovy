@@ -77,6 +77,23 @@ class ExecuteTest extends Specification {
 
    }
 
+   def "Execute :listTopics task"() {
+
+      given:
+      buildFile.write("""
+               |plugins {
+               |  id 'com.redpillanalytics.gradle-confluent'
+               |}
+        """.stripMargin())
+
+      taskName = 'listTopics'
+      result = executeSingleTask(taskName, ['-Si', '--rerun-tasks'])
+
+      expect:
+      result.task(":${taskName}").outcome.name() != 'FAILED'
+
+   }
+
    def "Execute :pipelineExecute task with default values"() {
 
       given:

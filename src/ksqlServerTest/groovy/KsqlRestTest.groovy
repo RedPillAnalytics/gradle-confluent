@@ -45,4 +45,22 @@ class KsqlRestTest extends Specification {
       then:
       url
    }
+
+   def "List of topics returned"() {
+
+      when:
+      def topics = ksqlRest.getTopics()
+
+      then:
+      topics
+   }
+
+   def "List of streams returned"() {
+
+      when:
+      def topics = ksqlRest.getStreams()
+
+      then:
+      topics
+   }
 }
