@@ -1,5 +1,6 @@
 import com.redpillanalytics.KsqlRest
 import groovy.util.logging.Slf4j
+import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -55,6 +56,7 @@ class KsqlRestTest extends Specification {
       topics
    }
 
+   @Ignore
    def "List of streams returned"() {
 
       when:
