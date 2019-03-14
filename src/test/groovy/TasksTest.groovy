@@ -102,6 +102,6 @@ class TasksTest extends Specification {
       result.output.contains(task)
 
       where:
-      task << ['build', 'pipelineScript', 'pipelineZip','publish']
+      task << ['build', 'pipelineScript', 'pipelineZip', 'publish', 'listTopics']
    }
 }

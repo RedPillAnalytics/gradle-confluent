@@ -27,6 +27,7 @@ pipeline {
       stage('Integration') {
           steps {
               sh "$gradle composeUp"
+              sleep 5
               sh "$gradle runAllTests"
           }
       }

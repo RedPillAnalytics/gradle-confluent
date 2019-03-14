@@ -414,4 +414,32 @@ class KsqlRest {
 
       return sql.find(KSQLREGEX) { String all, String statement, String type, String name -> statement.toLowerCase() } ?: 'other'
    }
+
+   /**
+    * Return a list of topic objects
+    *
+    * @return List of topic objects
+    */
+  def getTopics() {
+
+      def topics = execKsql('show topics').body.topics[0]
+
+      log.debug "Topics: ${topics}"
+
+      return topics
+   }
+
+   /**
+    * Return a list of stream objects
+    *
+    * @return List of KSQL stream objects
+    */
+   def getStreams() {
+
+      def topics = execKsql('show streams').body.topics[0]
+
+      log.warn "Topics: ${topics}"
+
+      return topics
+   }
 }

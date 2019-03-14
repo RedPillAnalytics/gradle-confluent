@@ -2,6 +2,7 @@ package com.redpillanalytics.gradle
 
 import com.redpillanalytics.common.GradleUtils
 import com.redpillanalytics.gradle.containers.TaskGroupContainer
+import com.redpillanalytics.gradle.tasks.ListTopicsTask
 import com.redpillanalytics.gradle.tasks.PipelineExecuteTask
 import com.redpillanalytics.gradle.tasks.PipelineScriptTask
 import com.redpillanalytics.gradle.tasks.LoadConfigTask
@@ -83,6 +84,12 @@ class ConfluentPlugin implements Plugin<Project> {
 
          Boolean enableStreams = project.extensions.confluent.enableStreams
          //log.debug "enableStreams: ${enableStreams}"
+
+         // show all topics
+         project.task('listTopics', type: ListTopicsTask) {
+            group taskGroup
+            description "List all topics."
+         }
 
          // create deploy task
          project.task('deploy') {
