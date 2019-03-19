@@ -39,6 +39,7 @@ class ExecuteTest extends Specification {
       buildFile.write("""
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
+               |  id "com.redpillanalytics.gradle-analytics" version "1.1.23"
                |}
                |confluent.pipelineEndpoint = 'http://localhost:8088'
                |""".stripMargin())
@@ -80,12 +81,6 @@ class ExecuteTest extends Specification {
    def "Execute :listTopics task"() {
 
       given:
-      buildFile.write("""
-               |plugins {
-               |  id 'com.redpillanalytics.gradle-confluent'
-               |}
-        """.stripMargin())
-
       taskName = 'listTopics'
       result = executeSingleTask(taskName, ['-Si', '--rerun-tasks'])
 

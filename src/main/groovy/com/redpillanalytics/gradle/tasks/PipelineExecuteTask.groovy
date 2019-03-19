@@ -13,6 +13,13 @@ import org.gradle.api.tasks.options.Option
 @Slf4j
 class PipelineExecuteTask extends PipelineTask {
 
+   PipelineExecuteTask() {
+      group = project.extensions.confluent.taskGroup
+      description = "Execute all KSQL pipelines from the provided source directory, in hierarchical order, with options for auto-generating and executing DROP and TERMINATE commands."
+
+      outputs.upToDateWhen { false }
+   }
+
    /**
     * The REST API URL for the KSQL Server. Default: the extension property {@link com.redpillanalytics.gradle.ConfluentPluginExtension#pipelineEndpoint}.
     */
@@ -72,12 +79,53 @@ class PipelineExecuteTask extends PipelineTask {
    @TaskAction
    def executePipelines() {
 
+
+
       // first execute the DROP KSQL statements
       // this also catches running statements and terminates them
-      if (!noDrop) ksqlRest.dropKsql(dropSql, [:], !noTerminate)
+      if (!noDrop) {
 
-      // now create the pipelines
-      if (!noCreate) ksqlRest.createKsql(pipelineSql, fromBeginning)
+         // drop KSQL objects
+         dropSql.each {
+            // execute the statement
+            def result = ksqlRest.dropKsql(it, [:], !noTerminate)
 
+            // write the analytics record if the analytics plugin is there
+            if (project.rootProject.plugins.findPlugin('com.redpillanalytics.gradle-analytics')) {
+               project.rootProject.extensions.analytics.writeAnalytics(
+                       'ksql-executions.json',
+                       project.rootProject.buildDir,
+                       project.rootProject.extensions.analytics.getBuildHeader() <<
+                               [
+                                       type     : 'drop',
+                                       statement: it,
+                                       status: result.status,
+                                       statustext: result.statusText
+                               ]
+               )
+            }
+         }
+      }
+
+      // create KSQL objects
+      if (!noCreate) {
+         pipelineSql.each {
+            def result = ksqlRest.createKsql(it, fromBeginning)
+            // write the analytics record if the analytics plugin is there
+            if (project.rootProject.plugins.findPlugin('com.redpillanalytics.gradle-analytics')) {
+               project.rootProject.extensions.analytics.writeAnalytics(
+                       'ksql-executions.json',
+                       project.rootProject.buildDir,
+                       project.rootProject.extensions.analytics.getBuildHeader() <<
+                               [
+                                       type     : 'create',
+                                       statement: it,
+                                       status: result.status,
+                                       statustext: result.statusText
+                               ]
+               )
+            }
+         }
+      }
    }
 }
