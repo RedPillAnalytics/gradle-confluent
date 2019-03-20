@@ -79,6 +79,9 @@ class PipelineExecuteTask extends PipelineTask {
    @TaskAction
    def executePipelines() {
 
+      Integer numTerminated = 0
+      Integer numCreated = 0
+      Integer numDropped = 0
 
 
       // first execute the DROP KSQL statements
@@ -86,23 +89,62 @@ class PipelineExecuteTask extends PipelineTask {
       if (!noDrop) {
 
          // drop KSQL objects
-         dropSql.each {
-            // execute the statement
-            def result = ksqlRest.dropKsql(it, [:], !noTerminate)
+         dropSql.each { sql ->
 
-            // write the analytics record if the analytics plugin is there
-            if (project.rootProject.plugins.findPlugin('com.redpillanalytics.gradle-analytics')) {
-               project.rootProject.extensions.analytics.writeAnalytics(
-                       'ksql-executions.json',
-                       project.rootProject.buildDir,
-                       project.rootProject.extensions.analytics.getBuildHeader() <<
-                               [
-                                       type     : 'drop',
-                                       statement: it,
-                                       status: result.status,
-                                       statustext: result.statusText
-                               ]
-               )
+            // extract the object name from the query
+            String object = ksqlRest.getObjectName(sql)
+
+            // don't bother unless it actually exists
+            if (ksqlRest.getSourceDescription(object)) {
+
+               // get any persistent queries reading or writing to this table/stream
+               List queryIds = ksqlRest.getQueryIds(object)
+
+               if (!queryIds.isEmpty()) {
+                  if (!noTerminate) {
+                     queryIds.each { query ->
+                        logger.info "Terminating query $query..."
+                        def result = ksqlRest.execKsql("TERMINATE ${query}")
+                        // write the analytics record if the analytics plugin is there
+                        if (project.rootProject.plugins.findPlugin('com.redpillanalytics.gradle-analytics')) {
+                           project.rootProject.extensions.analytics.writeAnalytics(
+                                   'ksql-executions.json',
+                                   project.rootProject.buildDir,
+                                   project.rootProject.extensions.analytics.getBuildHeader() <<
+                                           [
+                                                   type      : 'terminate',
+                                                   object    : object,
+                                                   statement : sql,
+                                                   status    : result.status,
+                                                   statustext: result.statusText
+                                           ]
+                           )
+                        }
+                        numTerminated++
+                     }
+
+                  } else log.info "Persistent queries exist, but '--no-terminate' option provided."
+               }
+
+               // execute the statement
+               def result = ksqlRest.dropKsql(sql, [:])
+
+               // write the analytics record if the analytics plugin is there
+               if (project.rootProject.plugins.findPlugin('com.redpillanalytics.gradle-analytics')) {
+                  project.rootProject.extensions.analytics.writeAnalytics(
+                          'ksql-executions.json',
+                          project.rootProject.buildDir,
+                          project.rootProject.extensions.analytics.getBuildHeader() <<
+                                  [
+                                          type      : 'drop',
+                                          object    : object,
+                                          statement : sql,
+                                          status    : result.status,
+                                          statustext: result.statusText
+                                  ]
+                  )
+               }
+               numDropped++
             }
          }
       }
@@ -110,6 +152,10 @@ class PipelineExecuteTask extends PipelineTask {
       // create KSQL objects
       if (!noCreate) {
          pipelineSql.each {
+
+            // extract the object name from the query
+            String object = ksqlRest.getObjectName(it)
+
             def result = ksqlRest.createKsql(it, fromBeginning)
             // write the analytics record if the analytics plugin is there
             if (project.rootProject.plugins.findPlugin('com.redpillanalytics.gradle-analytics')) {
@@ -118,14 +164,19 @@ class PipelineExecuteTask extends PipelineTask {
                        project.rootProject.buildDir,
                        project.rootProject.extensions.analytics.getBuildHeader() <<
                                [
-                                       type     : 'create',
-                                       statement: it,
-                                       status: result.status,
+                                       type      : 'create',
+                                       object    : object,
+                                       statement : it,
+                                       status    : result.status,
                                        statustext: result.statusText
                                ]
                )
             }
+            numCreated++
          }
       }
+      log.warn "${numTerminated} queries terminated."
+      log.warn "${numDropped} objects dropped."
+      log.warn "${numCreated} objects created."
    }
 }
