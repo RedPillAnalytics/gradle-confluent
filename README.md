@@ -253,7 +253,7 @@ If we want to deploy our KSQL pipelines from Maven instead of Git (which let's f
 ```gradle
 plugins {
    id 'maven-publish'
-   id "com.redpillanalytics.gradle-confluent" version '1.1.2'
+   id "com.redpillanalytics.gradle-confluent" version '1.1.5'
 }
 publishing {
     repositories {
@@ -268,11 +268,11 @@ repositories {
 }
 
 dependencies {
-    archives group: 'com.redpillanalytics', name: 'ksql-examples-pipeline', version: '+'
+    archives 'com.redpillanalytics:ksql-examples-pipeline:+'
 }
 ```
 
-With our KSQL pipeline dependency added, we get a few more tasks in our **Confluent** task group when we run `./gradlew tasks`, specifically the `pipelineExtract` and `pipelineDeploy` tasks:
+With our KSQL pipeline dependency added, we get a few more tasks in our **Confluent** task group when we run `./gradlew tasks --group confluent`, specifically the `pipelineExtract` and `pipelineDeploy` tasks:
 
 ```
 Confluent tasks
