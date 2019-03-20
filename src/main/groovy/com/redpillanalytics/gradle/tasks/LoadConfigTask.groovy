@@ -2,12 +2,16 @@ package com.redpillanalytics.gradle.tasks
 
 import groovy.util.logging.Slf4j
 import org.gradle.api.DefaultTask
-import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
 
 @Slf4j
 class LoadConfigTask extends DefaultTask {
+
+   LoadConfigTask() {
+      group = project.extensions.confluent.taskGroup
+      description = "Load a config file using ConfigSlurper."
+   }
 
    /**
     * "The path of the Streams configuration file. A relative path will be resolved in the project directory, while absolute paths are resolved absolutely.

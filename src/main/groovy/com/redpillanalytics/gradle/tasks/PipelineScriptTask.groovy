@@ -10,6 +10,11 @@ import org.gradle.api.tasks.*
 @Slf4j
 class PipelineScriptTask extends PipelineTask {
 
+   PipelineScriptTask() {
+      group = project.confluent.taskGroup
+      description = 'Build a single KSQL deployment script with individual pipeline processes ordered and normalized. Primarily used for building a KSQL queries file used for KSQL Server startup.'
+   }
+
    /**
     * Builds the KSQL script for the directory or directories.
     */

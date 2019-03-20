@@ -3,11 +3,11 @@ plugins {
    id 'java-gradle-plugin'
    id "com.gradle.plugin-publish" version "0.10.1"
    id "pl.allegro.tech.build.axion-release" version "1.10.0"
-   id "com.github.breadmoirai.github-release" version "2.2.4"
-   id 'org.unbroken-dome.test-sets' version '2.0.3'
-   id "com.avast.gradle.docker-compose" version "0.8.13"
-   id "com.github.ben-manes.versions" version "0.20.0"
-   id "com.redpillanalytics.gradle-analytics" version "1.1.21"
+   id "com.github.breadmoirai.github-release" version "2.2.6"
+   id 'org.unbroken-dome.test-sets' version '2.1.1'
+   id "com.avast.gradle.docker-compose" version "0.9.1"
+   id "com.github.ben-manes.versions" version "0.21.0"
+   id "com.redpillanalytics.gradle-analytics" version "1.2.1"
    id 'com.adarshr.test-logger' version '1.6.0'
 }
 

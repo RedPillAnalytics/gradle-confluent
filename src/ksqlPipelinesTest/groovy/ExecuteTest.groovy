@@ -33,14 +33,21 @@ class ExecuteTest extends Specification {
       copySource()
 
       settingsFile = new File(projectDir, 'settings.gradle').write("""rootProject.name = '$projectName'""")
-
       buildFile = new File(projectDir, 'build.gradle')
 
       buildFile.write("""
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
+               |  id "com.redpillanalytics.gradle-analytics" version "1.2.1"
                |}
                |confluent.pipelineEndpoint = 'http://localhost:8088'
+               |
+               |analytics {
+               |   ignoreErrors = false
+               |   sinks {
+               |      kafka
+               |   }
+               |}
                |""".stripMargin())
    }
 
@@ -77,15 +84,20 @@ class ExecuteTest extends Specification {
 
    }
 
+   def "Execute :tasks task"() {
+
+      given:
+      taskName = 'tasks'
+      result = executeSingleTask(taskName, ['-Si'])
+
+      expect:
+      result.task(":${taskName}").outcome.name() != 'FAILED'
+   }
+
+
    def "Execute :listTopics task"() {
 
       given:
-      buildFile.write("""
-               |plugins {
-               |  id 'com.redpillanalytics.gradle-confluent'
-               |}
-        """.stripMargin())
-
       taskName = 'listTopics'
       result = executeSingleTask(taskName, ['-Si', '--rerun-tasks'])
 
@@ -192,15 +204,21 @@ class ExecuteTest extends Specification {
    def "Execute :pipelineExecute task with custom REST endpoint"() {
 
       given:
-      buildFile.write("""
-               |plugins {
-               |  id 'com.redpillanalytics.gradle-confluent'
-               |}
-               confluent.pipelineEndpoint = 'http://nothing:8088'
-        """.stripMargin())
+      buildFile.append("""\nconfluent.pipelineEndpoint = 'http://nothing:8088'""")
 
       taskName = 'pipelineExecute'
       result = executeSingleTask(taskName, ["-Pconfluent.pipelineEndpoint=http://localhost:8088", '-Si', '--rerun-tasks'])
+
+      expect:
+      result.task(":${taskName}").outcome.name() != 'FAILED'
+
+   }
+
+   def "Execute :producer task"() {
+
+      given:
+      taskName = 'producer'
+      result = executeSingleTask(taskName, ['-Si'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'

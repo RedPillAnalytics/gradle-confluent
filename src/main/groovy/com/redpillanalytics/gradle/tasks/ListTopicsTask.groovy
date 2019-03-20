@@ -11,6 +11,11 @@ import org.gradle.api.tasks.TaskAction
 @Slf4j
 class ListTopicsTask extends DefaultTask {
 
+   ListTopicsTask() {
+      description = "List all topics."
+      group = project.extensions.confluent.taskGroup
+   }
+
    @TaskAction
    def listTopics(){
 

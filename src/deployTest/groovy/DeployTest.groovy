@@ -9,7 +9,7 @@ import spock.lang.Title
 class DeployTest extends Specification {
 
    @Shared
-   File projectDir, buildDir, resourcesDir, buildFile, settingsFile, artifact
+   File projectDir, buildDir, resourcesDir, settingsFile, artifact, buildFile
 
    @Shared
    def result, tasks, taskList
@@ -22,7 +22,7 @@ class DeployTest extends Specification {
       projectDir = new File("${System.getProperty("projectDir")}/$projectName")
       buildDir = new File(projectDir, 'build')
       artifact = new File(buildDir, 'distributions/simple-deploy-pipeline.zip')
-      taskList = ['functionCopy', 'pipelineExtract', 'pipelineDeploy', 'deploy']
+      taskList = ['functionCopy', 'pipelineExtract', 'pipelineDeploy', 'deploy', 'producer']
 
       resourcesDir = new File('src/test/resources')
 
@@ -33,39 +33,43 @@ class DeployTest extends Specification {
       settingsFile = new File(projectDir, 'settings.gradle').write("""rootProject.name = '$projectName'""")
 
       buildFile = new File(projectDir, 'build.gradle').write("""
-            plugins {
-               id 'com.redpillanalytics.gradle-confluent'
-               id 'maven-publish'
-            }
-            publishing {
-              repositories {
-                mavenLocal()
-              }
-            }
-            group = 'com.redpillanalytics'
-            version = '1.0.0'
-            
-            repositories {
-               jcenter()
-               mavenLocal()
-               maven {
-                  name 'test'
-                  url 's3://maven.redpillanalytics.com/demo/maven2'
-                  authentication {
-                     awsIm(AwsImAuthentication)
-                  }
-              }
-            }
-            
-            dependencies {
-               archives group: 'com.redpillanalytics', name: 'simple-build', version: '+'
-               archives group: 'com.redpillanalytics', name: 'simple-build-pipeline', version: '+'
-            }
-
-            confluent {
-               functionPattern 'simple-build'
-            }
-        """)
+               |plugins {
+               |  id 'com.redpillanalytics.gradle-confluent'
+               |  id "com.redpillanalytics.gradle-analytics" version "1.2.1"
+               |  id 'maven-publish'
+               |}
+               |
+               |publishing {
+               |  repositories {
+               |    mavenLocal()
+               |  }
+               |}
+               |group = 'com.redpillanalytics'
+               |version = '1.0.0'
+               |
+               |repositories {
+               |  jcenter()
+               |  mavenLocal()
+               |  maven {
+               |     name 'test'
+               |     url 's3://maven.redpillanalytics.com/demo/maven2'
+               |     authentication {
+               |        awsIm(AwsImAuthentication)
+               |     }
+               |  }
+               |}
+               |
+               |dependencies {
+               |   archives group: 'com.redpillanalytics', name: 'simple-build', version: '+'
+               |   archives group: 'com.redpillanalytics', name: 'simple-build-pipeline', version: '+'
+               |}
+               |
+               |confluent.pipelineEndpoint = 'http://localhost:8088'
+               |confluent.functionPattern = 'simple-build'
+               |analytics.sinks {
+               |   kafka
+               |}
+               |""".stripMargin())
    }
 
    def "Deploy test S3"() {
@@ -74,7 +78,7 @@ class DeployTest extends Specification {
 
       result = GradleRunner.create()
               .withProjectDir(projectDir)
-              .withArguments('-Si', 'deploy')
+              .withArguments('-Si', 'deploy', 'producer')
               .withPluginClasspath()
               .build()
 

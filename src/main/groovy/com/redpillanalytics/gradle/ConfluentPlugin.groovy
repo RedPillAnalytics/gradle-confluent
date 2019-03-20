@@ -86,10 +86,7 @@ class ConfluentPlugin implements Plugin<Project> {
          //log.debug "enableStreams: ${enableStreams}"
 
          // show all topics
-         project.task('listTopics', type: ListTopicsTask) {
-            group taskGroup
-            description "List all topics."
-         }
+         project.task('listTopics', type: ListTopicsTask) {}
 
          // create deploy task
          project.task('deploy') {
@@ -116,10 +113,6 @@ class ConfluentPlugin implements Plugin<Project> {
 
                project.task(tg.getTaskName('pipelineScript'), type: PipelineScriptTask) {
 
-                  group taskGroup
-                  description('Build a single KSQL deployment script with individual pipeline processes ordered and normalized.'
-                          + ' Primarily used for building a KSQL queries file used for KSQL Server startup.')
-
                   pipelinePath pipelineBuildDir.canonicalPath
                   onlyIf { dir.exists() }
                   dependsOn tg.getTaskName('pipelineSync')
@@ -140,12 +133,9 @@ class ConfluentPlugin implements Plugin<Project> {
                project.build.dependsOn tg.getTaskName('pipelineZip')
 
                project.task(tg.getTaskName('pipelineExecute'), type: PipelineExecuteTask) {
-                  group taskGroup
-                  description = "Execute all KSQL pipelines from the provided source directory, in hierarchical order, with options for auto-generating and executing DROP and TERMINATE commands."
                   pipelinePath pipelineBuildDir.canonicalPath
                   onlyIf { pipelineBuildDir.exists() }
                   dependsOn tg.getTaskName('pipelineSync')
-                  outputs.upToDateWhen { false }
                }
             }
 
@@ -166,7 +156,6 @@ class ConfluentPlugin implements Plugin<Project> {
                      pipelinePath pipelineDeployDir.canonicalPath
                      onlyIf { pipelineDeployDir.exists() }
                      dependsOn tg.getTaskName('pipelineExtract')
-                     outputs.upToDateWhen { false }
                   }
 
                   project.deploy.dependsOn tg.getTaskName('pipelineDeploy')
@@ -190,8 +179,6 @@ class ConfluentPlugin implements Plugin<Project> {
 
             if (tg.isBuildEnv && enableStreams && project.plugins.hasPlugin(ApplicationPlugin)) {
                project.task(tg.getTaskName('loadConfig'), type: LoadConfigTask) {
-                  group taskGroup
-                  description "Load a config file using ConfigSlurper."
                   filePath configPath
                   environment configEnv
                   onlyIf { configFile.exists() }

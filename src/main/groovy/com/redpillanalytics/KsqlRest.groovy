@@ -139,13 +139,13 @@ class KsqlRest {
 
       // groovy doesn't yet have a do-while loop (it will in 3.0)
       // hack to do bottom-checking loop
-      for(;;){ // infinite for
+      for (; ;) { // infinite for
 
          // get a describe of the table
          def describe = getSourceDescription(object)
 
          // break if the describe is non-null
-         if( describe ){
+         if (describe) {
             break
          }
       }
@@ -210,88 +210,27 @@ class KsqlRest {
     *
     * @param properties Any KSQL parameters to include with the KSQL execution.
     *
-    * @param terminate Determines whether TERMINATE statements are issued, along with a retry of the DROP.
-    *
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key with the full JSON payload.
     */
-   def dropKsql(String ksql, Map properties, Boolean terminate = true) {
+   def dropKsql(String ksql, Map properties) {
 
-      // get object name from the query
-      String object = getObjectName(ksql)
-
-      // number of queries terminated
-      Integer numTerminated = 0
-
-      // first terminate any persistent queries reading or writing to this table/stream
-      List queryIds = getQueryIds(object)
-      if (!queryIds.isEmpty()) {
-         if (terminate) {
-            queryIds.each { query ->
-               log.info "Terminating query $query..."
-               execKsql("TERMINATE ${query}", properties)
-            }
-
-            numTerminated = queryIds.size()
-
-         } else log.info "Persistent queries exist, but '--no-terminate' option provided."
-      }
-
-      // describe the object first
-      def describe = getSourceDescription(object)
-
-      if (describe) {
-
-         def result = execKsql(ksql, properties)
+      def result = execKsql(ksql, properties)
 
          log.debug "result: ${result}"
 
-         if (result.status == 400 && result.body.message.contains('Incompatible data source type is STREAM')) {
-            log.info "Type is now STREAM. Issuing DROP STREAM..."
-            result = execKsql(ksql.replace('TABLE', 'STREAM'), properties)
-         }
-
-         if (result.status == 400 && result.body.message.contains('Incompatible data source type is TABLE')) {
-            log.info "Type is now TABLE. Issuing DROP TABLE..."
-            result = execKsql(ksql.replace('STREAM', 'TABLE'), properties)
-         }
-
-         result.numTerminated = numTerminated
-         result.numDropped = 1
-
-         log.debug "final result: ${result}"
-
-         return result
-
+      if (result.status == 400 && result.body.message.contains('Incompatible data source type is STREAM')) {
+         log.info "Type is now STREAM. Issuing DROP STREAM..."
+         result = execKsql(ksql.replace('TABLE', 'STREAM'), properties)
       }
 
-      return [numTerminated: numTerminated, numDropped: 0]
-
-   }
-
-   /**
-    * Executes a List of KSQL DROP statements using the KSQL RESTful API. Manages issuing TERMINATE statements as part of the DROP, if desired.
-    *
-    * @param ksql the List of KSQL DROP statements to execute.
-    *
-    * @param properties Any KSQL parameters to include with the KSQL execution.
-    *
-    * @param terminate Determines whether TERMINATE statements are issued, along with a retry of the DROP.
-    *
-    * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key with the full JSON payload.
-    */
-   def dropKsql(List ksql, Map properties, Boolean terminate = true) {
-
-      Integer numTerminated = 0
-      Integer numDropped = 0
-      ksql.each {
-
-         def result = dropKsql(it, properties, terminate)
-         numTerminated = numTerminated + result.numTerminated
-         numDropped = numDropped + result.numDropped
+      if (result.status == 400 && result.body.message.contains('Incompatible data source type is TABLE')) {
+         log.info "Type is now TABLE. Issuing DROP TABLE..."
+         result = execKsql(ksql.replace('STREAM', 'TABLE'), properties)
       }
 
-      log.warn "${numTerminated} queries terminated."
-      log.warn "${numDropped} objects dropped."
+      log.debug "final result: ${result}"
+
+      return result
    }
 
    /**
@@ -420,7 +359,7 @@ class KsqlRest {
     *
     * @return List of topic objects
     */
-  def getTopics() {
+   def getTopics() {
 
       def topics = execKsql('show topics').body.topics[0]
 

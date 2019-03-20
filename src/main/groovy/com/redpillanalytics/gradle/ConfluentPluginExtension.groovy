@@ -99,5 +99,4 @@ class ConfluentPluginExtension {
 
       return (pipelineSourcePath ?: "${sourceBase}/${pipelineSourceName}")
    }
-
 }

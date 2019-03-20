@@ -36,39 +36,47 @@ class TasksTest extends Specification {
       settingsFile = new File(projectDir, 'settings.gradle').write("""rootProject.name = '$projectName'""")
 
       buildFile = new File(projectDir, 'build.gradle').write("""
-            plugins {
-               id 'com.redpillanalytics.gradle-confluent'
-               id 'maven-publish'
-               id 'application'
-            }
-            publishing {
-              repositories {
-                mavenLocal()
-              }
-            }
-            archivesBaseName = 'test'
-            group = 'com.redpillanalytics'
-            version = '1.0.0'
-            
-            dependencies {
-               archives group: 'com.redpillanalytics', name: 'simple-build', version: '+'
-               archives group: 'com.redpillanalytics', name: 'simple-build-pipeline', version: '+'
-            }
-            
-            repositories {
-               jcenter()
-               mavenLocal()
-               maven {
-                  name 'test'
-                  url 's3://maven.redpillanalytics.com/demo/maven2'
-                  authentication {
-                     awsIm(AwsImAuthentication)
-                  }
-              }
-            }
-            
-            mainClassName = "streams.TestClass"
-        """)
+               |plugins {
+               |  id 'com.redpillanalytics.gradle-confluent'
+               |  id "com.redpillanalytics.gradle-analytics" version "1.2.1"
+               |  id 'maven-publish'
+               |  id 'application'
+               |}
+               |
+               |publishing {
+               |  repositories {
+               |    mavenLocal()
+               |  }
+               |}
+               |archivesBaseName = 'test'
+               |group = 'com.redpillanalytics'
+               |version = '1.0.0'
+               |
+               |repositories {
+               |  jcenter()
+               |  mavenLocal()
+               |  maven {
+               |     name 'test'
+               |     url 's3://maven.redpillanalytics.com/demo/maven2'
+               |     authentication {
+               |        awsIm(AwsImAuthentication)
+               |     }
+               |  }
+               |}
+               |
+               |dependencies {
+               |   archives group: 'com.redpillanalytics', name: 'simple-build', version: '+'
+               |   archives group: 'com.redpillanalytics', name: 'simple-build-pipeline', version: '+'
+               |}
+               |
+               |confluent.pipelineEndpoint = 'http://localhost:8088'
+               |confluent.functionPattern = 'simple-build'
+               |analytics.sinks {
+               |   kafka
+               |}
+               |mainClassName = "streams.TestClass"
+               |
+               |""".stripMargin())
 
       result = GradleRunner.create()
               .withProjectDir(projectDir)
