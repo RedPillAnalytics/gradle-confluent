@@ -13,6 +13,8 @@ import org.gradle.api.tasks.options.Option
 @Slf4j
 class PipelineExecuteTask extends PipelineTask {
 
+   static final String ANALYTICS_NAME = 'ksql-statements.json'
+
    PipelineExecuteTask() {
       group = project.extensions.confluent.taskGroup
       description = "Execute all KSQL pipelines from the provided source directory, in hierarchical order, with options for auto-generating and executing DROP and TERMINATE commands."
@@ -108,7 +110,7 @@ class PipelineExecuteTask extends PipelineTask {
                         // write the analytics record if the analytics plugin is there
                         if (project.rootProject.plugins.findPlugin('com.redpillanalytics.gradle-analytics')) {
                            project.rootProject.extensions.analytics.writeAnalytics(
-                                   'ksql-executions.json',
+                                   ANALYTICS_NAME,
                                    project.rootProject.buildDir,
                                    project.rootProject.extensions.analytics.getBuildHeader() <<
                                            [
@@ -132,7 +134,7 @@ class PipelineExecuteTask extends PipelineTask {
                // write the analytics record if the analytics plugin is there
                if (project.rootProject.plugins.findPlugin('com.redpillanalytics.gradle-analytics')) {
                   project.rootProject.extensions.analytics.writeAnalytics(
-                          'ksql-executions.json',
+                          ANALYTICS_NAME,
                           project.rootProject.buildDir,
                           project.rootProject.extensions.analytics.getBuildHeader() <<
                                   [
@@ -160,7 +162,7 @@ class PipelineExecuteTask extends PipelineTask {
             // write the analytics record if the analytics plugin is there
             if (project.rootProject.plugins.findPlugin('com.redpillanalytics.gradle-analytics')) {
                project.rootProject.extensions.analytics.writeAnalytics(
-                       'ksql-executions.json',
+                       ANALYTICS_NAME,
                        project.rootProject.buildDir,
                        project.rootProject.extensions.analytics.getBuildHeader() <<
                                [
