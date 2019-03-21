@@ -177,7 +177,7 @@ class ConfluentPlugin implements Plugin<Project> {
                project.deploy.dependsOn tg.getTaskName('functionCopy')
             }
 
-            if (tg.isBuildEnv && enableStreams && project.plugins.hasPlugin(ApplicationPlugin)) {
+            if (tg.isBuildEnv && enableStreams && project.rootProject.plugins.findPlugin('application')) {
                project.task(tg.getTaskName('loadConfig'), type: LoadConfigTask) {
                   filePath configPath
                   environment configEnv
@@ -200,7 +200,7 @@ class ConfluentPlugin implements Plugin<Project> {
             }
          }
 
-         if (enablePipelines && project.tasks.findByName('pipelineZip') && project.plugins.hasPlugin(MavenPublishPlugin)) {
+         if (enablePipelines && project.tasks.findByName('pipelineZip') && project.rootProject.plugins.findPlugin('maven-publish')) {
 
             project.publishing.publications {
 
