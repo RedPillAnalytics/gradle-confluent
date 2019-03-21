@@ -12,30 +12,41 @@ class DeployTest extends Specification {
    File projectDir, buildDir, resourcesDir, settingsFile, artifact, buildFile
 
    @Shared
-   def result, tasks, taskList
+   def result, tasks
 
    @Shared
-   String projectName = 'simple-deploy'
+   String projectName = 'simple-deploy', taskName
+
+   def setup() {
+
+      copySource()
+   }
+
+   def copySource() {
+
+      new AntBuilder().copy(todir: projectDir) {
+         fileset(dir: resourcesDir)
+      }
+   }
 
    def setupSpec() {
 
       projectDir = new File("${System.getProperty("projectDir")}/$projectName")
       buildDir = new File(projectDir, 'build')
       artifact = new File(buildDir, 'distributions/simple-deploy-pipeline.zip')
-      taskList = ['functionCopy', 'pipelineExtract', 'pipelineDeploy', 'deploy', 'producer']
 
       resourcesDir = new File('src/test/resources')
 
-      new AntBuilder().copy(todir: projectDir) {
-         fileset(dir: resourcesDir)
-      }
+      copySource()
 
       settingsFile = new File(projectDir, 'settings.gradle').write("""rootProject.name = '$projectName'""")
 
-      buildFile = new File(projectDir, 'build.gradle').write("""
+      buildFile = new File(projectDir, 'build.gradle')
+
+      buildFile.write("""
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
-               |  id "com.redpillanalytics.gradle-analytics" version "1.2.1"
+               |  id "com.redpillanalytics.gradle-analytics" version "1.2.3"
                |  id 'maven-publish'
                |}
                |
@@ -72,15 +83,32 @@ class DeployTest extends Specification {
                |""".stripMargin())
    }
 
-   def "Deploy test S3"() {
+   // helper method
+   def executeSingleTask(String taskName, List otherArgs, Boolean logOutput = true) {
 
-      given:
+      otherArgs.add(0, taskName)
 
+      log.warn "runner arguments: ${otherArgs.toString()}"
+
+      // execute the Gradle test build
       result = GradleRunner.create()
               .withProjectDir(projectDir)
-              .withArguments('-Si', 'deploy', 'producer')
+              .withArguments(otherArgs)
               .withPluginClasspath()
               .build()
+
+      // log the results
+      if (logOutput) log.warn result.getOutput()
+
+      return result
+
+   }
+
+   def "Deploy test to S3"() {
+
+      given:
+      taskName = 'deploy'
+      result = executeSingleTask(taskName, ['-Si'])
 
       tasks = result.output.readLines().grep(~/(> Task :)(.+)/).collect {
          it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
@@ -89,7 +117,24 @@ class DeployTest extends Specification {
       log.warn result.getOutput()
 
       expect:
-      ['SUCCESS', 'UP_TO_DATE', 'SKIPPED'].contains(result.task(":deploy").outcome.toString())
-      tasks.collect { it - ' SKIPPED' } == taskList
+      result.task(":${taskName}").outcome.name() != 'FAILED'
+      tasks.collect { it - ' SKIPPED' } == ['functionCopy', 'pipelineExtract', 'pipelineDeploy', 'deploy']
+   }
+
+   def "Producer test to Kafka"() {
+
+      given:
+      taskName = 'producer'
+      result = executeSingleTask(taskName, ['-Si'])
+
+      tasks = result.output.readLines().grep(~/(> Task :)(.+)/).collect {
+         it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
+      }
+
+      log.warn result.getOutput()
+
+      expect:
+      result.task(":${taskName}").outcome.name() != 'FAILED'
+      tasks.collect { it - ' SKIPPED' } == ['kafkaSink','producer']
    }
 }
