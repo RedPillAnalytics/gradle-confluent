@@ -43,6 +43,7 @@ class PropertiesTest extends Specification {
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
                |  id "com.redpillanalytics.gradle-analytics" version "1.2.1"
+               |  id 'maven-publish'
                |}
                |
                |publishing {
