@@ -24,7 +24,6 @@ class ConfluentPlugin implements Plugin<Project> {
 
       // apply Gradle built-in plugins
       project.apply plugin: 'base'
-      project.apply plugin: 'maven-publish'
 
       // apply the Gradle plugin extension and the context container
       applyExtension(project)
