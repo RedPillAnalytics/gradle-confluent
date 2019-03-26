@@ -52,6 +52,7 @@ class LoadConfigTest extends Specification {
             version = '1.0.0'
             
             mainClassName = "streams.TestClass"
+            confluent.enableStreams = true
         """)
    }
 
