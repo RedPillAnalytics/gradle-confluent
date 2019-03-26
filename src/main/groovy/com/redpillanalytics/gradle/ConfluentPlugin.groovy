@@ -9,9 +9,7 @@ import com.redpillanalytics.gradle.tasks.LoadConfigTask
 import groovy.util.logging.Slf4j
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.bundling.Zip
@@ -26,6 +24,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
       // apply Gradle built-in plugins
       project.apply plugin: 'base'
+      project.apply plugin: 'maven-publish'
 
       // apply the Gradle plugin extension and the context container
       applyExtension(project)
@@ -200,7 +199,7 @@ class ConfluentPlugin implements Plugin<Project> {
             }
          }
 
-         if (enablePipelines && project.tasks.findByName('pipelineZip') && project.rootProject.plugins.findPlugin('maven-publish')) {
+         if (enablePipelines && project.tasks.findByName('pipelineZip') && project.plugins.findPlugin('maven-publish')) {
 
             project.publishing.publications {
 
