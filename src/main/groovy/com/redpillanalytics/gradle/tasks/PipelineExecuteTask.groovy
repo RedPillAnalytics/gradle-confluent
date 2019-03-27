@@ -13,7 +13,7 @@ import org.gradle.api.tasks.options.Option
 @Slf4j
 class PipelineExecuteTask extends PipelineTask {
 
-   static final String ANALYTICS_NAME = 'ksql-statements.json'
+   static final String ANALYTICS_NAME = 'ksqlstatements.json'
 
    PipelineExecuteTask() {
       group = project.extensions.confluent.taskGroup
