@@ -1,7 +1,5 @@
 version: '1.0'
-
 steps:
-
     build_image:
       title: Build Image
       type: build
@@ -13,8 +11,11 @@ steps:
       commands:
         - build copyBuildResources
 
-    launch_composition:
-      title: Launch Composition
-      type: launch-composition
+    test_plugin:
+      title: Test Plugin
+      type: composition
       composition: docker-compose.yml
-      environment_name: 'java-spring-mvc-jdbc'
+      composition_candidates:
+        gradle:
+          image: ${{build_image}}
+          command: runAllTests
