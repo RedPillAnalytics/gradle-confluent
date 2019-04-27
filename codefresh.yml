@@ -8,8 +8,9 @@ steps:
     build_plugin:
       title: Build Plugin
       image: ${{build_image}}
-      commands:
-        - build copyBuildResources
+      cmd:
+        - build
+        - copyBuildResources
 
     test_plugin:
       title: Test Plugin
@@ -18,4 +19,4 @@ steps:
       composition_candidates:
         gradle:
           image: ${{build_image}}
-          command: runAllTests
+          cmd: runAllTests
