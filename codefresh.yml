@@ -1,5 +1,12 @@
 version: '1.0'
 steps:
+
+    list_files:
+      title: List files
+      image: alpine:latest
+      commands:
+        - ls -al
+        
     build_image:
       title: Build Image
       type: build
