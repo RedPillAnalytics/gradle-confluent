@@ -56,10 +56,10 @@ steps:
         #command: runAllTests -Si -Pconfluent.pipelineEndpoint=http://ksql-server:8088
         #command: listFiles
         image: ubuntu
-        command: bash -c "echo $CF_VOLUME_NAME && pwd && ls -l"
+        command: bash -c "echo ${{CF_VOLUME_NAME}} && pwd && ls -l"
         volumes:
-          - '${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}'
-        working_dir: '${{CF_VOLUME_PATH}}'
+          - ${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}
+        working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
 
   inspect_build:
     title: Inspect Build Directory
