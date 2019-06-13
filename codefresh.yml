@@ -53,7 +53,8 @@ steps:
     composition_candidates:
       gradle:
         image: ${{gradle_image}}
-        command: runAllTests -Si -Pconfluent.pipelineEndpoint=http://ksql-server:8088
+        #command: runAllTests -Si -Pconfluent.pipelineEndpoint=http://ksql-server:8088
+        command: tasks
 
   inspect_build:
     title: Inspect Build Directory
