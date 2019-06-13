@@ -49,7 +49,7 @@ steps:
   test_plugin:
     title: Test Plugin
     type: composition
-    composition: confluent-5.2.1
+    composition: docker-compose.yml
     composition_candidates:
       gradle:
         image: ${{build_image}}
