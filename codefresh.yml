@@ -52,6 +52,7 @@ steps:
       - -Prelease.localOnly
       - -Prelease.dryRun
       - build
+      - runAllTests
       - -Si
 
 #  test_plugin:
