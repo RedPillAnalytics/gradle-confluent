@@ -35,25 +35,25 @@ steps:
       - copyBuildResources
       - -Si
 
-#  build_plugin:
-#    title: Build Plugin
-#    image: ${{gradle_image}}
-#    cmd:
-#      - release
-#      - -Prelease.disableChecks
-#      - -Prelease.localOnly
-#      - -Prelease.dryRun
-#      - build
-#      - -Si
+  build_plugin:
+    title: Build Plugin
+    image: ${{gradle_image}}
+    cmd:
+      - release
+      - -Prelease.disableChecks
+      - -Prelease.localOnly
+      - -Prelease.dryRun
+      - build
+      - -Si
 
   test_plugin:
     title: Test Plugin
     type: composition
-    composition: docker-compose.yml
+    composition: confluent-5.2.1
     composition_candidates:
       gradle:
         image: ${{build_image}}
-        command: /usr/bin/gradle release -Prelease.disableChecks -Prelease.localOnly -Prelease.dryRun build runAllTests -Si
+        command: /usr/bin/gradle runAllTests -Si -Pconfluent.pipelineEndpoint=http://ksql-server:8088
 
   inspect_build:
     title: Inspect Build Directory
