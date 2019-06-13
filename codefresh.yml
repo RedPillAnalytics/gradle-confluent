@@ -35,6 +35,14 @@ steps:
       - copyBuildResources
       - -Si
 
+  launch_confluent:
+    title: Launch Confluent
+    type: launch-composition
+    composition: docker-compose.yml
+    working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
+    volumes:
+      - ${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}
+
   build_plugin:
     title: Build Plugin
     image: ${{gradle_image}}
@@ -46,20 +54,17 @@ steps:
       - build
       - -Si
 
-  test_plugin:
-    title: Test Plugin
-    type: composition
-    composition: docker-compose.yml
-    composition_candidates:
-      gradle:
-        image: ${{gradle_image}}
-        command: runAllTests -Si -Pconfluent.pipelineEndpoint=http://ksql-server:8088
-        #command: listFiles
-        #image: ubuntu
-        #command: bash -c "echo ${{CF_VOLUME_NAME}} && pwd && ls -l"
-        volumes:
-          - ${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}
-        working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
+#  test_plugin:
+#    title: Test Plugin
+#    type: composition
+#    composition: docker-compose.yml
+#    composition_candidates:
+#      gradle:
+#        image: ${{gradle_image}}
+#        command: runAllTests -Si -Pconfluent.pipelineEndpoint=http://ksql-server:8088
+#        volumes:
+#          - ${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}
+#        working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
 
   inspect_build:
     title: Inspect Build Directory
