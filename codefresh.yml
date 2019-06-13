@@ -55,8 +55,8 @@ steps:
         #image: ${{gradle_image}}
         #command: runAllTests -Si -Pconfluent.pipelineEndpoint=http://ksql-server:8088
         #command: listFiles
-        image: alpine
-        command: pwd && ls -l
+        image: ubuntu
+        command: bash -c "echo volume: $CF_VOLUME_NAME && pwd && ls -l"
         volumes:
           - '${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}'
         working_dir: '${{CF_VOLUME_PATH}}'
