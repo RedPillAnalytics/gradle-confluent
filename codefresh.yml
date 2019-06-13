@@ -52,11 +52,11 @@ steps:
     composition: docker-compose.yml
     composition_candidates:
       gradle:
-        #image: ${{gradle_image}}
-        #command: runAllTests -Si -Pconfluent.pipelineEndpoint=http://ksql-server:8088
+        image: ${{gradle_image}}
+        command: runAllTests -Si -Pconfluent.pipelineEndpoint=http://ksql-server:8088
         #command: listFiles
-        image: ubuntu
-        command: bash -c "echo ${{CF_VOLUME_NAME}} && pwd && ls -l"
+        #image: ubuntu
+        #command: bash -c "echo ${{CF_VOLUME_NAME}} && pwd && ls -l"
         volumes:
           - ${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}
         working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
