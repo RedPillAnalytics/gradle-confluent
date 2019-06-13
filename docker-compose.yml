@@ -131,3 +131,4 @@ services:
                           topic=clickstream \
                           maxInterval=100 \
                           bootstrap-server=kafka:29092'"
+

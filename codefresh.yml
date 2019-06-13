@@ -52,7 +52,7 @@ steps:
     composition: docker-compose.yml
     composition_candidates:
       gradle:
-        image: ${{build_image}}
+        image: ${{gradle_image}}
         command: /usr/bin/gradle runAllTests -Si -Pconfluent.pipelineEndpoint=http://ksql-server:8088
 
   inspect_build:
