@@ -35,13 +35,13 @@ steps:
       - copyBuildResources
       - -Si
 
-  launch_confluent:
-    title: Launch Confluent
-    type: launch-composition
-    composition: docker-compose.yml
-    working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
-    volumes:
-      - ${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}
+#  launch_confluent:
+#    title: Launch Confluent
+#    type: launch-composition
+#    composition: docker-compose.yml
+#    working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
+#    volumes:
+#      - ${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}
 
   build_plugin:
     title: Build Plugin
@@ -52,20 +52,25 @@ steps:
       - -Prelease.localOnly
       - -Prelease.dryRun
       - build
-      - runAllTests
       - -Si
 
-#  test_plugin:
-#    title: Test Plugin
-#    type: composition
-#    composition: docker-compose.yml
-#    composition_candidates:
-#      gradle:
-#        image: ${{gradle_image}}
-#        command: runAllTests -Si -Pconfluent.pipelineEndpoint=http://ksql-server:8088
-#        volumes:
-#          - ${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}
-#        working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
+  test_plugin:
+    title: Test Plugin
+    type: composition
+    composition: docker-compose.yml
+    composition_candidates:
+      gradle:
+        image: ${{gradle_image}}
+        command: runAllTests -Si -Pconfluent.pipelineEndpoint=http://ksql-server:8088
+        volumes:
+          - ${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}
+        working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
+        environment:
+          - AWS_ACCESS_KEY_ID=${{AWS_ACCESS_KEY_ID}}
+          - AWS_SECRET_ACCESS_KEY=${{AWS_SECRET_ACCESS_KEY}}
+          - AWS_REGION=${{AWS_REGION}}
+        links:
+          - ksql-server
 
   inspect_build:
     title: Inspect Build Directory
