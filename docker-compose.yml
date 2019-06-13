@@ -70,9 +70,6 @@ services:
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_PLUGIN_PATH: '/usr/share/java'
       CONNECT_HOST: kafka-connect
-    volumes:
-     - $PWD/ksql/ksql-clickstream-demo/demo/:/scripts
-     - $PWD/ksql/ksql-clickstream-demo/demo/connect-config:/usr/share/java/null-smt
 
   ksql-server:
     image: confluentinc/cp-ksql-server:5.2.1
@@ -94,8 +91,6 @@ services:
       - ksql-server
     entrypoint: /bin/sh
     tty: true
-    volumes:
-      - $PWD/ksql/ksql-clickstream-demo/demo:/usr/share/doc/clickstream
 
   kafkacat:
     image: confluentinc/cp-kafkacat:latest
