@@ -52,9 +52,11 @@ steps:
     composition: docker-compose.yml
     composition_candidates:
       gradle:
-        image: ${{gradle_image}}
+        #image: ${{gradle_image}}
         #command: runAllTests -Si -Pconfluent.pipelineEndpoint=http://ksql-server:8088
-        command: listFiles
+        #command: listFiles
+        image: alpine
+        command: pwd && ls -l
         volumes:
           - '${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}'
         working_dir: '${{CF_VOLUME_PATH}}'
