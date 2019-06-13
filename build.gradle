@@ -1,3 +1,6 @@
+import com.redpillanalytics.aws.tasks.S3UploadSyncTask
+import com.redpillanalytics.aws.tasks.S3DownloadSyncTask
+
 plugins {
    id 'groovy'
    id 'java-gradle-plugin'
@@ -9,6 +12,7 @@ plugins {
    id "com.github.ben-manes.versions" version "0.21.0"
    id "com.redpillanalytics.gradle-analytics" version "1.2.3"
    id 'com.adarshr.test-logger' version '1.6.0'
+   id "com.redpillanalytics.gradle-aws" version "0.1.4"
 }
 
 // send analytics
@@ -111,67 +115,49 @@ task('cleanJunit', type: Delete) {
    delete getTestResultsDir()
 }
 
-ext.bucket = 's3://documentation.redpillanalytics.com'
-ext.bucketPath = 'gradle-confluent'
-ext.resourceBucket = 's3://rpa-build-resources'
+ext.docsBucket = 'documentation.redpillanalytics.com'
+ext.resourceBucket = 'rpa-build-resources'
 
-
-task publishVersionDocs {
+task publishVersionDocs(type: S3UploadSyncTask) {
 
    description = 'Upload version Groovydocs to s3.'
    group = 'documentation'
 
-   doLast {
-      exec {
-         executable 'aws'
-         args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/${version}/"
-      }
-   }
+   bucketName docsBucket
+   filePath groovydoc.destinationDir.getPath()
+   keyName "${rootProject.name}/${version}"
+
    dependsOn groovydoc
 }
 
-task publishLatestDocs {
+task publishLatestDocs(type: S3UploadSyncTask) {
 
    description = 'Upload latest Groovydocs to s3.'
    group = 'documentation'
 
-   doLast {
-      exec {
-         executable 'aws'
-         args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/latest/"
-      }
-   }
+   bucketName docsBucket
+   filePath groovydoc.destinationDir.getPath()
+   keyName "${rootProject.name}/latest"
+
    dependsOn groovydoc
-   onlyIf { gitBranch == 'master' }
 }
 
-tasks.publishPlugins.dependsOn publishVersionDocs, publishLatestDocs
+task copyBuildResources(type: S3DownloadSyncTask) {
+   description 'Copy build resource files from S3.'
+   group 'build'
+   bucketName resourceBucket
+   keyName 'gradle'
+   filePath gradle.getGradleUserHomeDir().toString()
+   doFirst {
+      logger.warn "gradle home: ${gradle.getGradleUserHomeDir().toString()}"
+   }
+}
 
 task runAllTests {
    description 'Run all defined tests.'
    group 'verification'
 }
 
-task copyBuildResources {
-   description 'Copy build resource files from S3.'
-   group 'build'
-   doLast {
-      exec {
-         executable 'aws'
-         args 's3', 'cp',"${resourceBucket}/gradle-analytics-build-user.json", "."
-      }
-      exec {
-         executable 'aws'
-         args 's3', 'cp',"${resourceBucket}/gradle.properties", "."
-      }
-   }
-}
-
 tasks.withType(Test) {
    runAllTests.dependsOn it
 }
-
-// Only execute certain tasks if we are on the master branch
-tasks.release.configure { onlyIf { gitBranch == 'master' } }
-tasks.publishPlugins.configure { onlyIf { gitBranch == 'master' } }
-tasks.githubRelease.configure { onlyIf { gitBranch == 'master' } }
