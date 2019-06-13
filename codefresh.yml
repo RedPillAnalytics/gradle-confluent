@@ -1,20 +1,111 @@
 version: '1.0'
-
 steps:
 
-    build_image:
-      title: Build Image
-      type: build
-      image_name: gradle
-    
-    build_plugin:
-      title: Build Plugin
-      image: ${{build_image}}
-      commands:
-        - build copyBuildResources
+  main_clone:
+    title: Cloning main repository...
+    type: git-clone
+    repo: '${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}'
+    revision: '${{CF_REVISION}}'
 
-    launch_composition:
-      title: Launch Composition
-      type: launch-composition
-      composition: docker-compose.yml
-      environment_name: 'java-spring-mvc-jdbc'
+  gradle_image:
+    title: Build Gradle Image
+    type: build
+    image_name: gradle
+
+  release_plugin:
+    title: Release Plugin
+    image: ${{gradle_image}}
+    cmd:
+      - cleanLibs
+      - release
+      - -Prelease.disableChecks
+      - -Prelease.localOnly
+      - -Si
+    when:
+      condition:
+        all:
+          validateTargetBranch: '"${{CF_PULL_REQUEST_TARGET}}" == "master"'
+          prActionClose: '"${{CF_PULL_REQUEST_ACTION}}" == "closed"'
+          prActionMerge: '"${{CF_PULL_REQUEST_MERGED}}" == "true"'
+
+  build_resources:
+    title: Copy Build Resources
+    image: ${{gradle_image}}
+    cmd:
+      - copyBuildResources
+      - -Si
+
+#  launch_confluent:
+#    title: Launch Confluent
+#    type: launch-composition
+#    composition: docker-compose.yml
+#    working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
+#    volumes:
+#      - ${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}
+
+  build_plugin:
+    title: Build Plugin
+    image: ${{gradle_image}}
+    cmd:
+      - release
+      - -Prelease.disableChecks
+      - -Prelease.localOnly
+      - -Prelease.dryRun
+      - build
+      - -Si
+
+  test_plugin:
+    title: Test Plugin
+    type: composition
+    composition: docker-compose.yml
+    composition_candidates:
+      gradle:
+        image: ${{gradle_image}}
+        command: runAllTests -Si -Pconfluent.pipelineEndpoint=http://ksql-server:8088
+        volumes:
+          - ${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}
+        working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
+        environment:
+          - AWS_ACCESS_KEY_ID=${{AWS_ACCESS_KEY_ID}}
+          - AWS_SECRET_ACCESS_KEY=${{AWS_SECRET_ACCESS_KEY}}
+          - AWS_REGION=${{AWS_REGION}}
+        links:
+          - ksql-server
+
+  inspect_build:
+    title: Inspect Build Directory
+    image: alpine:latest
+    commands:
+      - ls -lhR build
+
+  unit_tests:
+    title: Parse Gradle Test Reports
+    image: codefresh/cf-docker-test-reporting
+    working_directory: '${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}/build/reports/tests/'
+    environment:
+      - REPORT_DIR=test
+      - REPORT_INDEX_FILE=index.html
+      - CLEAR_TEST_REPORT=true
+      - BUCKET_NAME=rpa-gradle-reports
+      - CF_STORAGE_INTEGRATION=rpa-test-reports
+
+  publish_plugin:
+    title: Publish Plugin
+    image: ${{gradle_image}}
+    cmd:
+      - publishVersionDocs
+      - publishLatestDocs
+      - githubRelease
+      - publishPlugins
+    when:
+      condition:
+        all:
+          validateTargetBranch: '"${{CF_PULL_REQUEST_TARGET}}" == "master"'
+          prActionClose: '"${{CF_PULL_REQUEST_ACTION}}" == "closed"'
+          prActionMerge: '"${{CF_PULL_REQUEST_MERGED}}" == "true"'
+
+  analytics_producer:
+    title: Analytics Producer
+    image: ${{gradle_image}}
+    cmd:
+      - producer
