@@ -161,3 +161,9 @@ task runAllTests {
 tasks.withType(Test) {
    runAllTests.dependsOn it
 }
+
+task listFiles {
+   def tree  = fileTree(dir: '.')
+   logger.warn "dir: ${tree.getDir().absolutePath}"
+   logger.warn "files: ${tree.getFiles()}"
+}

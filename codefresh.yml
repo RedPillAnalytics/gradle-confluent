@@ -54,9 +54,10 @@ steps:
       gradle:
         image: ${{gradle_image}}
         #command: runAllTests -Si -Pconfluent.pipelineEndpoint=http://ksql-server:8088
-        command: tasks
+        command: listFiles
         volumes:
-          - /codefresh/volume
+          - '${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}'
+        working_dir: '${{CF_VOLUME_PATH}}'
 
   inspect_build:
     title: Inspect Build Directory
