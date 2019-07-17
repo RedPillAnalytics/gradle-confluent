@@ -37,13 +37,14 @@ allprojects {
    project.version = scmVersion.version
 }
 
-githubRelease {
+FilenameFilter filter = { dir, filename -> filename.contains("${rootProject.name}-${project.version}") }
 
+githubRelease {
    token = githubToken
    owner = 'RedPillAnalytics'
-   repo = 'gradle-confluent'
+   repo = rootProject.name
    tagName = "v${version}"
-   releaseAssets = fileTree(dir: buildDir, includes: ["**/*${version}*", "**/*${version}*.jar"]).toList()
+   releaseAssets = [jar.destinationDir.listFiles(filter)]
 }
 
 dependencies {
@@ -59,6 +60,7 @@ dependencies {
    compile "gradle.plugin.com.redpillanalytics:gradle-analytics:+"
 
    testCompile 'org.spockframework:spock-core:1.2-groovy-2.5'
+   testCompile "org.testcontainers:spock:1.11.4"
 }
 
 // Default artifact naming.
@@ -99,7 +101,6 @@ pluginBundle {
 
 // Options for all tests
 tasks.withType(Test) {
-   ignoreFailures true
    testLogging.showStandardStreams true
    systemProperty 'projectDir', temporaryDir
 }
