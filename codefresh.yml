@@ -54,11 +54,11 @@ steps:
       - build
       - -Si
 
-    test_plugin:
-      title: Test Plugin
-      image: docker/compose:1.24.1
-      cmd:
-        - up
+  test_plugin:
+    title: Test Plugin
+    image: docker/compose:1.24.1
+    cmd:
+      - up
 
 #  test_plugin:
 #    title: Test Plugin
