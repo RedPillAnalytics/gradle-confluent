@@ -60,7 +60,7 @@ dependencies {
    compile "gradle.plugin.com.redpillanalytics:gradle-analytics:+"
 
    testCompile 'org.spockframework:spock-core:1.2-groovy-2.5'
-   testCompile "org.testcontainers:spock:1.11.4"
+   //testCompile "org.testcontainers:spock:1.11.4"
 }
 
 // Default artifact naming.
@@ -68,9 +68,7 @@ group = 'com.redpillanalytics'
 
 repositories {
    jcenter()
-   maven {
-      url "https://plugins.gradle.org/m2/"
-   }
+   maven { url "https://plugins.gradle.org/m2/" }
 }
 
 gradlePlugin {
