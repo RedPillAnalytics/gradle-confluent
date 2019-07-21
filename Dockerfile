@@ -1,4 +1,4 @@
-FROM gradle:5.4.1-jdk8
+FROM gradle:5.5.1-jdk8
 USER root
 
 # Run the Update
