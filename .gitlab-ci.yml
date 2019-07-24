@@ -1,4 +1,14 @@
+before_script:
+  - export GRADLE_USER_HOME=`pwd`/.gradle
+
 build:
+  stage: build
   script: ./gradlew release -Prelease.disableChecks -Prelease.localOnly -Prelease.dryRun - build -Si
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    policy: push
+    paths:
+      - build
+      - .gradle
   only:
     - merge_requests
