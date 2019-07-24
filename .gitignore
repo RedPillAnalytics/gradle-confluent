@@ -18,7 +18,8 @@ gradle-app.setting
 .*
 !.gitignore
 !.travis.yml
-!.circleci/
+!.circleci
+!.gitlab-ci.yml
 
 # Visual Studio Code build directory
 bin

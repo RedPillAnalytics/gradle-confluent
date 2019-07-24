@@ -1,0 +1,4 @@
+build:
+  script: ./gradlew release -Prelease.disableChecks -Prelease.localOnly -Prelease.dryRun - build -Si
+  only:
+    - merge_requests
