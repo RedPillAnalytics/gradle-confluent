@@ -6,7 +6,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Write Google Credential
-      run: echo ${{ secrets.GCP_JKEY_TEXT }} > ${{ secrets.GCP_JKEY_PATH }}
+      run: echo "${{ secrets.GCP_JKEY_TEXT }}" > ${{ secrets.GCP_JKEY_PATH }}
     - name: Test Google Credential
       run: cat ${{ secrets.GCP_JKEY_PATH }}
     # - name: Build with Gradle
