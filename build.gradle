@@ -15,9 +15,9 @@ plugins {
    //id "com.redpillanalytics.gradle-aws" version "0.1.4"
 }
 
-test {
-   failFast = true
-}
+// test {
+//    failFast = true
+// }
 
 // send analytics
 analytics {
