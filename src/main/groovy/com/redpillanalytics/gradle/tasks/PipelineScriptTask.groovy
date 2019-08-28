@@ -18,7 +18,6 @@ class PipelineScriptTask extends PipelineTask {
    /**
     * Builds the KSQL script for the directory or directories.
     */
-   @OutputFile
    File createScript() {
 
       createScript.delete()

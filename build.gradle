@@ -1,5 +1,5 @@
-import com.redpillanalytics.aws.tasks.S3UploadSyncTask
-import com.redpillanalytics.aws.tasks.S3DownloadSyncTask
+// import com.redpillanalytics.aws.tasks.S3UploadSyncTask
+// import com.redpillanalytics.aws.tasks.S3DownloadSyncTask
 
 plugins {
    id 'groovy'
@@ -12,8 +12,12 @@ plugins {
    id "com.github.ben-manes.versions" version "0.21.0"
    id "com.redpillanalytics.gradle-analytics" version "1.2.3"
    id 'com.adarshr.test-logger' version '1.6.0'
-   id "com.redpillanalytics.gradle-aws" version "0.1.4"
+   //id "com.redpillanalytics.gradle-aws" version "0.1.4"
 }
+
+// test {
+//    failFast = true
+// }
 
 // send analytics
 analytics {
@@ -108,6 +112,7 @@ testSets {
    ksqlServerTest
    ksqlPipelinesTest
    deployTest
+   buildTest
 }
 
 task cleanJunit(type: Delete) {
@@ -121,40 +126,40 @@ task cleanLibs(type: Delete) {
 ext.docsBucket = 'documentation.redpillanalytics.com'
 ext.resourceBucket = 'rpa-build-resources'
 
-task publishVersionDocs(type: S3UploadSyncTask) {
+// task publishVersionDocs(type: S3UploadSyncTask) {
 
-   description = 'Upload version Groovydocs to s3.'
-   group = 'documentation'
+//    description = 'Upload version Groovydocs to s3.'
+//    group = 'documentation'
 
-   bucketName docsBucket
-   filePath groovydoc.destinationDir.getPath()
-   keyName "${rootProject.name}/${version}"
+//    bucketName docsBucket
+//    filePath groovydoc.destinationDir.getPath()
+//    keyName "${rootProject.name}/${version}"
 
-   dependsOn groovydoc
-}
+//    dependsOn groovydoc
+// }
 
-task publishLatestDocs(type: S3UploadSyncTask) {
+// task publishLatestDocs(type: S3UploadSyncTask) {
 
-   description = 'Upload latest Groovydocs to s3.'
-   group = 'documentation'
+//    description = 'Upload latest Groovydocs to s3.'
+//    group = 'documentation'
 
-   bucketName docsBucket
-   filePath groovydoc.destinationDir.getPath()
-   keyName "${rootProject.name}/latest"
+//    bucketName docsBucket
+//    filePath groovydoc.destinationDir.getPath()
+//    keyName "${rootProject.name}/latest"
 
-   dependsOn groovydoc
-}
+//    dependsOn groovydoc
+// }
 
-task copyBuildResources(type: S3DownloadSyncTask) {
-   description 'Copy build resource files from S3.'
-   group 'build'
-   bucketName resourceBucket
-   keyName 'gradle'
-   filePath gradle.getGradleUserHomeDir().toString()
-   doFirst {
-      logger.warn "gradle home: ${gradle.getGradleUserHomeDir().toString()}"
-   }
-}
+// task copyBuildResources(type: S3DownloadSyncTask) {
+//    description 'Copy build resource files from S3.'
+//    group 'build'
+//    bucketName resourceBucket
+//    keyName 'gradle'
+//    filePath gradle.getGradleUserHomeDir().toString()
+//    doFirst {
+//       logger.warn "gradle home: ${gradle.getGradleUserHomeDir().toString()}"
+//    }
+// }
 
 task runAllTests {
    description 'Run all defined tests.'

@@ -154,7 +154,6 @@ class PipelineTask extends DefaultTask {
     *
     * @return objects A list of tables/streams that have the specific directive.
     */
-   @Internal
    def getDirectiveObjects(String directiveType) {
 
       directives.collect { map ->
