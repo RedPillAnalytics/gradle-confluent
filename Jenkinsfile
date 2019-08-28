@@ -36,7 +36,7 @@ pipeline {
         HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
       }
       steps {
-        container('gradle5') {
+        container('gradle') {
           sh "./gradlew clean build"
         }
       }
