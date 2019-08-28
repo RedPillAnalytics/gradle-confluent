@@ -20,7 +20,7 @@ pipeline {
       }
       steps {
         container('gradle') {
-          sh "gradle clean build"
+          sh "./gradlew clean build"
         }
       }
     }
@@ -39,7 +39,7 @@ pipeline {
           // so we can retrieve the version in later steps
           sh "echo \$(jx-release-version) > VERSION"
           sh "jx step tag --version \$(cat VERSION)"
-          sh "gradle clean build"
+          sh "./gradlew clean build"
         }
       }
     }
