@@ -36,7 +36,7 @@ pipeline {
         HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
       }
       steps {
-        container('gradle') {
+        container('docker/compose:1.25.0-rc2') {
           sh "./gradlew clean build"
         }
       }
