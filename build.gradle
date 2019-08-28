@@ -112,6 +112,7 @@ testSets {
    ksqlServerTest
    ksqlPipelinesTest
    deployTest
+   buildTest
 }
 
 task cleanJunit(type: Delete) {
