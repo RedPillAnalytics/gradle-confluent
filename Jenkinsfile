@@ -9,24 +9,7 @@ pipeline {
     DOCKER_REGISTRY_ORG = 'rpa-jenkins-v4'
   }
   stages {
-    stage('Release') {
-      when {
-        branch 'master'
-      }
-      steps {
-        container('gradle') {
-          // ensure we're not on a detached head
-          sh "git checkout master"
-          sh "git config --global credential.helper store"
-          sh "jx step git credentials"
-
-          // so we can retrieve the version in later steps
-          sh "echo \$(jx-release-version) > VERSION"
-          sh "jx step tag --version \$(cat VERSION)"
-        }
-      }
-    }
-    stage('Build') {
+    stage('CI Build and push snapshot') {
       when {
         branch 'PR-*'
       }
@@ -36,8 +19,53 @@ pipeline {
         HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
       }
       steps {
-        container('gradle5') {
-          sh "./gradlew clean build"
+        container('gradle') {
+          sh "gradle clean build"
+          sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold.yaml"
+          sh "jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:$PREVIEW_VERSION"
+          dir('./charts/preview') {
+            sh "make preview"
+            sh "jx preview --app $APP_NAME --dir ../.."
+          }
+        }
+      }
+    }
+    stage('Build Release') {
+      when {
+        branch 'master'
+      }
+      steps {
+        container('gradle') {
+
+          // ensure we're not on a detached head
+          sh "git checkout master"
+          sh "git config --global credential.helper store"
+          sh "jx step git credentials"
+
+          // so we can retrieve the version in later steps
+          sh "echo \$(jx-release-version) > VERSION"
+          sh "jx step tag --version \$(cat VERSION)"
+          sh "gradle clean build"
+          sh "export VERSION=`cat VERSION` && skaffold build -f skaffold.yaml"
+          sh "jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:\$(cat VERSION)"
+        }
+      }
+    }
+    stage('Promote to Environments') {
+      when {
+        branch 'master'
+      }
+      steps {
+        container('gradle') {
+          dir('./charts/gradle-confluent') {
+            sh "jx step changelog --version v\$(cat ../../VERSION)"
+
+            // release the helm chart
+            sh "jx step helm release"
+
+            // promote through all 'Auto' promotion Environments
+            sh "jx promote -b --all-auto --timeout 1h --version \$(cat ../../VERSION)"
+          }
         }
       }
     }
