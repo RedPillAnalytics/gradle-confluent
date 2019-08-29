@@ -1,0 +1,10 @@
+metadata:
+  labels:
+    build-tool: gradle
+spec:
+  containers:
+  - name: gradle
+    image: redpillanalytics/docker-gradle:latest
+    command:
+    - cat
+    tty: true
