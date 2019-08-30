@@ -8,9 +8,10 @@ spec:
     - name: CONTAINER_ENV_VAR
       value: jnlp
   - name: gradle
-    image: redpillanalytics/docker-gradle
+    image: gradle
     command:
-    - gradle
+    - cat
+    tty: true
     env:
     - name: CONTAINER_ENV_VAR
       value: gradle

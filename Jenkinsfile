@@ -1,7 +1,7 @@
 pipeline {
   agent {
     kubernetes {
-      defaultContainer 'jnlp'
+      defaultContainer 'gradle'
       yamlFile 'pod-template.yaml'
     }
   }
@@ -25,15 +25,8 @@ pipeline {
       when {
         branch 'PR-*'
       }
-      environment {
-        PREVIEW_VERSION = "0.0.0-SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER"
-        PREVIEW_NAMESPACE = "$APP_NAME-$BRANCH_NAME".toLowerCase()
-        HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
-      }
       steps {
-        container('gradle') {
-          sh "clean build"
-        }
+        sh "gradle clean build"
       }
     }
   }
