@@ -27,5 +27,39 @@ spec:
       value: "2181"
     - name: ZOOKEEPER_TICK_TIME
       value: "2000"
-
-
+  - name: kafka
+    image: confluentinc/cp-enterprise-kafka:5.3.0
+    command:
+    - cat
+    tty: true
+    env:
+    - name: CONFLUENT_METRICS_ENABLE
+      value: "true"
+    - name: CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS
+      value: kafka:29092
+    - name: CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS
+      value: "1"
+    - name: CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT
+      value: zookeeper:2181
+    - name: CONFLUENT_SUPPORT_CUSTOMER_ID
+      value: anonymous
+    - name: KAFKA_ADVERTISED_LISTENERS
+      value: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+    - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
+      value: "true"
+    - name: KAFKA_BROKER_ID
+      value: "1"
+    - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
+      value: "100"
+    - name: KAFKA_INTER_BROKER_LISTENER_NAME
+      value: PLAINTEXT
+    - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+      value: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+    - name: KAFKA_METRIC_REPORTERS
+      value: io.confluent.metrics.reporter.ConfluentMetricsReporter
+    - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+      value: "1"
+    - name: KAFKA_ZOOKEEPER_CONNECT
+      value: zookeeper:2181
+    ports:
+    - containerPort: 9092
