@@ -1,3 +1,7 @@
+def options = '-Si'
+def properties = "-Panalytics.buildId=${env.BUILD_TAG}"
+def gradle = "gradle ${options} ${properties}"
+
 pipeline {
   agent {
     kubernetes {
@@ -22,17 +26,19 @@ pipeline {
       }
     }
     stage('Build') {
-      when {
-        branch 'PR-*'
-      }
       steps {
-        sh "gradle clean build"
+        sh "$gradle build"
+        junit testResults: "build/test-results/test/*.xml", allowEmptyResults: true, keepLongStdio: true
       }
     }
   }
   post {
-        always {
-          cleanWs()
-        }
+    always {
+      archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true
+      sh "$gradle cleanJunit"
+    }
+    cleanup {
+      cleanWs()
+    }
   }
 }
