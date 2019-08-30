@@ -20,8 +20,8 @@ pipeline {
       }
     }
     stage('Data Generation') {
-      container('datagen') {
-        steps {
+      steps {
+        container('datagen') {
           sh 'cub kafka-ready -b kafka:29092 1 300'
           sh 'cub sr-ready schema-registry 8081 300'
           sh 'sleep 30'
