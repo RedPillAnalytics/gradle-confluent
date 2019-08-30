@@ -153,6 +153,7 @@ spec:
     image: confluentinc/ksql-examples:5.3.0
     command:
     - bash
+    args:
     - -c
     - 'echo Waiting for Kafka to be ready... &&'
     - 'cub kafka-ready -b kafka:29092 1 300 &&'
