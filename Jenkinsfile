@@ -31,8 +31,5 @@ pipeline {
       archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true
       sh "$gradle cleanJunit"
     }
-    cleanup {
-      cleanWs()
-    }
   }
 }
