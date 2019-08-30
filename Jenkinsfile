@@ -15,14 +15,8 @@ pipeline {
         branch 'master'
       }
       steps {
-        // ensure we're not on a detached head
-        sh "git checkout master"
-        sh "git config --global credential.helper store"
-        sh "jx step git credentials"
-
-        // so we can retrieve the version in later steps
-        sh "echo \$(jx-release-version) > VERSION"
-        sh "jx step tag --version \$(cat VERSION)"
+        // create a new release
+        sh "$gradle ${options} clean release -Prelease.disableChecks -Prelease.localOnly"
       }
     }
     stage('Build') {
