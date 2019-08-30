@@ -1,10 +1,12 @@
+apiVersion: v1
+kind: Pod
 metadata:
   labels:
     build-tool: gradle
 spec:
   containers:
   - name: gradle
-    image: redpillanalytics/docker-gradle:latest
+    image: redpillanalytics/docker-gradle
     command:
     - cat
     tty: true
