@@ -22,7 +22,7 @@ pipeline {
     stage('Data Generation') {
       steps {
         container('datagen') {
-          sh 'cub kafka-ready -b localhost:9092 1 300'
+          sh 'cub kafka-ready -b localhost:29092 1 300'
           sh 'cub sr-ready localhost 8081 300'
           sh 'sleep 30'
           sh 'ksql-datagen bootstrap-server=localhost:29092 quickstart=clickstream_codes format=json topic=clickstream_codes maxInterval=20 iterations=100 &&'
