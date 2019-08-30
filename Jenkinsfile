@@ -22,12 +22,12 @@ pipeline {
     stage('Data Generation') {
       steps {
         container('datagen') {
-          sh 'cub kafka-ready -b kafka:9092 1 300'
-          sh 'cub sr-ready schema-registry 8081 300'
+          sh 'cub kafka-ready -b localhost:9092 1 300'
+          sh 'cub sr-ready localhost 8081 300'
           sh 'sleep 30'
-          sh 'ksql-datagen ootstrap-server=kafka:29092 quickstart=clickstream_codes format=json topic=clickstream_codes maxInterval=20 iterations=100 &&'
-          sh 'ksql-datagen bootstrap-server=kafka:29092 quickstart=clickstream_users format=json topic=clickstream_users maxInterval=10 iterations=1000 &&'
-          sh 'ksql-datagen quickstart=clickstream format=json topic=clickstream maxInterval=100 bootstrap-server=kafka:29092'
+          sh 'ksql-datagen bootstrap-server=localhost:29092 quickstart=clickstream_codes format=json topic=clickstream_codes maxInterval=20 iterations=100 &&'
+          sh 'ksql-datagen bootstrap-server=localhost:29092 quickstart=clickstream_users format=json topic=clickstream_users maxInterval=10 iterations=1000 &&'
+          sh 'ksql-datagen quickstart=clickstream format=json topic=clickstream maxInterval=100 bootstrap-server=localhost:29092'
         }
       }
     }
