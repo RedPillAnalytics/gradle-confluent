@@ -23,5 +23,9 @@ spec:
     - name: CONTAINER_ENV_VAR
       value: confluent
     command:
-    - confluent local start ksql-server
+    - confluent
+    args:
+    - local
+    - start
+    - ksql-server
     tty: true
