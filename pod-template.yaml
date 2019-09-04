@@ -23,7 +23,6 @@ spec:
     - name: CONTAINER_ENV_VAR
       value: confluent
     command:
-    - /bin/sh
     - confluent local start ksql-server \ &&
     - ksql-datagen bootstrap-server=localhost:9092 quickstart=clickstream_codes \
     - format=json topic=clickstream_codes maxInterval=20 iterations=100 \ &&
