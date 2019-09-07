@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       confluent:
-        image: redpillanalytics/docker-confluent
+        image: redpillanalytics/docker-confluent:5.3.0
         ports:
         - 8080:8080
         env:
@@ -17,6 +17,8 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - name: Release Plugin
+      if: github.event_name == 'push'
       uses: docker://redpillanalytics/docker-gradle
       with:
         args: cleanLibs release -Prelease.disableChecks -Prelease.localOnly -Si -Prelease.dryRun
+    - name: 
