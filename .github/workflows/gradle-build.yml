@@ -12,11 +12,4 @@ jobs:
     - name: Release Plugin
       uses: docker://redpillanalytics/docker-gradle
       with:
-        args: 
-        - cleanLibs
-        - release
-        - -Prelease.disableChecks
-        - -Prelease.localOnly
-        - -Si
-        - -Prelease.dryRun
-
+        args: cleanLibs release -Prelease.disableChecks -Prelease.localOnly -Si -Prelease.dryRun
