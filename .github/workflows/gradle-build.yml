@@ -1,0 +1,22 @@
+name: Build and Publish Docker Image
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Release Plugin
+      uses: docker://redpillanalytics/docker-gradle
+      with:
+        args: 
+        - cleanLibs
+        - release
+        - -Prelease.disableChecks
+        - -Prelease.localOnly
+        - -Si
+        - -Prelease.dryRun
+
