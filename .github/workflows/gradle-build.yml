@@ -11,7 +11,7 @@ jobs:
       confluent:
         image: redpillanalytics/docker-confluent:5.3.0
         ports:
-        - 8080:8080
+        - 8088:8088
         env:
           KSQL_KSQL_SERVICE_ID: kafka-examples
     steps:
@@ -20,5 +20,8 @@ jobs:
       if: github.event_name == 'push'
       uses: docker://redpillanalytics/docker-gradle
       with:
-        args: cleanLibs release -Prelease.disableChecks -Prelease.localOnly -Si -Prelease.dryRun
-
+        args: cleanLibs release -Prelease.disableChecks -Prelease.localOnly -Si
+    - name: Build and Test Plugin
+      uses: docker://redpillanalytics/docker-gradle
+      with:
+        args: runAllTests -Si
