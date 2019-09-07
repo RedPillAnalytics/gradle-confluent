@@ -10,7 +10,7 @@ jobs:
     services:
       confluent:
         image: redpillanalytics/docker-confluent:5.3.0
-        entrypoint: confluent local start ksql-server
+        cmd: confluent local start ksql-server
         ports:
         - 8088:8088
         env:
