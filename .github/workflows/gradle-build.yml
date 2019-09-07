@@ -6,6 +6,14 @@ on:
   pull_request:
 jobs:
   build:
+    runs-on: ubuntu-latest
+    services:
+      confluent:
+        image: redpillanalytics/docker-confluent
+        ports:
+        - 8080:8080
+        env:
+          KSQL_KSQL_SERVICE_ID: kafka-examples
     steps:
     - uses: actions/checkout@master
     - name: Release Plugin
