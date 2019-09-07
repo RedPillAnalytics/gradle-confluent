@@ -21,4 +21,4 @@ jobs:
       uses: docker://redpillanalytics/docker-gradle
       with:
         args: cleanLibs release -Prelease.disableChecks -Prelease.localOnly -Si -Prelease.dryRun
-    - name: 
+
