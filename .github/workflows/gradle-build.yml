@@ -10,6 +10,7 @@ jobs:
     services:
       confluent:
         image: redpillanalytics/docker-confluent:5.3.0
+        entrypoint: confluent local start ksql-server
         ports:
         - 8088:8088
         env:
@@ -20,8 +21,8 @@ jobs:
       if: github.event_name == 'push'
       uses: docker://redpillanalytics/docker-gradle
       with:
-        args: cleanLibs release -Prelease.disableChecks -Prelease.localOnly -Si
+        args: cleanLibs release -Prelease.disableChecks -Prelease.localOnly -S
     - name: Build and Test Plugin
       uses: docker://redpillanalytics/docker-gradle
       with:
-        args: runAllTests -Si
+        args: runAllTests -S
