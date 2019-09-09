@@ -14,6 +14,7 @@ jobs:
         - 8088:8088
         env:
           KSQL_KSQL_SERVICE_ID: kafka-examples
+          KSQL_LISTENERS: http://0.0.0.0:8088
     steps:
     - uses: actions/checkout@master
     - name: Release Plugin
