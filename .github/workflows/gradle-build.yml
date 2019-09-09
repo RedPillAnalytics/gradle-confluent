@@ -18,10 +18,10 @@ jobs:
     - uses: actions/checkout@master
     - name: Release Plugin
       if: github.event_name == 'push'
-      runs: ./gradlew cleanLibs release -Prelease.disableChecks -Prelease.localOnly -S
+      run: ./gradlew cleanLibs release -Prelease.disableChecks -Prelease.localOnly -S
     - name: Build and Test Plugin
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      runs: ./gradlew ksqlServerTest -S
+      run: ./gradlew ksqlServerTest -S
 
