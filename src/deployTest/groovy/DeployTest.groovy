@@ -15,7 +15,7 @@ class DeployTest extends Specification {
    def result, tasks
 
    @Shared
-   String projectName = 'simple-deploy', taskName
+   String projectName = 'simple-deploy', taskName, restUrl = System.getProperty('restUrl')
 
    def setup() {
 
@@ -75,7 +75,7 @@ class DeployTest extends Specification {
                |   archives group: 'com.redpillanalytics', name: 'simple-build-pipeline', version: '+'
                |}
                |
-               |confluent.pipelineEndpoint = 'http://localhost:8088'
+               |confluent.pipelineEndpoint = '${restUrl}'
                |confluent.functionPattern = 'simple-build'
                |analytics.sinks {
                |   kafka
@@ -104,7 +104,7 @@ class DeployTest extends Specification {
 
    }
 
-   def "Deploy test to S3"() {
+   def "Deploy test from Maven S3"() {
 
       given:
       taskName = 'deploy'
