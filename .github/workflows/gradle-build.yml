@@ -27,4 +27,4 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       uses: docker://redpillanalytics/docker-gradle
       with:
-        args: runAllTests -S -PksqlRestUrl=http://confluent:8088
+        args: ksqlRestTest -S -PksqlRestUrl=http://confluent:8088
