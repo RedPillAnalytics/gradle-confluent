@@ -8,7 +8,7 @@ import spock.lang.Specification
 class KsqlRestTest extends Specification {
 
    @Shared
-   def ksqlRest = new KsqlRest()
+   def ksqlRest = new KsqlRest(restUrl: System.getProperty('restUrl'))
 
    def "KSQL Server properties fetched"() {
 
@@ -41,7 +41,7 @@ class KsqlRestTest extends Specification {
    def "KSQL REST URL is returned"() {
 
       when:
-      def url = ksqlRest.getRestUrl()
+      def url = ksqlRest.getSchemaRegistry()
 
       then:
       url

@@ -1,6 +1,3 @@
-// import com.redpillanalytics.aws.tasks.S3UploadSyncTask
-// import com.redpillanalytics.aws.tasks.S3DownloadSyncTask
-
 plugins {
    id 'groovy'
    id 'java-gradle-plugin'
@@ -14,10 +11,6 @@ plugins {
    id 'com.adarshr.test-logger' version '1.7.0'
    //id "com.redpillanalytics.gradle-aws" version "0.1.4"
 }
-
-// test {
-//    failFast = true
-// }
 
 // send analytics
 analytics {
@@ -165,4 +158,5 @@ tasks.withType(Test) {
    ignoreFailures false
    testLogging.showStandardStreams true
    systemProperty 'projectDir', temporaryDir
+   systemProperty 'restUrl', ksqlRestUrl
 }
