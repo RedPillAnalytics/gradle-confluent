@@ -8,7 +8,7 @@ import spock.lang.Specification
 class KsqlRestTest extends Specification {
 
    @Shared
-   def ksqlRest = new KsqlRest(restUrl: System.getProperty('restUrl'))
+   def ksqlRest = new KsqlRest()
 
    def "KSQL Server properties fetched"() {
 

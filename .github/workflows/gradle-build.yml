@@ -18,13 +18,10 @@ jobs:
     - uses: actions/checkout@master
     - name: Release Plugin
       if: github.event_name == 'push'
-      uses: docker://redpillanalytics/docker-gradle
-      with:
-        args: cleanLibs release -Prelease.disableChecks -Prelease.localOnly -S
+      runs: ./gradlew cleanLibs release -Prelease.disableChecks -Prelease.localOnly -S
     - name: Build and Test Plugin
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      uses: docker://redpillanalytics/docker-gradle
-      with:
-        args: ksqlServerTest -S -PksqlRestUrl=http://confluent:8088
+      runs: ./gradlew ksqlServerTest -S
+
