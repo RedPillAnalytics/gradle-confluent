@@ -10,7 +10,6 @@ jobs:
     services:
       confluent:
         image: redpillanalytics/docker-confluent:5.3.0
-        cmd: confluent local start ksql-server
         ports:
         - 8088:8088
         env:
@@ -23,6 +22,9 @@ jobs:
       with:
         args: cleanLibs release -Prelease.disableChecks -Prelease.localOnly -S
     - name: Build and Test Plugin
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       uses: docker://redpillanalytics/docker-gradle
       with:
         args: runAllTests -S

@@ -101,13 +101,6 @@ pluginBundle {
    }
 }
 
-// Options for all tests
-tasks.withType(Test) {
-   ignoreFailures true
-   testLogging.showStandardStreams true
-   systemProperty 'projectDir', temporaryDir
-}
-
 testSets {
    ksqlServerTest
    ksqlPipelinesTest
@@ -168,4 +161,8 @@ task runAllTests {
 
 tasks.withType(Test) {
    runAllTests.dependsOn it
+   failFast false
+   ignoreFailures false
+   testLogging.showStandardStreams true
+   systemProperty 'projectDir', temporaryDir
 }
