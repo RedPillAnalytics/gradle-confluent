@@ -109,43 +109,29 @@ task cleanLibs(type: Delete) {
    delete getLibsDir()
 }
 
-ext.docsBucket = 'documentation.redpillanalytics.com'
-ext.resourceBucket = 'rpa-build-resources'
+ext.bucket = 's3://documentation.redpillanalytics.com'
+ext.bucketPath = 'gradle-confluent'
 
-// task publishVersionDocs(type: S3UploadSyncTask) {
 
-//    description = 'Upload version Groovydocs to s3.'
-//    group = 'documentation'
+task publishVersionDocs(type: Exec) {
+   description = 'Sync version Groovydocs to S3.'
+   group = 'documentation'
+   executable 'aws'
+   args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/${version}/"
 
-//    bucketName docsBucket
-//    filePath groovydoc.destinationDir.getPath()
-//    keyName "${rootProject.name}/${version}"
+   dependsOn groovydoc
+}
 
-//    dependsOn groovydoc
-// }
+task publishLatestDocs(type: Exec) {
+   description = 'Sync latest Groovydocs to S3.'
+   group = 'documentation'
+   executable 'aws'
+   args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/latest/"
 
-// task publishLatestDocs(type: S3UploadSyncTask) {
+   dependsOn groovydoc
+}
 
-//    description = 'Upload latest Groovydocs to s3.'
-//    group = 'documentation'
-
-//    bucketName docsBucket
-//    filePath groovydoc.destinationDir.getPath()
-//    keyName "${rootProject.name}/latest"
-
-//    dependsOn groovydoc
-// }
-
-// task copyBuildResources(type: S3DownloadSyncTask) {
-//    description 'Copy build resource files from S3.'
-//    group 'build'
-//    bucketName resourceBucket
-//    keyName 'gradle'
-//    filePath gradle.getGradleUserHomeDir().toString()
-//    doFirst {
-//       logger.warn "gradle home: ${gradle.getGradleUserHomeDir().toString()}"
-//    }
-// }
+tasks.publishPlugins.dependsOn publishVersionDocs, publishLatestDocs, githubRelease
 
 task runAllTests {
    description 'Run all defined tests.'
@@ -158,5 +144,4 @@ tasks.withType(Test) {
    ignoreFailures false
    testLogging.showStandardStreams true
    systemProperty 'projectDir', temporaryDir
-   systemProperty 'restUrl', ksqlRestUrl
 }
