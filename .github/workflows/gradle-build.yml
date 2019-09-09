@@ -20,11 +20,13 @@ jobs:
     - name: Release Plugin
       if: github.event_name == 'push'
       run: ./gradlew cleanLibs release -Prelease.disableChecks -Prelease.localOnly -S
+    - name: Build Plugin
+      run: ./gradlew build -S
     - name: Start Confluent
       run: ./gradlew composeUp -q
-    - name: Build and Test Plugin
+    - name: Test Plugin
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      run: ./gradlew ksqlServerTest -S
+      run: ./gradlew runAllTests -S
 
