@@ -7,19 +7,21 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    services:
-      confluent:
-        image: redpillanalytics/docker-confluent:5.3.0
-        ports:
-        - 8088:8088
-        env:
-          KSQL_KSQL_SERVICE_ID: kafka-examples
-          KSQL_LISTENERS: http://0.0.0.0:8088
+#    services:
+#      confluent:
+#        image: redpillanalytics/docker-confluent:5.3.0
+#        ports:
+#        - 8088:8088
+#        env:
+#          KSQL_KSQL_SERVICE_ID: kafka-examples
+#          KSQL_LISTENERS: http://0.0.0.0:8088
     steps:
     - uses: actions/checkout@master
     - name: Release Plugin
       if: github.event_name == 'push'
       run: ./gradlew cleanLibs release -Prelease.disableChecks -Prelease.localOnly -S
+    - name: Start Confluent
+      run: ./gradlew composeUp -q
     - name: Build and Test Plugin
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
