@@ -1,7 +1,7 @@
 package com.redpillanalytics
 
-import com.mashape.unirest.http.HttpResponse
-import com.mashape.unirest.http.Unirest
+import kong.unirest.HttpResponse
+import kong.unirest.Unirest
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j

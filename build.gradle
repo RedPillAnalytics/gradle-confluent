@@ -6,10 +6,9 @@ plugins {
    id "com.github.breadmoirai.github-release" version "2.2.9"
    id 'org.unbroken-dome.test-sets' version '2.1.1'
    id "com.avast.gradle.docker-compose" version "0.9.4"
-   id "com.github.ben-manes.versions" version "0.23.0"
+   id "com.github.ben-manes.versions" version "0.24.0"
    id "com.redpillanalytics.gradle-analytics" version "1.2.3"
    id 'com.adarshr.test-logger' version '1.7.0'
-   //id "com.redpillanalytics.gradle-aws" version "0.1.4"
 }
 
 // send analytics
@@ -49,7 +48,7 @@ dependencies {
    compile localGroovy()
 
    compile group: 'org.slf4j', name: 'slf4j-simple', version: '+'
-   compile 'com.mashape.unirest:unirest-java:+'
+   compile 'com.konghq:unirest-java:+'
 
    // Gradle Analytics plugin
    // It also has the Common library in it, thus the dependency here
@@ -140,6 +139,8 @@ task runAllTests {
 
 tasks.withType(Test) {
    runAllTests.dependsOn it
+   composeDown.mustRunAfter it
+   mustRunAfter composeUp
    failFast false
    ignoreFailures false
    testLogging.showStandardStreams true
