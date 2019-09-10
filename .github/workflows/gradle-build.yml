@@ -9,20 +9,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - name: Dump GitHub context
+    - name: Log GitHub context
       run: echo "${{ toJson(github) }}"
     - name: Release Plugin
       if: github.event_name == 'push'
-      run: ./gradlew cleanLibs release -Prelease.disableChecks -Prelease.localOnly -S
+      run: ./gradlew -Panalytics.buildTag=${{ github.sha }} cleanLibs release -Prelease.disableChecks -Prelease.localOnly -S
     - name: Build Plugin
-      run: ./gradlew build -S
+      run: ./gradlew -Panalytics.buildTag=${{ github.sha }} build -S
     - name: Start Confluent
-      run: ./gradlew composeUp -q
+      run: ./gradlew -Panalytics.buildTag=${{ github.sha }} composeUp -q
     - name: Test Plugin
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      run: ./gradlew runAllTests publishTestReports -S
+      run: ./gradlew -Panalytics.buildTag=${{ github.sha }} runAllTests publishTestReports -S -PexecutionId=${{ github.sha }}
     - name: Publish Plugin
       if: github.event_name == 'push'
-      run: ./gradlew publishPlugins -S -PgithubToken=${{ secrets.GITHUB_TOKEN }}
+      run: ./gradlew -Panalytics.buildTag=${{ github.sha }} publishPlugins -S -PgithubToken=${{ secrets.GITHUB_TOKEN }}

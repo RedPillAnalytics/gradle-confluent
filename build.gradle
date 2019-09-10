@@ -9,7 +9,6 @@ plugins {
    id "com.github.ben-manes.versions" version "0.24.0"
    id "com.redpillanalytics.gradle-analytics" version "1.2.3"
    id 'com.adarshr.test-logger' version '1.7.0'
-   //id "io.qameta.allure" version "2.8.1"
    id 'build-dashboard'
 }
 
@@ -103,11 +102,6 @@ testSets {
    buildTest
 }
 
-//allure {
-//   version '2.13.0'
-//   autoconfigure true
-//}
-
 
 task cleanJunit(type: Delete) {
    delete getTestResultsDir()
@@ -117,44 +111,39 @@ task cleanLibs(type: Delete) {
    delete getLibsDir()
 }
 
-//tasks.allureReport.dependsOn downloadAllure
-
-//task publishAllureTests(type: Exec) {
-//   description = 'Copy Allure tests to S3..'
-//   group = 'verification'
-//   executable 'aws'
-//   args 's3', 'sync', "${reportsDir}/allure-report", "${actionsBucket}/${rootProject.name}/"
-//
-//   //dependsOn tasks.allureReport
-//}
-
+def reportUrl = "${actionsBucket}/${rootProject.name}/${executionId}"
 task publishTestReports(type: Exec) {
    description = 'Copy Gradle test reports to S3.'
    group = 'verification'
    executable 'aws'
-   args 's3', 'sync', reportsDir, "${actionsBucket}/${rootProject.name}/"
-
+   args 's3', 'sync', reportsDir, "s3://${reportUrl}"
+   doLast{
+      logger.warn "\nTest reports: https://s3.amazonaws.com/${reportUrl}/buildDashboard/index.html"
+   }
    dependsOn buildDashboard
-
-   logger.warn "Test reports: https://s3.amazonaws.com/actions.redpillanalytics.io/gradle-confluent/buildDashboard/index.html"
 }
 
-
+def versionUrl = "${docBucket}/${rootProject.name}/${version}"
 task publishVersionDocs(type: Exec) {
    description = 'Sync version Groovydocs to S3.'
    group = 'documentation'
    executable 'aws'
-   args 's3', 'sync', groovydoc.destinationDir.getPath(), "${docBucket}/${rootProject.name}/${version}/"
-
+   args 's3', 'sync', groovydoc.destinationDir.getPath(), "s3://${versionUrl}"
+   doLast{
+      logger.warn "\nVersion docs: https://s3.amazonaws.com/${versionUrl}/index.html"
+   }
    dependsOn groovydoc
 }
 
+def latestUrl = "${docBucket}/${rootProject.name}/latest"
 task publishLatestDocs(type: Exec) {
-   description = 'Sync latest Groovydocs to S3.'
+   description = 'Sync version Groovydocs to S3.'
    group = 'documentation'
    executable 'aws'
-   args 's3', 'sync', groovydoc.destinationDir.getPath(), "${docBucket}/${rootProject.name}/latest/"
-
+   args 's3', 'sync', groovydoc.destinationDir.getPath(), "s3://${latestUrl}"
+   doLast{
+      logger.warn "\nVersion docs: https://s3.amazonaws.com/${latestUrl}/index.html"
+   }
    dependsOn groovydoc
 }
 
