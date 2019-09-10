@@ -135,6 +135,8 @@ task publishTestReports(type: Exec) {
    args 's3', 'sync', reportsDir, "${actionsBucket}/${rootProject.name}/"
 
    dependsOn buildDashboard
+
+   logger.warn "Test reports: https://s3.amazonaws.com/actions.redpillanalytics.io/gradle-confluent/buildDashboard/index.html"
 }
 
 
@@ -166,6 +168,7 @@ task runAllTests {
 tasks.withType(Test) {
    runAllTests.dependsOn it
    composeDown.mustRunAfter it
+   publishTestReports.mustRunAfter it
    mustRunAfter composeUp
    failFast false
    ignoreFailures false

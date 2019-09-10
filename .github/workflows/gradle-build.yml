@@ -11,12 +11,6 @@ jobs:
     - uses: actions/checkout@master
     - name: Dump GitHub context
       run: echo "${{ toJson(github) }}"
-    - name: Dump job context
-      run: echo "${{ toJson(job) }}"
-    - name: Dump steps context
-      run: echo "${{ toJson(steps) }}"
-    - name: Dump runner context
-      run: echo "${{ toJson(runner) }}"
     - name: Release Plugin
       if: github.event_name == 'push'
       run: ./gradlew cleanLibs release -Prelease.disableChecks -Prelease.localOnly -S
@@ -28,7 +22,7 @@ jobs:
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      run: ./gradlew runAllTests -S
+      run: ./gradlew runAllTests publishTestReports -S
     - name: Publish Plugin
       if: github.event_name == 'push'
       run: ./gradlew publishPlugins -S -PgithubToken=${{ secrets.GITHUB_TOKEN }}
