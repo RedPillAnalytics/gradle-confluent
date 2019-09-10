@@ -9,6 +9,8 @@ plugins {
    id "com.github.ben-manes.versions" version "0.24.0"
    id "com.redpillanalytics.gradle-analytics" version "1.2.3"
    id 'com.adarshr.test-logger' version '1.7.0'
+   //id "io.qameta.allure" version "2.8.1"
+   id 'build-dashboard'
 }
 
 // send analytics
@@ -54,6 +56,7 @@ dependencies {
    // It also has the Common library in it, thus the dependency here
    compile "gradle.plugin.com.redpillanalytics:gradle-analytics:+"
 
+   // tsting
    testCompile 'org.spockframework:spock-core:1.2-groovy-2.5'
 }
 
@@ -100,6 +103,12 @@ testSets {
    buildTest
 }
 
+//allure {
+//   version '2.13.0'
+//   autoconfigure true
+//}
+
+
 task cleanJunit(type: Delete) {
    delete getTestResultsDir()
 }
@@ -108,15 +117,32 @@ task cleanLibs(type: Delete) {
    delete getLibsDir()
 }
 
-ext.bucket = 's3://documentation.redpillanalytics.com'
-ext.bucketPath = 'gradle-confluent'
+//tasks.allureReport.dependsOn downloadAllure
+
+//task publishAllureTests(type: Exec) {
+//   description = 'Copy Allure tests to S3..'
+//   group = 'verification'
+//   executable 'aws'
+//   args 's3', 'sync', "${reportsDir}/allure-report", "${actionsBucket}/${rootProject.name}/"
+//
+//   //dependsOn tasks.allureReport
+//}
+
+task publishTestReports(type: Exec) {
+   description = 'Copy Gradle test reports to S3.'
+   group = 'verification'
+   executable 'aws'
+   args 's3', 'sync', reportsDir, "${actionsBucket}/${rootProject.name}/"
+
+   dependsOn buildDashboard
+}
 
 
 task publishVersionDocs(type: Exec) {
    description = 'Sync version Groovydocs to S3.'
    group = 'documentation'
    executable 'aws'
-   args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/${version}/"
+   args 's3', 'sync', groovydoc.destinationDir.getPath(), "${docBucket}/${rootProject.name}/${version}/"
 
    dependsOn groovydoc
 }
@@ -125,7 +151,7 @@ task publishLatestDocs(type: Exec) {
    description = 'Sync latest Groovydocs to S3.'
    group = 'documentation'
    executable 'aws'
-   args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/latest/"
+   args 's3', 'sync', groovydoc.destinationDir.getPath(), "${docBucket}/${rootProject.name}/latest/"
 
    dependsOn groovydoc
 }
