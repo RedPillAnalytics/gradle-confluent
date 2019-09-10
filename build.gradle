@@ -130,7 +130,7 @@ task publishLatestDocs(type: Exec) {
    dependsOn groovydoc
 }
 
-tasks.publishPlugins.dependsOn publishVersionDocs, publishLatestDocs, githubRelease
+tasks.publishPlugins.dependsOn tasks.publishVersionDocs, tasks.publishLatestDocs, tasks.githubRelease
 
 task runAllTests {
    description 'Run all defined tests.'
