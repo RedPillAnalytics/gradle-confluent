@@ -1,7 +1,7 @@
 package com.redpillanalytics
 
-import com.mashape.unirest.http.HttpResponse
-import com.mashape.unirest.http.Unirest
+import kong.unirest.HttpResponse
+import kong.unirest.Unirest
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
@@ -18,7 +18,7 @@ class KsqlRest {
    /**
     * The base REST endpoint for the KSQL server. Defaults to 'http://localhost:8088', which is handy when developing against Confluent CLI.
     */
-   String baseUrl = 'http://localhost:8088'
+   String restUrl = 'http://localhost:8088'
 
    /**
     * Executes a KSQL statement using the KSQL RESTful API.
@@ -35,7 +35,7 @@ class KsqlRest {
 
       if (['create', 'drop'].contains(getStatementType(ksql))) log.info prepared
 
-      HttpResponse<String> response = Unirest.post("${baseUrl}/ksql")
+      HttpResponse<String> response = Unirest.post("${restUrl}/ksql")
               .header("Content-Type", "application/vnd.ksql.v1+json")
               .header("Cache-Control", "no-cache")
               .header("Postman-Token", "473fbb05-9da1-4020-95c0-f2c60fed8289")
@@ -280,7 +280,7 @@ class KsqlRest {
    /**
     * Returns KSQL Server properties from the KSQL RESTful API using the 'LIST PROPERTIES' sql statement.
     *
-    * @return All the KSQL properties. This is a helper method, used to return individual properties in other methods such as {@link #getExtensionPath} and {@link #getRestUrl}.
+    * @return All the KSQL properties. This is a helper method, used to return individual properties in other methods such as {@link #getExtensionPath} and {@link #getSchemaRegistry}.
     */
    def getProperties() {
 
@@ -292,7 +292,7 @@ class KsqlRest {
    }
 
    /**
-    * Returns an individual KSQL server property using {@link #getProperties}. This is a helper method, used to return individual properties in other methods such as {@link #getExtensionPath} and {@link #getRestUrl}.
+    * Returns an individual KSQL server property using {@link #getProperties}. This is a helper method, used to return individual properties in other methods such as {@link #getExtensionPath} and {@link #getSchemaRegistry}.
     *
     * @param property The individual property to return a value for.
     *
@@ -329,7 +329,7 @@ class KsqlRest {
     *
     * @return The KSQL Server property value for 'ksql.schema.registry.url'.
     */
-   String getRestUrl() {
+   String getSchemaRegistry() {
 
       return getProperty('ksql.schema.registry.url')
    }

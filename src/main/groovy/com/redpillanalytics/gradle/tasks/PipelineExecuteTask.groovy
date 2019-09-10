@@ -39,7 +39,7 @@ class PipelineExecuteTask extends PipelineTask {
    @Internal
    def getKsqlRest() {
 
-      return new KsqlRest(baseUrl: restUrl)
+      return new KsqlRest(restUrl: restUrl)
    }
 
    /**

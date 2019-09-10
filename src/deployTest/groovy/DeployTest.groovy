@@ -75,7 +75,6 @@ class DeployTest extends Specification {
                |   archives group: 'com.redpillanalytics', name: 'simple-build-pipeline', version: '+'
                |}
                |
-               |confluent.pipelineEndpoint = 'http://localhost:8088'
                |confluent.functionPattern = 'simple-build'
                |analytics.sinks {
                |   kafka
@@ -104,7 +103,7 @@ class DeployTest extends Specification {
 
    }
 
-   def "Deploy test to S3"() {
+   def "Deploy test from Maven S3"() {
 
       given:
       taskName = 'deploy'

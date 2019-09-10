@@ -1,23 +1,15 @@
-// import com.redpillanalytics.aws.tasks.S3UploadSyncTask
-// import com.redpillanalytics.aws.tasks.S3DownloadSyncTask
-
 plugins {
    id 'groovy'
    id 'java-gradle-plugin'
    id "com.gradle.plugin-publish" version "0.10.1"
-   id "pl.allegro.tech.build.axion-release" version "1.10.0"
-   id "com.github.breadmoirai.github-release" version "2.2.6"
+   id "pl.allegro.tech.build.axion-release" version "1.10.2"
+   id "com.github.breadmoirai.github-release" version "2.2.9"
    id 'org.unbroken-dome.test-sets' version '2.1.1'
-   id "com.avast.gradle.docker-compose" version "0.9.1"
-   id "com.github.ben-manes.versions" version "0.21.0"
+   id "com.avast.gradle.docker-compose" version "0.9.4"
+   id "com.github.ben-manes.versions" version "0.24.0"
    id "com.redpillanalytics.gradle-analytics" version "1.2.3"
-   id 'com.adarshr.test-logger' version '1.6.0'
-   //id "com.redpillanalytics.gradle-aws" version "0.1.4"
+   id 'com.adarshr.test-logger' version '1.7.0'
 }
-
-// test {
-//    failFast = true
-// }
 
 // send analytics
 analytics {
@@ -56,7 +48,7 @@ dependencies {
    compile localGroovy()
 
    compile group: 'org.slf4j', name: 'slf4j-simple', version: '+'
-   compile 'com.mashape.unirest:unirest-java:+'
+   compile 'com.konghq:unirest-java:+'
 
    // Gradle Analytics plugin
    // It also has the Common library in it, thus the dependency here
@@ -101,13 +93,6 @@ pluginBundle {
    }
 }
 
-// Options for all tests
-tasks.withType(Test) {
-   ignoreFailures true
-   testLogging.showStandardStreams true
-   systemProperty 'projectDir', temporaryDir
-}
-
 testSets {
    ksqlServerTest
    ksqlPipelinesTest
@@ -123,43 +108,29 @@ task cleanLibs(type: Delete) {
    delete getLibsDir()
 }
 
-ext.docsBucket = 'documentation.redpillanalytics.com'
-ext.resourceBucket = 'rpa-build-resources'
+ext.bucket = 's3://documentation.redpillanalytics.com'
+ext.bucketPath = 'gradle-confluent'
 
-// task publishVersionDocs(type: S3UploadSyncTask) {
 
-//    description = 'Upload version Groovydocs to s3.'
-//    group = 'documentation'
+task publishVersionDocs(type: Exec) {
+   description = 'Sync version Groovydocs to S3.'
+   group = 'documentation'
+   executable 'aws'
+   args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/${version}/"
 
-//    bucketName docsBucket
-//    filePath groovydoc.destinationDir.getPath()
-//    keyName "${rootProject.name}/${version}"
+   dependsOn groovydoc
+}
 
-//    dependsOn groovydoc
-// }
+task publishLatestDocs(type: Exec) {
+   description = 'Sync latest Groovydocs to S3.'
+   group = 'documentation'
+   executable 'aws'
+   args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/latest/"
 
-// task publishLatestDocs(type: S3UploadSyncTask) {
+   dependsOn groovydoc
+}
 
-//    description = 'Upload latest Groovydocs to s3.'
-//    group = 'documentation'
-
-//    bucketName docsBucket
-//    filePath groovydoc.destinationDir.getPath()
-//    keyName "${rootProject.name}/latest"
-
-//    dependsOn groovydoc
-// }
-
-// task copyBuildResources(type: S3DownloadSyncTask) {
-//    description 'Copy build resource files from S3.'
-//    group 'build'
-//    bucketName resourceBucket
-//    keyName 'gradle'
-//    filePath gradle.getGradleUserHomeDir().toString()
-//    doFirst {
-//       logger.warn "gradle home: ${gradle.getGradleUserHomeDir().toString()}"
-//    }
-// }
+tasks.publishPlugins.dependsOn publishVersionDocs, publishLatestDocs, githubRelease
 
 task runAllTests {
    description 'Run all defined tests.'
@@ -168,4 +139,10 @@ task runAllTests {
 
 tasks.withType(Test) {
    runAllTests.dependsOn it
+   composeDown.mustRunAfter it
+   mustRunAfter composeUp
+   failFast false
+   ignoreFailures false
+   testLogging.showStandardStreams true
+   systemProperty 'projectDir', temporaryDir
 }

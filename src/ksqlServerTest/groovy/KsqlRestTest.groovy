@@ -41,7 +41,7 @@ class KsqlRestTest extends Specification {
    def "KSQL REST URL is returned"() {
 
       when:
-      def url = ksqlRest.getRestUrl()
+      def url = ksqlRest.getSchemaRegistry()
 
       then:
       url
