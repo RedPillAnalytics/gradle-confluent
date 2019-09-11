@@ -117,7 +117,7 @@ task publishTestReports(type: Exec) {
    group = 'verification'
    executable 'aws'
    args 's3', 'sync', reportsDir, "s3://${reportUrl}"
-   doLast{
+   doLast {
       logger.warn "\nTest reports: https://s3.amazonaws.com/${reportUrl}/buildDashboard/index.html"
    }
    dependsOn buildDashboard
@@ -129,7 +129,7 @@ task publishVersionDocs(type: Exec) {
    group = 'documentation'
    executable 'aws'
    args 's3', 'sync', groovydoc.destinationDir.getPath(), "s3://${versionUrl}"
-   doLast{
+   doLast {
       logger.warn "\nVersion docs: https://s3.amazonaws.com/${versionUrl}/index.html"
    }
    dependsOn groovydoc
@@ -141,7 +141,7 @@ task publishLatestDocs(type: Exec) {
    group = 'documentation'
    executable 'aws'
    args 's3', 'sync', groovydoc.destinationDir.getPath(), "s3://${latestUrl}"
-   doLast{
+   doLast {
       logger.warn "\nVersion docs: https://s3.amazonaws.com/${latestUrl}/index.html"
    }
    dependsOn groovydoc
