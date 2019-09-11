@@ -9,6 +9,7 @@ plugins {
    id "com.github.ben-manes.versions" version "0.24.0"
    id "com.redpillanalytics.gradle-analytics" version "1.2.3"
    id 'com.adarshr.test-logger' version '1.7.0'
+   id 'build-dashboard'
 }
 
 // send analytics
@@ -54,6 +55,7 @@ dependencies {
    // It also has the Common library in it, thus the dependency here
    compile "gradle.plugin.com.redpillanalytics:gradle-analytics:+"
 
+   // tsting
    testCompile 'org.spockframework:spock-core:1.2-groovy-2.5'
 }
 
@@ -100,6 +102,7 @@ testSets {
    buildTest
 }
 
+
 task cleanJunit(type: Delete) {
    delete getTestResultsDir()
 }
@@ -108,25 +111,39 @@ task cleanLibs(type: Delete) {
    delete getLibsDir()
 }
 
-ext.bucket = 's3://documentation.redpillanalytics.com'
-ext.bucketPath = 'gradle-confluent'
+def reportUrl = "${actionsBucket}/${rootProject.name}/${executionId}"
+task publishTestReports(type: Exec) {
+   description = 'Copy Gradle test reports to S3.'
+   group = 'verification'
+   executable 'aws'
+   args 's3', 'sync', reportsDir, "s3://${reportUrl}"
+   doLast {
+      logger.warn "\nTest reports: https://s3.amazonaws.com/${reportUrl}/buildDashboard/index.html"
+   }
+   dependsOn buildDashboard
+}
 
-
+def versionUrl = "${docBucket}/${rootProject.name}/${version}"
 task publishVersionDocs(type: Exec) {
    description = 'Sync version Groovydocs to S3.'
    group = 'documentation'
    executable 'aws'
-   args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/${version}/"
-
+   args 's3', 'sync', groovydoc.destinationDir.getPath(), "s3://${versionUrl}"
+   doLast {
+      logger.warn "\nVersion docs: https://s3.amazonaws.com/${versionUrl}/index.html"
+   }
    dependsOn groovydoc
 }
 
+def latestUrl = "${docBucket}/${rootProject.name}/latest"
 task publishLatestDocs(type: Exec) {
-   description = 'Sync latest Groovydocs to S3.'
+   description = 'Sync version Groovydocs to S3.'
    group = 'documentation'
    executable 'aws'
-   args 's3', 'sync', groovydoc.destinationDir.getPath(), "${bucket}/${bucketPath}/latest/"
-
+   args 's3', 'sync', groovydoc.destinationDir.getPath(), "s3://${latestUrl}"
+   doLast {
+      logger.warn "\nVersion docs: https://s3.amazonaws.com/${latestUrl}/index.html"
+   }
    dependsOn groovydoc
 }
 
@@ -140,6 +157,7 @@ task runAllTests {
 tasks.withType(Test) {
    runAllTests.dependsOn it
    composeDown.mustRunAfter it
+   publishTestReports.mustRunAfter it
    mustRunAfter composeUp
    failFast false
    ignoreFailures false
