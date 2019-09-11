@@ -9,8 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - name: Log GitHub context
-      run: echo "${{ toJson(github) }}"
     - name: Release Plugin
       if: github.event_name == 'push'
       run: ./gradlew -Panalytics.buildTag=${{ github.sha }} cleanLibs release -Prelease.disableChecks -Prelease.localOnly -S
