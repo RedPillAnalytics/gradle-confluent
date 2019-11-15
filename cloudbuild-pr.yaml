@@ -7,3 +7,4 @@ steps:
   args: ['gradle','runAllTests','-Si']
 - name: 'docker/compose:1.25.0-rc2'
   args: ['down']
+timeout: 3600s
