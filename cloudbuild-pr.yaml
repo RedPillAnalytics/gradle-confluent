@@ -2,7 +2,7 @@ steps:
 - name: 'docker/compose:1.25.0-rc2'
   id: compose-up
   args: ['up', '-d']
-- name: 'gradle'
+- name: 'gradle:5.6.4-jdk8'
   id: gradle-build
   args: ['gradle','runAllTests','-Si']
 - name: 'docker/compose:1.25.0-rc2'
