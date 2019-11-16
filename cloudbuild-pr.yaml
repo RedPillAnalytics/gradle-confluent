@@ -1,10 +1,8 @@
 steps:
-- name: 'docker/compose:1.25.0-rc2'
-  id: compose-up
-  args: ['up', '-d']
-- name: 'gradle:5.6.4-jdk8'
+#- name: 'docker/compose:1.25.0-rc2'
+#  id: compose-up
+#  args: ['up', '-d']
+- name: 'gradle'
   id: gradle-build
-  args: ['gradle','runAllTests','-Si']
-- name: 'docker/compose:1.25.0-rc2'
-  args: ['down']
+  args: ['gradle','build','-Si']
 timeout: 3600s
