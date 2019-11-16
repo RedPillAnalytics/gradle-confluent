@@ -6,5 +6,5 @@ steps:
   id: compose-up
 - name: 'gradle'
   id: gradle-build
-  args: ['gradle','runAllTests','-Si']
+  args: ['gradle','build','-Si']
 timeout: 3600s
