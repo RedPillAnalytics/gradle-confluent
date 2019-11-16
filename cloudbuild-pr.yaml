@@ -1,9 +1,9 @@
 steps:
-  - name: 'docker/compose:1.15.0'
-    args: ['up', '-d']
-    env:
-      - 'PROJECT_ID=$PROJECT_ID'
-    id: compose-up
+- name: 'docker/compose:1.15.0'
+  args: ['up', '-d']
+  env:
+    - 'PROJECT_ID=$PROJECT_ID'
+  id: compose-up
 - name: 'gradle'
   id: gradle-build
   args: ['gradle','runAllTests','-Si']
