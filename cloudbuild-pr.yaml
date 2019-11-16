@@ -1,7 +1,9 @@
 steps:
-- name: 'gcr.io/$PROJECT_ID/docker-compose'
-  id: compose-up
-  args: ['up']
+  - name: 'docker/compose:1.15.0'
+    args: ['up', '-d']
+    env:
+      - 'PROJECT_ID=$PROJECT_ID'
+    id: compose-up
 - name: 'gradle'
   id: gradle-build
   args: ['gradle','runAllTests','-Si']
