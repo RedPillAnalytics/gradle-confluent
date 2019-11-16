@@ -1,8 +1,8 @@
 steps:
-#- name: 'docker/compose:1.25.0-rc2'
-#  id: compose-up
-#  args: ['up', '-d']
+- name: 'gcr.io/$PROJECT_ID/docker-compose'
+  id: compose-up
+  args: ['up']
 - name: 'gradle'
   id: gradle-build
-  args: ['gradle','build','-Si']
+  args: ['gradle','runAllTests','-Si']
 timeout: 3600s
