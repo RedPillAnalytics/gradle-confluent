@@ -6,5 +6,5 @@ steps:
   id: compose-up
 - name: 'gradle'
   id: gradle-build
-  args: ['gradle','build ksqlServerTest','-Si']
+  args: ['gradle','build','ksqlServerTest','-Si']
 timeout: 3600s
