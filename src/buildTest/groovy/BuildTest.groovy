@@ -6,7 +6,7 @@ import spock.lang.Title
 import spock.lang.Unroll
 
 @Slf4j
-@Title("Test that a :build functions successfully")
+@Title("Test that :build functions successfully")
 class BuildTest extends Specification {
 
    @Shared
@@ -69,7 +69,7 @@ class BuildTest extends Specification {
                mavenLocal()
                maven {
                name 'test'
-               url 'gcs://maven.redpillanalytics.com/demo/maven2'
+               url 'gcs://maven.redpillanalytics.io/demo'
               }
             }
             mainClassName = "streams.TestClass"

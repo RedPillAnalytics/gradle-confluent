@@ -102,6 +102,7 @@ testSets {
    buildTest
 }
 
+tasks.deployTest.mustRunAfter tasks.buildTest
 
 task cleanJunit(type: Delete) {
    delete getTestResultsDir()
@@ -155,12 +156,14 @@ task runAllTests {
 }
 
 tasks.withType(Test) {
-   runAllTests.dependsOn it
-   composeDown.mustRunAfter it
-   publishTestReports.mustRunAfter it
    mustRunAfter composeUp
+   composeDown.mustRunAfter it
+   runAllTests.dependsOn it
+   publishTestReports.mustRunAfter it
    failFast false
    ignoreFailures false
    testLogging.showStandardStreams true
    systemProperty 'projectDir', temporaryDir
+   systemProperty 'pipelineEndpoint', pipelineEndpoint
+   systemProperty 'kafkaServers', kafkaServers
 }

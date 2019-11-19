@@ -57,10 +57,7 @@ class TasksTest extends Specification {
                |  mavenLocal()
                |  maven {
                |     name 'test'
-               |     url 's3://maven.redpillanalytics.com/demo/maven2'
-               |     authentication {
-               |        awsIm(AwsImAuthentication)
-               |     }
+               |     url 'gcs://maven.redpillanalytics.io/demo'
                |  }
                |}
                |

@@ -17,6 +17,12 @@ class DeployTest extends Specification {
    @Shared
    String projectName = 'simple-deploy', taskName
 
+   @Shared
+   String pipelineEndpoint = System.getProperty("pipelineEndpoint") ?: 'http://localhost:8088'
+
+   @Shared
+   String kafkaServers = System.getProperty("kafkaServers") ?: 'localhost:9092'
+
    def setup() {
 
       copySource()
@@ -63,10 +69,7 @@ class DeployTest extends Specification {
                |  mavenLocal()
                |  maven {
                |     name 'test'
-               |     url 's3://maven.redpillanalytics.com/demo/maven2'
-               |     authentication {
-               |        awsIm(AwsImAuthentication)
-               |     }
+               |     url 'gcs://maven.redpillanalytics.com/demo'
                |  }
                |}
                |
@@ -75,9 +78,14 @@ class DeployTest extends Specification {
                |   archives group: 'com.redpillanalytics', name: 'simple-build-pipeline', version: '+'
                |}
                |
-               |confluent.functionPattern = 'simple-build'
+               |confluent {
+               |  functionPattern = 'simple-build'
+               |  pipelineEndpoint = '$pipelineEndpoint'
+               |}
                |analytics.sinks {
-               |   kafka
+               |   kafka {
+               |     servers = '$kafkaServers'
+               |  }
                |}
                |""".stripMargin())
    }
@@ -103,7 +111,7 @@ class DeployTest extends Specification {
 
    }
 
-   def "Deploy test from Maven S3"() {
+   def "Deploy test from Maven GCS"() {
 
       given:
       taskName = 'deploy'
