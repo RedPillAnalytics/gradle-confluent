@@ -1,5 +1,5 @@
 def options = '-Si'
-def properties = "-Panalytics.buildId=${env.BUILD_TAG}"
+def properties = "-Panalytics.buildId=${env.BUILD_TAG} -g .gradle"
 def gradle = "gradle ${options} ${properties}"
 
 pipeline {
@@ -22,7 +22,7 @@ pipeline {
     stage('Data Generation') {
       steps {
         container('datagen') {
-          sh "./gradlew $options $properties"
+          sh "./gradlew $options $properties generateData -PkafkaServers=broker:9092 -PpipelineEndpoint=http://ksqldb-server:8088"
         }
       }
     }

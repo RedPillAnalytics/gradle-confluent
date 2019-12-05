@@ -174,15 +174,15 @@ task generateData {
    doLast{
       exec {
          executable 'ksql-datagen '
-         args 'bootstrap-server=broker:9092', 'quickstart=clickstream', 'format=json', 'topic=clickstream', 'maxInterval=5', 'iterations=500000'
+         args "bootstrap-server=$kafkaServers", 'quickstart=clickstream', 'format=json', 'topic=clickstream', 'maxInterval=5', 'iterations=500000'
       }
       exec {
          executable 'ksql-datagen'
-         args 'bootstrap-server=broker:9092', 'quickstart=clickstream', 'format=json', 'topic=clickstream_codes', 'maxInterval=5', 'iterations=100'
+         args "bootstrap-server=$kafkaServers", 'quickstart=clickstream', 'format=json', 'topic=clickstream_codes', 'maxInterval=5', 'iterations=100'
       }
       exec {
          executable 'ksql-datagen'
-         args 'bootstrap-server=broker:9092', 'quickstart=clickstream_users', 'format=json', 'topic=clickstream_codes', 'maxInterval=5', 'iterations=1000'
+         args "bootstrap-server=$kafkaServers", 'quickstart=clickstream_users', 'format=json', 'topic=clickstream_codes', 'maxInterval=5', 'iterations=1000'
       }
    }
 }
