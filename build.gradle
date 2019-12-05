@@ -173,7 +173,7 @@ task generateData {
    group 'test'
    doLast{
       exec {
-         executable 'ksql-datagen '
+         executable 'ksql-datagen'
          args "bootstrap-server=$kafkaServers", 'quickstart=clickstream', 'format=json', 'topic=clickstream', 'maxInterval=5', 'iterations=500000'
       }
       exec {
