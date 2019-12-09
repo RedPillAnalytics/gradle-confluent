@@ -19,16 +19,16 @@ pipeline {
         sh "$gradle ${options} clean release -Prelease.disableChecks -Prelease.localOnly"
       }
     }
-    stage('Data Generation') {
-      steps {
-        container('datagen') {
-          sh "./gradlew $options $properties generateData -PkafkaServers=broker:9092 -PpipelineEndpoint=http://ksqldb-server:8088"
-        }
-      }
-    }
+    // stage('Data Generation') {
+    //   steps {
+    //     container('datagen') {
+    //       sh "./gradlew $options $properties generateData -PkafkaServers=broker:9092 -PpipelineEndpoint=http://ksqldb-server:8088"
+    //     }
+    //   }
+    // }
     stage('Test') {
       steps {
-        sh "$gradle cV cleanJunit runAllTests"
+        sh "$gradle cV cleanJunit build"
       }
       post {
         always {
