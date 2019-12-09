@@ -1,5 +1,5 @@
 def options = '-Si'
-def properties = "-Panalytics.buildId=${env.BUILD_TAG} -g .gradle"
+def properties = "-Panalytics.buildId=${env.BUILD_TAG}"
 def gradle = "gradle ${options} ${properties}"
 
 pipeline {
