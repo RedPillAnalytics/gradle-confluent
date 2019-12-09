@@ -7,6 +7,7 @@ pipeline {
     kubernetes {
       defaultContainer 'gradle'
       yamlFile 'pod-template.yaml'
+      slaveConnectTimeout 200
     }
   }
   stages {
