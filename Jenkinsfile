@@ -1,42 +1,56 @@
-def options = '-Si'
-def properties = "-Panalytics.buildId=${env.BUILD_TAG}"
-def gradle = "gradle ${options} ${properties}"
+def options = '-S'
+def properties = "-Panalytics.buildTag=${env.BUILD_TAG}"
+def gradle = "./gradlew ${options} ${properties}"
 
 pipeline {
   agent {
     kubernetes {
-      defaultContainer 'gradle'
+      defaultContainer 'agent'
       yamlFile 'pod-template.yaml'
       slaveConnectTimeout 200
     }
   }
-  stages {
-    stage('Release') {
-      when {
-        branch 'master'
+   environment {
+      ORG_GRADLE_PROJECT_githubToken = credentials('github-redpillanalyticsbot-secret')
+		AWS = credentials("rpa-development-build-server-svc")
+		AWS_ACCESS_KEY_ID = "${env.AWS_USR}"
+		AWS_SECRET_ACCESS_KEY = "${env.AWS_PSW}"
+		AWS_REGION = 'us-east-1'
+		GRADLE_COMBINED = credentials("gradle-publish-key")
+		GRADLE_KEY = "${env.GRADLE_COMBINED_USR}"
+		GRADLE_SECRET = "${env.GRADLE_COMBINED_PSW}"
+   }
+
+   stages {
+
+      stage('Release') {
+         when { branch "master" }
+         steps {
+            sh "$gradle clean release -Prelease.disableChecks -Prelease.localOnly"
+         }
       }
-      steps {
-        // create a new release
-        sh "$gradle ${options} clean release -Prelease.disableChecks -Prelease.localOnly"
+
+      stage('Test') {
+         steps {
+            sh "$gradle cleanJunit cV runAllTests"
+         }
+         post {
+            always {
+               junit testResults: 'build/test-results/**/*.xml', allowEmptyResults: true
+            }
+         }
       }
-    }
-    // stage('Data Generation') {
-    //   steps {
-    //     container('datagen') {
-    //       sh "./gradlew $options $properties generateData -PkafkaServers=broker:9092 -PpipelineEndpoint=http://ksqldb-server:8088"
-    //     }
-    //   }
-    // }
-    stage('Test') {
-      steps {
-        sh "$gradle cV cleanJunit build"
+
+      stage('Publish') {
+         when { branch "master" }
+         steps {
+            sh "$gradle publish -Pgradle.publish.key=${env.GRADLE_KEY} -Pgradle.publish.secret=${env.GRADLE_SECRET}"
+         }
+         post {
+            always {
+               archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true, allowEmptyArchive: true
+            }
+         }
       }
-      post {
-        always {
-            junit testResults: 'build/test-results/test/*.xml', allowEmptyResults: true
-            archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true, allowEmptyArchive: true
-        }
-      }
-    }
-  }
+   }
 }
