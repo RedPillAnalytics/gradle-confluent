@@ -56,7 +56,6 @@ spec:
     image: confluentinc/ksqldb-server:0.6.0
     ports:
         - containerPort: 8088
-    command: ['cat']
     tty: true
     env:
       - name: KSQL_BOOTSTRAP_SERVERS
