@@ -3,22 +3,23 @@ def properties = "-Panalytics.buildTag=${env.BUILD_TAG}"
 def gradle = "./gradlew ${options} ${properties}"
 
 pipeline {
-  agent {
-    kubernetes {
-      defaultContainer 'agent'
-      yamlFile 'pod-template.yaml'
-      slaveConnectTimeout 200
-    }
-  }
+   agent {
+      kubernetes {
+         defaultContainer 'agent'
+         yamlFile 'pod-template.yaml'
+         slaveConnectTimeout 300
+         podRetention 'On Failure'
+      }
+   }
    environment {
       ORG_GRADLE_PROJECT_githubToken = credentials('github-redpillanalyticsbot-secret')
-		AWS = credentials("rpa-development-build-server-svc")
-		AWS_ACCESS_KEY_ID = "${env.AWS_USR}"
-		AWS_SECRET_ACCESS_KEY = "${env.AWS_PSW}"
-		AWS_REGION = 'us-east-1'
-		GRADLE_COMBINED = credentials("gradle-publish-key")
-		GRADLE_KEY = "${env.GRADLE_COMBINED_USR}"
-		GRADLE_SECRET = "${env.GRADLE_COMBINED_PSW}"
+      AWS = credentials("rpa-development-build-server-svc")
+      AWS_ACCESS_KEY_ID = "${env.AWS_USR}"
+      AWS_SECRET_ACCESS_KEY = "${env.AWS_PSW}"
+      AWS_REGION = 'us-east-1'
+      GRADLE_COMBINED = credentials("gradle-publish-key")
+      GRADLE_KEY = "${env.GRADLE_COMBINED_USR}"
+      GRADLE_SECRET = "${env.GRADLE_COMBINED_PSW}"
    }
 
    stages {
