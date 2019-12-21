@@ -26,7 +26,7 @@ spec:
     image: confluentinc/cp-zookeeper:5.3.1
     ports:
         - containerPort: 2181
-    command: ['cat']
+    #command: ['cat']
     tty: true
     env:
       - name: ZOOKEEPER_CLIENT_PORT
@@ -37,7 +37,7 @@ spec:
     image: confluentinc/cp-enterprise-kafka:5.3.1
     ports:
         - containerPort: 29092
-    command: ['cat']
+    #command: ['cat']
     tty: true
     env:
       - name: KAFKA_ADVERTISED_LISTENERS
