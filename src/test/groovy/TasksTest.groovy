@@ -69,7 +69,8 @@ class TasksTest extends Specification {
                |confluent.pipelineEndpoint = 'http://localhost:8088'
                |confluent.functionPattern = 'simple-build'
                |analytics.sinks {
-               |   kafka
+               |   kafka {
+               |     servers = 'broker:29092'
                |}
                |mainClassName = "streams.TestClass"
                |

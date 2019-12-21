@@ -155,8 +155,8 @@ task runAllTests {
 tasks.withType(Test) {
    runAllTests.dependsOn it
    publishTestReports.mustRunAfter it
-   failFast false
-   ignoreFailures false
+   failFast true
+   ignoreFailures true
    testLogging.showStandardStreams true
    systemProperty 'projectDir', temporaryDir
    systemProperty 'pipelineEndpoint', pipelineEndpoint

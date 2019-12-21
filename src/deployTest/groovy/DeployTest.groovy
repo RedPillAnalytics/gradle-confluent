@@ -2,9 +2,12 @@ import groovy.util.logging.Slf4j
 import org.gradle.testkit.runner.GradleRunner
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Stepwise
 import spock.lang.Title
+import spock.lang.Unroll
 
 @Slf4j
+@Stepwise
 @Title("Check basic configuration")
 class DeployTest extends Specification {
 
@@ -91,7 +94,7 @@ class DeployTest extends Specification {
    }
 
    // helper method
-   def executeSingleTask(String taskName, List otherArgs, Boolean logOutput = true) {
+   def executeSingleTask(String taskName, List otherArgs = []) {
 
       otherArgs.add(0, taskName)
 
@@ -102,46 +105,36 @@ class DeployTest extends Specification {
               .withProjectDir(projectDir)
               .withArguments(otherArgs)
               .withPluginClasspath()
+              .forwardOutput()
               .build()
+   }
 
-      // log the results
-      if (logOutput) log.warn result.getOutput()
+   def "Execute :tasks task"() {
+      given:
+      taskName = 'tasks'
+      result = executeSingleTask(taskName, ['-Si'])
 
-      return result
-
+      expect:
+      !result.tasks.collect { it.outcome }.contains('FAILURE')
    }
 
    def "Deploy test from Maven GCS"() {
-
       given:
       taskName = 'deploy'
       result = executeSingleTask(taskName, ['-Si'])
 
-      tasks = result.output.readLines().grep(~/(> Task :)(.+)/).collect {
-         it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
-      }
-
-      log.warn result.getOutput()
-
       expect:
-      result.task(":${taskName}").outcome.name() != 'FAILED'
-      tasks.collect { it - ' SKIPPED' } == ['functionCopy', 'pipelineExtract', 'pipelineDeploy', 'deploy']
+      !result.tasks.collect { it.outcome }.contains('FAILURE')
+      result.tasks.collect { it.path - ":" } == ["functionCopy", "pipelineExtract", "pipelineDeploy", "deploy"]
    }
 
    def "Producer test to Kafka"() {
-
       given:
       taskName = 'producer'
       result = executeSingleTask(taskName, ['-Si'])
 
-      tasks = result.output.readLines().grep(~/(> Task :)(.+)/).collect {
-         it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
-      }
-
-      log.warn result.getOutput()
-
       expect:
-      result.task(":${taskName}").outcome.name() != 'FAILED'
-      tasks.collect { it - ' SKIPPED' } == ['kafkaSink','producer']
+      !result.tasks.collect { it.outcome }.contains('FAILURE')
+      result.tasks.collect { it.path - ":" } == ['kafkaSink', 'producer']
    }
 }
