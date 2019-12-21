@@ -8,7 +8,7 @@ pipeline {
          defaultContainer 'agent'
          yamlFile 'pod-template.yaml'
          slaveConnectTimeout 300
-         podRetention 'On Failure'
+         podRetention onFailure()
       }
    }
    environment {
