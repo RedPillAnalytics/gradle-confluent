@@ -77,7 +77,5 @@ services:
                           format=json \
                           topic=clickstream \
                           maxInterval=1 \
-                          iterations=1000 && \
-                       echo Waiting a few seconds for topic creation to finish... && \
-                       sleep 10'"
+                          iterations=1000'"
 
