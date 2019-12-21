@@ -1,6 +1,7 @@
 apiVersion: v1
 kind: Pod
 spec:
+  podRetention: onFailure()
   containers:
   - name: jnlp
     env:
