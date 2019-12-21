@@ -50,4 +50,35 @@ services:
       - ksqldb-server
     entrypoint: /bin/sh
     tty: true
-    
+
+  # Runs the Kafka KSQL data generator
+  datagen:
+    container_name: datagen
+    image: confluentinc/ksql-examples:5.3.1
+    depends_on:
+      - kafka
+      - schema-registry
+    command: "bash -c 'echo Waiting for Kafka to be ready... && \
+                       cub kafka-ready -b broker:29092 1 300 && \
+                       echo Waiting a few seconds for topic creation to finish... && \
+                       sleep 30 && \
+                       ksql-datagen \
+                          bootstrap-server=broker:29092 \
+                          quickstart=clickstream_codes \
+                          format=json \
+                          topic=clickstream_codes \
+                          maxInterval=20 \
+                          iterations=100 && \
+                       ksql-datagen \
+                          bootstrap-server=broker:29092 \
+                          quickstart=clickstream_users \
+                          format=json \
+                          topic=clickstream_users \
+                          maxInterval=10 \
+                          iterations=1000 && \
+                       ksql-datagen \
+                          quickstart=clickstream \
+                          format=json \
+                          topic=clickstream \
+                          maxInterval=100 \
+                          bootstrap-server=broker:29092'"
