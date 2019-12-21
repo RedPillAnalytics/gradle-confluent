@@ -22,7 +22,7 @@ pipeline {
    }
 
    stages {
-      
+
       stage('Release') {
          when { branch "master" }
          steps {
@@ -32,7 +32,7 @@ pipeline {
 
       stage('Test') {
          steps {
-            sh "$gradle -m cleanJunit cV runAllTests"
+            sh "$gradle cleanJunit cV runAllTests"
          }
          post {
             always {
