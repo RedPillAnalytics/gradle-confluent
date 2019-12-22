@@ -30,11 +30,16 @@ pipeline {
          }
       }
 
-      stage('Test') {
-         steps {
+      stage('Datagen') {
+         steps{
             container('datagen'){
                sh "$gradle -m datagen"
             }
+          }
+       }
+
+      stage('Test') {
+         steps {
             sh "$gradle -m cleanJunit cV runAllTests"
          }
          post {
