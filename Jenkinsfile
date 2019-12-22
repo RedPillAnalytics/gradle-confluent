@@ -32,19 +32,9 @@ pipeline {
          }
       }
 
-      // stage('Datagen') {
-      //    steps{
-      //       container('datagen'){
-      //          sh """ksql-datagen bootstrap-server=${kafkaServers} \
-      //          quickstart=clickstream_codes format=json 
-      //          topic=clickstream_codes maxInterval=1 iterations=100"""
-      //       }
-      //     }
-      //  }
-
       stage('Test') {
          steps {
-            sh "$gradle -m cleanJunit cV runAllTests"
+            sh "$gradle cleanJunit cV runAllTests"
          }
          post {
             always {
