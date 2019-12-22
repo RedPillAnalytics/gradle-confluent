@@ -25,10 +25,9 @@ spec:
     - name: confluent
       image: gcr.io/rpa-devops/confluent
       ports:
-        - containerPort: 2181
+        - containerPort: 2092
+          name: broker-port
+        - containerPort: 8088
+          name: ksql-server
       tty: true
-      env:
-        - name: ZOOKEEPER_CLIENT_PORT
-          value: "2181"
-        - name: ZOOKEEPER_TICK_TIME
-          value: "2000"
+

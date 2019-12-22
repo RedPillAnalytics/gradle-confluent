@@ -1,7 +1,7 @@
 def options = '-S'
 def properties = "-Panalytics.buildTag=${env.BUILD_TAG}"
 def gradle = "./gradlew ${options} ${properties}"
-def kafkaServers = "localhost:9092"
+def kafkaServers = "confluent:9092"
 
 pipeline {
    agent {
