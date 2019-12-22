@@ -2,9 +2,12 @@ import groovy.util.logging.Slf4j
 import org.gradle.testkit.runner.GradleRunner
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Stepwise
 import spock.lang.Title
+import spock.lang.Unroll
 
 @Slf4j
+@Stepwise
 @Title("Check basic configuration")
 class DeployTest extends Specification {
 
@@ -16,6 +19,12 @@ class DeployTest extends Specification {
 
    @Shared
    String projectName = 'simple-deploy', taskName
+
+   @Shared
+   String pipelineEndpoint = System.getProperty("pipelineEndpoint") ?: 'http://localhost:8088'
+
+   @Shared
+   String kafkaServers = System.getProperty("kafkaServers") ?: 'localhost:9092'
 
    def setup() {
 
@@ -63,10 +72,7 @@ class DeployTest extends Specification {
                |  mavenLocal()
                |  maven {
                |     name 'test'
-               |     url 's3://maven.redpillanalytics.com/demo/maven2'
-               |     authentication {
-               |        awsIm(AwsImAuthentication)
-               |     }
+               |     url 'gcs://maven.redpillanalytics.com/demo'
                |  }
                |}
                |
@@ -75,15 +81,20 @@ class DeployTest extends Specification {
                |   archives group: 'com.redpillanalytics', name: 'simple-build-pipeline', version: '+'
                |}
                |
-               |confluent.functionPattern = 'simple-build'
+               |confluent {
+               |  functionPattern = 'simple-build'
+               |  pipelineEndpoint = '$pipelineEndpoint'
+               |}
                |analytics.sinks {
-               |   kafka
+               |   kafka {
+               |     servers = '$kafkaServers'
+               |  }
                |}
                |""".stripMargin())
    }
 
    // helper method
-   def executeSingleTask(String taskName, List otherArgs, Boolean logOutput = true) {
+   def executeSingleTask(String taskName, List otherArgs = []) {
 
       otherArgs.add(0, taskName)
 
@@ -94,46 +105,36 @@ class DeployTest extends Specification {
               .withProjectDir(projectDir)
               .withArguments(otherArgs)
               .withPluginClasspath()
+              .forwardOutput()
               .build()
-
-      // log the results
-      if (logOutput) log.warn result.getOutput()
-
-      return result
-
    }
 
-   def "Deploy test from Maven S3"() {
+   def "Execute :tasks task"() {
+      given:
+      taskName = 'tasks'
+      result = executeSingleTask(taskName, ['-Si'])
 
+      expect:
+      !result.tasks.collect { it.outcome }.contains('FAILURE')
+   }
+
+   def "Deploy test from Maven GCS"() {
       given:
       taskName = 'deploy'
       result = executeSingleTask(taskName, ['-Si'])
 
-      tasks = result.output.readLines().grep(~/(> Task :)(.+)/).collect {
-         it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
-      }
-
-      log.warn result.getOutput()
-
       expect:
-      result.task(":${taskName}").outcome.name() != 'FAILED'
-      tasks.collect { it - ' SKIPPED' } == ['functionCopy', 'pipelineExtract', 'pipelineDeploy', 'deploy']
+      !result.tasks.collect { it.outcome }.contains('FAILURE')
+      result.tasks.collect { it.path - ":" } == ["functionCopy", "pipelineExtract", "pipelineDeploy", "deploy"]
    }
 
    def "Producer test to Kafka"() {
-
       given:
       taskName = 'producer'
       result = executeSingleTask(taskName, ['-Si'])
 
-      tasks = result.output.readLines().grep(~/(> Task :)(.+)/).collect {
-         it.replaceAll(/(> Task :)(\w+)( UP-TO-DATE)*/, '$2')
-      }
-
-      log.warn result.getOutput()
-
       expect:
-      result.task(":${taskName}").outcome.name() != 'FAILED'
-      tasks.collect { it - ' SKIPPED' } == ['kafkaSink','producer']
+      !result.tasks.collect { it.outcome }.contains('FAILURE')
+      result.tasks.collect { it.path - ":" } == ['kafkaSink', 'producer']
    }
 }

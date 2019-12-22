@@ -3,12 +3,12 @@ plugins {
    id 'java-gradle-plugin'
    id "com.gradle.plugin-publish" version "0.10.1"
    id "pl.allegro.tech.build.axion-release" version "1.10.2"
-   id "com.github.breadmoirai.github-release" version "2.2.9"
-   id 'org.unbroken-dome.test-sets' version '2.1.1'
-   id "com.avast.gradle.docker-compose" version "0.9.4"
-   id "com.github.ben-manes.versions" version "0.24.0"
-   id "com.redpillanalytics.gradle-analytics" version "1.2.3"
-   id 'com.adarshr.test-logger' version '1.7.0'
+   id "com.github.breadmoirai.github-release" version "2.2.10"
+   id 'org.unbroken-dome.test-sets' version '2.2.1'
+   id "com.avast.gradle.docker-compose" version "0.10.7"
+   id "com.github.ben-manes.versions" version "0.27.0"
+   id "com.redpillanalytics.gradle-analytics" version "1.2.4"
+   id 'com.adarshr.test-logger' version '2.0.0'
    id 'build-dashboard'
 }
 
@@ -16,12 +16,13 @@ plugins {
 analytics {
    organization = 'Red Pill Analytics'
    sinks {
-      pubsub
+      gs {
+         prefix = 'rpa-gradle-analytics'
+      }
    }
 }
 
 scmVersion {
-
    tag {
       prefix = 'v'
       versionSeparator = ''
@@ -35,7 +36,6 @@ allprojects {
 }
 
 githubRelease {
-
    token = githubToken
    owner = 'RedPillAnalytics'
    repo = 'gradle-confluent'
@@ -51,12 +51,12 @@ dependencies {
    compile group: 'org.slf4j', name: 'slf4j-simple', version: '+'
    compile 'com.konghq:unirest-java:+'
 
-   // Gradle Analytics plugin
+   // Gradle Properties
    // It also has the Common library in it, thus the dependency here
-   compile "gradle.plugin.com.redpillanalytics:gradle-analytics:+"
+   compile "gradle.plugin.com.redpillanalytics:gradle-properties:+"
 
    // tsting
-   testCompile 'org.spockframework:spock-core:1.2-groovy-2.5'
+   testCompile 'org.spockframework:spock-core:1.3-RC1-groovy-2.5'
 }
 
 // Default artifact naming.
@@ -84,7 +84,6 @@ pluginBundle {
    vcsUrl = 'https://github.com/RedPillAnalytics/gradle-confluent'
 
    plugins {
-
       gradleConfluent {
          id = 'com.redpillanalytics.gradle-confluent'
          displayName = 'gradle-confluent'
@@ -102,6 +101,7 @@ testSets {
    buildTest
 }
 
+tasks.deployTest.mustRunAfter tasks.buildTest
 
 task cleanJunit(type: Delete) {
    delete getTestResultsDir()
@@ -125,8 +125,8 @@ task publishTestReports(type: Exec) {
 
 def versionUrl = "${docBucket}/${rootProject.name}/${version}"
 task publishVersionDocs(type: Exec) {
-   description = 'Sync version Groovydocs to S3.'
-   group = 'documentation'
+   description = 'Publish version Groovydocs to S3.'
+   group = 'publishing'
    executable 'aws'
    args 's3', 'sync', groovydoc.destinationDir.getPath(), "s3://${versionUrl}"
    doLast {
@@ -137,17 +137,15 @@ task publishVersionDocs(type: Exec) {
 
 def latestUrl = "${docBucket}/${rootProject.name}/latest"
 task publishLatestDocs(type: Exec) {
-   description = 'Sync version Groovydocs to S3.'
-   group = 'documentation'
+   description = 'Publish latest Groovydocs to S3.'
+   group = 'publishing'
    executable 'aws'
    args 's3', 'sync', groovydoc.destinationDir.getPath(), "s3://${latestUrl}"
    doLast {
-      logger.warn "\nVersion docs: https://s3.amazonaws.com/${latestUrl}/index.html"
+      logger.warn "\nLatest docs: https://s3.amazonaws.com/${latestUrl}/index.html"
    }
    dependsOn groovydoc
 }
-
-tasks.publishPlugins.dependsOn tasks.publishVersionDocs, tasks.publishLatestDocs, tasks.githubRelease
 
 task runAllTests {
    description 'Run all defined tests.'
@@ -156,11 +154,66 @@ task runAllTests {
 
 tasks.withType(Test) {
    runAllTests.dependsOn it
-   composeDown.mustRunAfter it
    publishTestReports.mustRunAfter it
-   mustRunAfter composeUp
-   failFast false
-   ignoreFailures false
+   failFast true
+   ignoreFailures true
    testLogging.showStandardStreams true
    systemProperty 'projectDir', temporaryDir
+   systemProperty 'pipelineEndpoint', pipelineEndpoint
+   systemProperty 'kafkaServers', kafkaServers
+}
+
+//dockerCompose.isRequiredBy tasks.runAllTests
+
+// create a publish task
+task publish {
+   description 'Custom publish task.'
+   group 'publishing'
+   dependsOn tasks.publishPlugins, tasks.publishVersionDocs, tasks.publishLatestDocs, tasks.githubRelease
+}
+
+tasks.githubRelease.mustRunAfter tasks.publishPlugins
+
+task datagen {
+   group "integration"
+   description "Load the clickstream quickstart data into Kafka topics."
+}
+
+task clickstreamCodes(type: Exec) {
+   group "integration"
+   description "Load the clickstream_codes topic."
+   dependsOn datagen
+   executable 'ksql-datagen'
+   args "bootstrap-server=${kafkaServers}",
+           "quickstart=clickstream_codes",
+           "format=json",
+           "topic=clickstream_codes",
+           "maxInterval=1",
+           "iterations=100"
+}
+
+task clickstreamUsers(type: Exec) {
+   group "integration"
+   description "Load the clickstream_users topic."
+   dependsOn datagen
+   executable 'ksql-datagen'
+   args "bootstrap-server=${kafkaServers}",
+           "quickstart=clickstream_users",
+           "format=json",
+           "topic=clickstream_users",
+           "maxInterval=1",
+           "iterations=1000"
+}
+
+task clickstream(type: Exec) {
+   group "integration"
+   description "Load the clickstream topic."
+   dependsOn datagen
+   executable 'ksql-datagen'
+   args "bootstrap-server=${kafkaServers}",
+           "quickstart=clickstream",
+           "format=json",
+           "topic=clickstream",
+           "maxInterval=1",
+           "iterations=100"
 }

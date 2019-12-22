@@ -1,0 +1,10 @@
+steps:
+- name: 'docker/compose:1.15.0'
+  args: ['up', '-d']
+  env:
+    - 'PROJECT_ID=$PROJECT_ID'
+  id: compose-up
+- name: 'gradle'
+  id: gradle-build
+  args: ['gradle','build','buildTest','deployTest','-S','-PpipelineEndpoint=http://ksql-server:8088','-PkafkaServers=kafka:29092']
+timeout: 3600s

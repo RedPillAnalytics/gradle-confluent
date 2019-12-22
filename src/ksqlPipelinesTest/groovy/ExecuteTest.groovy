@@ -22,6 +22,12 @@ class ExecuteTest extends Specification {
    @Shared
    def result, taskList
 
+   @Shared
+   String pipelineEndpoint = System.getProperty("pipelineEndpoint") ?: 'http://localhost:8088'
+
+   @Shared
+   String kafkaServers = System.getProperty("kafkaServers") ?: 'localhost:9092'
+
    def setupSpec() {
 
       projectDir = new File("${System.getProperty("projectDir")}/$projectName")
@@ -40,13 +46,12 @@ class ExecuteTest extends Specification {
                |  id 'com.redpillanalytics.gradle-confluent'
                |  id "com.redpillanalytics.gradle-analytics" version "1.2.1"
                |}
-               |confluent.pipelineEndpoint = 'http://localhost:8088'
+               |confluent.pipelineEndpoint = '$pipelineEndpoint'
                |
-               |analytics {
-               |   ignoreErrors = false
-               |   sinks {
-               |      kafka
-               |   }
+               |analytics.sinks {
+               |   kafka {
+               |     servers = '$kafkaServers'
+               |  }
                |}
                |""".stripMargin())
    }
@@ -85,47 +90,40 @@ class ExecuteTest extends Specification {
    }
 
    def "Execute :tasks task"() {
-
       given:
       taskName = 'tasks'
       result = executeSingleTask(taskName, ['-Si'])
 
       expect:
-      result.task(":${taskName}").outcome.name() != 'FAILED'
+      !result.tasks.collect { it.outcome }.contains('FAILURE')
    }
 
 
    def "Execute :listTopics task"() {
-
       given:
       taskName = 'listTopics'
       result = executeSingleTask(taskName, ['-Si', '--rerun-tasks'])
 
       expect:
-      result.task(":${taskName}").outcome.name() != 'FAILED'
-
+      !result.tasks.collect { it.outcome }.contains('FAILURE')
    }
 
    def "Execute :pipelineExecute task with default values"() {
-
       given:
       taskName = 'pipelineExecute'
       result = executeSingleTask(taskName, ['-Si', '--rerun-tasks'])
 
       expect:
-      result.task(":${taskName}").outcome.name() != 'FAILED'
-
+      !result.tasks.collect { it.outcome }.contains('FAILURE')
    }
 
    def "Execute :pipelineExecute task with custom directory"() {
-
       given:
       taskName = 'pipelineExecute'
       result = executeSingleTask(taskName, ['--pipeline-dir=src/main/pipeline/01-clickstream', '-Si', '--rerun-tasks'])
 
       expect:
-      result.task(":${taskName}").outcome.name() != 'FAILED'
-
+      !result.tasks.collect { it.outcome }.contains('FAILURE')
    }
 
    def "Execute :pipelineExecute task with --no-create"() {
@@ -135,62 +133,52 @@ class ExecuteTest extends Specification {
       result = executeSingleTask(taskName, ['--no-create', '-Si', '--rerun-tasks'])
 
       expect:
-      result.task(":${taskName}").outcome.name() != 'FAILED'
+      !result.tasks.collect { it.outcome }.contains('FAILURE')
       !result.output.toLowerCase().contains('create table')
       !result.output.toLowerCase().contains('insert into')
-
    }
 
    def "Execute :pipelineExecute task with --no-drop"() {
-
       given:
       taskName = 'pipelineExecute'
       result = executeSingleTask(taskName, ['--no-drop', '-Si', '--rerun-tasks'])
 
       expect:
-      result.task(":${taskName}").outcome.name() != 'FAILED'
+      !result.tasks.collect { it.outcome }.contains('FAILURE')
       !result.output.toLowerCase().contains('drop table')
-
    }
 
    def "Execute :pipelineExecute task with --no-create again"() {
-
       given:
       taskName = 'pipelineExecute'
       result = executeSingleTask(taskName, ['--no-create', '-Si', '--rerun-tasks'])
 
       expect:
-      result.task(":${taskName}").outcome.name() != 'FAILED'
+      !result.tasks.collect { it.outcome }.contains('FAILURE')
       !result.output.toLowerCase().contains('create table')
       !result.output.toLowerCase().contains('insert into')
-
    }
 
    def "Execute :pipelineExecute task with --no-terminate"() {
-
       given:
       taskName = 'pipelineExecute'
       result = executeSingleTask(taskName, ['--no-terminate', '-Si', '--rerun-tasks'])
 
       expect:
-      result.task(":${taskName}").outcome.name() != 'FAILED'
+      !result.tasks.collect { it.outcome }.contains('FAILURE')
       !result.output.toLowerCase().contains('terminating query')
-
    }
 
    def "Execute :pipelineExecute task with --from-beginning"() {
-
       given:
       taskName = 'pipelineExecute'
       result = executeSingleTask(taskName, ['--from-beginning', '-Si', '--rerun-tasks'])
 
       expect:
-      result.task(":${taskName}").outcome.name() != 'FAILED'
-
+      !result.tasks.collect { it.outcome }.contains('FAILURE')
    }
 
    def "Execute :pipelineExecute and test for --@DeleteTopic directive"() {
-
       given:
       taskName = 'pipelineExecute'
       result = executeSingleTask(taskName, ['--no-create', '-Si', '--rerun-tasks'])
@@ -198,7 +186,6 @@ class ExecuteTest extends Specification {
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'
       result.output.toLowerCase().contains('drop table if exists events_per_min delete topic')
-
    }
 
    def "Execute :pipelineExecute task with custom REST endpoint"() {
@@ -215,13 +202,11 @@ class ExecuteTest extends Specification {
    }
 
    def "Execute :producer task"() {
-
       given:
       taskName = 'producer'
       result = executeSingleTask(taskName, ['-Si'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'
-
    }
 }
