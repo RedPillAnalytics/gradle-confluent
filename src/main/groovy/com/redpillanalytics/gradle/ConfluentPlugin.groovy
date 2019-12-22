@@ -24,6 +24,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
       // apply Gradle built-in plugins
       project.apply plugin: 'base'
+      project.apply plugin: 'com.redpillanalytics.gradle-properties'
 
       // apply the Gradle plugin extension and the context container
       applyExtension(project)
@@ -32,7 +33,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
          // Go look for any -P properties that have "confluent." in them
          // If so... update the extension value
-         GradleUtils.setParameters(project, 'confluent')
+         project.pluginProps.setParameters(project, 'confluent')
 
          // add task to show configurations
          project.task('showConfigurations') {
