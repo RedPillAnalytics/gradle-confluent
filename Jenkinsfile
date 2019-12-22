@@ -8,7 +8,7 @@ pipeline {
       kubernetes {
          defaultContainer 'agent'
          yamlFile 'pod-template.yaml'
-         slaveConnectTimeout 300
+         slaveConnectTimeout 200
       }
    }
    environment {
@@ -32,15 +32,15 @@ pipeline {
          }
       }
 
-      stage('Datagen') {
-         steps{
-            container('datagen'){
-               sh """ksql-datagen bootstrap-server=${kafkaServers} \
-               quickstart=clickstream_codes format=json 
-               topic=clickstream_codes maxInterval=1 iterations=100"""
-            }
-          }
-       }
+      // stage('Datagen') {
+      //    steps{
+      //       container('datagen'){
+      //          sh """ksql-datagen bootstrap-server=${kafkaServers} \
+      //          quickstart=clickstream_codes format=json 
+      //          topic=clickstream_codes maxInterval=1 iterations=100"""
+      //       }
+      //     }
+      //  }
 
       stage('Test') {
          steps {
