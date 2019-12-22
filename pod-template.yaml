@@ -15,13 +15,13 @@ spec:
       env:
         - name: DOCKER_HOST
           value: tcp://localhost:2375
-    - name: docker-daemon
-      image: docker:19.03.1-dind
-      securityContext:
-        privileged: true
-      env:
-        - name: DOCKER_TLS_CERTDIR
-          value: ""
+    # - name: docker-daemon
+    #   image: docker:19.03.1-dind
+    #   securityContext:
+    #     privileged: true
+    #   env:
+    #     - name: DOCKER_TLS_CERTDIR
+    #       value: ""
     - name: confluent
       image: gcr.io/rpa-devops/confluent
       ports:

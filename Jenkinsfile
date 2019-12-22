@@ -1,7 +1,6 @@
 def options = '-S'
 def properties = "-Panalytics.buildTag=${env.BUILD_TAG}"
 def gradle = "./gradlew ${options} ${properties}"
-def kafkaServers = "confluent:9092"
 
 pipeline {
    agent {
@@ -13,7 +12,6 @@ pipeline {
    }
    environment {
       ORG_GRADLE_PROJECT_githubToken = credentials('github-redpillanalyticsbot-secret')
-      ORG_GRADLE_PROJECT_kafkaServers = "$kafkaServers"
       AWS = credentials("rpa-development-build-server-svc")
       AWS_ACCESS_KEY_ID = "${env.AWS_USR}"
       AWS_SECRET_ACCESS_KEY = "${env.AWS_PSW}"
