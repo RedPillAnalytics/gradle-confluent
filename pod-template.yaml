@@ -30,4 +30,8 @@ spec:
         - containerPort: 8088
           name: ksql-server
       tty: true
+      resources:
+        requests:
+          cpu: "10"
+          memory: "4Gi" 
 
