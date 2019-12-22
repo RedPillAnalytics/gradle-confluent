@@ -30,13 +30,13 @@ pipeline {
          }
       }
 
-      stage('Datagen') {
-         steps{
-            container('datagen'){
-               sh "$gradle -m datagen"
-            }
-          }
-       }
+      // stage('Datagen') {
+      //    steps{
+      //       container('datagen'){
+      //          sh "$gradle datagen"
+      //       }
+      //     }
+      //  }
 
       stage('Test') {
          steps {
