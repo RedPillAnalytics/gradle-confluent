@@ -75,7 +75,7 @@ spec:
                           topic=clickstream \
                           maxInterval=1 \
                           iterations=100 && \
-                          cat'"
+                       sleep'"
 #    - name: ksqldb-server
 #      image: confluentinc/ksqldb-server:0.6.0
 #      ports:
