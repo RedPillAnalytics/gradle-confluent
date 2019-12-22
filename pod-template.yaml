@@ -53,8 +53,7 @@ spec:
     - name: datagen
       image: confluentinc/ksql-examples:5.3.1
       tty: true
-      command: ["/bin/sh", "-c"]
-      args:
+      command: 
         - ksql-datagen
         - bootstrap-server=broker:9092
         - quickstart=clickstream_codes
