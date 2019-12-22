@@ -74,7 +74,8 @@ spec:
                           format=json \
                           topic=clickstream \
                           maxInterval=1 \
-                          iterations=100'"
+                          iterations=100 && \
+                          cat'"
 #    - name: ksqldb-server
 #      image: confluentinc/ksqldb-server:0.6.0
 #      ports:
