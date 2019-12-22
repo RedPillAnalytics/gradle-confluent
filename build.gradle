@@ -163,7 +163,7 @@ tasks.withType(Test) {
    systemProperty 'kafkaServers', kafkaServers
 }
 
-dockerCompose.isRequiredBy tasks.runAllTests
+//dockerCompose.isRequiredBy tasks.runAllTests
 
 // create a publish task
 task publish {
