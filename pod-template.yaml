@@ -70,7 +70,6 @@ spec:
   #   image: confluentinc/ksqldb-cli:0.6.0
   #   command: ['cat']
   #   tty: true
-  # - name: datagen
-  #   image: confluentinc/ksql-examples:5.3.1
-  #   command: ['cat']
-  #   tty: true
+   - name: datagen
+     image: confluentinc/ksql-examples:5.3.1
+     tty: true

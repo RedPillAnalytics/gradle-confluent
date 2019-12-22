@@ -73,9 +73,9 @@ services:
                           iterations=1000 && \
                        ksql-datagen \
                           bootstrap-server=broker:9092 \
-                          quickstart=clickstream_users \
+                          quickstart=clickstream \
                           format=json \
                           topic=clickstream \
                           maxInterval=1 \
-                          iterations=1000'"
+                          iterations=100'"
 
