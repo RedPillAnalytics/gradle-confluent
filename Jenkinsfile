@@ -1,6 +1,7 @@
 def options = '-S'
 def properties = "-Panalytics.buildTag=${env.BUILD_TAG}"
 def gradle = "./gradlew ${options} ${properties}"
+def kafkaServers = "localhost:9092"
 
 pipeline {
    agent {
@@ -12,6 +13,7 @@ pipeline {
    }
    environment {
       ORG_GRADLE_PROJECT_githubToken = credentials('github-redpillanalyticsbot-secret')
+      ORG_GRADLE_PROJECT_kafkaServers = $kafkaServers
       AWS = credentials("rpa-development-build-server-svc")
       AWS_ACCESS_KEY_ID = "${env.AWS_USR}"
       AWS_SECRET_ACCESS_KEY = "${env.AWS_PSW}"
@@ -30,13 +32,15 @@ pipeline {
          }
       }
 
-      // stage('Datagen') {
-      //    steps{
-      //       container('datagen'){
-      //          sh "$gradle datagen"
-      //       }
-      //     }
-      //  }
+      stage('Datagen') {
+         steps{
+            container('datagen'){
+               sh """ksql-datagen bootstrap-server=${kafkaServers} \
+               quickstart=clickstream_codes format=json 
+               topic=clickstream_codes maxInterval=1 iterations=100"""
+            }
+          }
+       }
 
       stage('Test') {
          steps {
