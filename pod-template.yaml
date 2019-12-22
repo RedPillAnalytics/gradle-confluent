@@ -53,6 +53,28 @@ spec:
     - name: datagen
       image: confluentinc/ksql-examples:5.3.1
       tty: true
+      command:
+        - "bash -c 'ksql-datagen \
+                          bootstrap-server=broker:9092 \
+                          quickstart=clickstream_codes \
+                          format=json \
+                          topic=clickstream_codes \
+                          maxInterval=1 \
+                          iterations=100 && \
+                       ksql-datagen \
+                          bootstrap-server=broker:9092 \
+                          quickstart=clickstream_users \
+                          format=json \
+                          topic=clickstream_users \
+                          maxInterval=1 \
+                          iterations=1000 && \
+                       ksql-datagen \
+                          bootstrap-server=broker:9092 \
+                          quickstart=clickstream \
+                          format=json \
+                          topic=clickstream \
+                          maxInterval=1 \
+                          iterations=100'"
 #    - name: ksqldb-server
 #      image: confluentinc/ksqldb-server:0.6.0
 #      ports:
