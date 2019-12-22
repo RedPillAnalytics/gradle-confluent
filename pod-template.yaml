@@ -50,6 +50,9 @@ spec:
           value: "1"
         - name: KAFKA_ZOOKEEPER_CONNECT
           value: zookeeper:2181
+    - name: datagen
+      image: confluentinc/ksql-examples:5.3.1
+      tty: true
 #    - name: ksqldb-server
 #      image: confluentinc/ksqldb-server:0.6.0
 #      ports:
@@ -68,7 +71,4 @@ spec:
 #      image: confluentinc/ksqldb-cli:0.6.0
 #      command: ['cat']
 #      tty: true
-#    - name: datagen
-#      image: confluentinc/ksql-examples:5.3.1
-#      command: ['cat']
-#      tty: true
+
