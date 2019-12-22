@@ -71,6 +71,7 @@ class TasksTest extends Specification {
                |analytics.sinks {
                |   kafka {
                |     servers = 'broker:29092'
+               |   }
                |}
                |mainClassName = "streams.TestClass"
                |
