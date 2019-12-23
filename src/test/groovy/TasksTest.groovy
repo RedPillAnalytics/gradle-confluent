@@ -20,6 +20,12 @@ class TasksTest extends Specification {
    @Shared
    String projectName = 'run-tasks'
 
+   @Shared
+   String pipelineEndpoint = System.getProperty("pipelineEndpoint") ?: 'http://localhost:8088'
+
+   @Shared
+   String kafkaServers = System.getProperty("kafkaServers") ?: 'localhost:9092'
+
    def setupSpec() {
 
       projectDir = new File("${System.getProperty("projectDir")}/$projectName")
@@ -66,8 +72,10 @@ class TasksTest extends Specification {
                |   archives group: 'com.redpillanalytics', name: 'simple-build-pipeline', version: '+'
                |}
                |
-               |confluent.pipelineEndpoint = 'http://localhost:8088'
-               |confluent.functionPattern = 'simple-build'
+               |confluent {
+               |  pipelineEndpoint = '$pipelineEndpoint'
+               |  functionPattern = 'simple-build'
+               |}
                |analytics.sinks {
                |   kafka {
                |     servers = 'broker:29092'

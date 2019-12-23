@@ -46,7 +46,10 @@ class ExecuteTest extends Specification {
                |  id 'com.redpillanalytics.gradle-confluent'
                |  id "com.redpillanalytics.gradle-analytics" version "1.2.1"
                |}
-               |confluent.pipelineEndpoint = '$pipelineEndpoint'
+               |
+               |confluent {
+               |  pipelineEndpoint '$pipelineEndpoint'
+               |}
                |
                |analytics.sinks {
                |   kafka {

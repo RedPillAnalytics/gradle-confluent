@@ -225,7 +225,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
       project.confluent.extensions.taskGroups = project.container(TaskGroupContainer)
 
-      project.extensions.confluent.taskGroups.add(new TaskGroupContainer(name: 'default'))
+      project.extensions.confluent.taskGroups.add(new TaskGroupContainer('default'))
 
    }
 }
