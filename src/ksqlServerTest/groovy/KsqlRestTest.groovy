@@ -58,14 +58,4 @@ class KsqlRestTest extends Specification {
       then:
       topics
    }
-
-   @Ignore
-   def "List of streams returned"() {
-
-      when:
-      def topics = ksqlRest.getStreams()
-
-      then:
-      topics
-   }
 }

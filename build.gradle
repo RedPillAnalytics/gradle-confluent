@@ -111,18 +111,6 @@ task cleanLibs(type: Delete) {
    delete getLibsDir()
 }
 
-def reportUrl = "${actionsBucket}/${rootProject.name}/${executionId}"
-task publishTestReports(type: Exec) {
-   description = 'Copy Gradle test reports to S3.'
-   group = 'verification'
-   executable 'aws'
-   args 's3', 'sync', reportsDir, "s3://${reportUrl}"
-   doLast {
-      logger.warn "\nTest reports: https://s3.amazonaws.com/${reportUrl}/buildDashboard/index.html"
-   }
-   dependsOn buildDashboard
-}
-
 def versionUrl = "${docBucket}/${rootProject.name}/${version}"
 task publishVersionDocs(type: Exec) {
    description = 'Publish version Groovydocs to S3.'
@@ -154,14 +142,13 @@ task runAllTests {
 
 tasks.withType(Test) {
    runAllTests.dependsOn it
-   publishTestReports.mustRunAfter it
    failFast true
    ignoreFailures true
    testLogging.showStandardStreams true
    systemProperty 'projectDir', temporaryDir
    systemProperty 'pipelineEndpoint', pipelineEndpoint
    systemProperty 'kafkaServers', kafkaServers
-   systemProperty 'analyticsVersion', '1.3.0'
+   systemProperty 'analyticsVersion', analyticsVersion
 }
 
 //dockerCompose.isRequiredBy tasks.runAllTests

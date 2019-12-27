@@ -26,6 +26,9 @@ class TasksTest extends Specification {
    @Shared
    String kafkaServers = System.getProperty("kafkaServers") ?: 'localhost:9092'
 
+   @Shared
+   String analyticsVersion = System.getProperty("analyticsVersion")
+
    def setupSpec() {
 
       projectDir = new File("${System.getProperty("projectDir")}/$projectName")
@@ -44,7 +47,7 @@ class TasksTest extends Specification {
       buildFile = new File(projectDir, 'build.gradle').write("""
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
-               |  id "com.redpillanalytics.gradle-analytics" version "1.3.0"
+               |  id "com.redpillanalytics.gradle-analytics" version "$analyticsVersion"
                |  id 'maven-publish'
                |  id 'application'
                |}
@@ -79,7 +82,7 @@ class TasksTest extends Specification {
                |analytics {
                |   kafka {
                |     test {
-               |        servers = '$kafkaServers'
+               |        bootstrapServers = '$kafkaServers'
                |     }
                |  }
                |}
