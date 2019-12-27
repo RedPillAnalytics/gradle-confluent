@@ -20,6 +20,15 @@ class TasksTest extends Specification {
    @Shared
    String projectName = 'run-tasks'
 
+   @Shared
+   String pipelineEndpoint = System.getProperty("pipelineEndpoint") ?: 'http://localhost:8088'
+
+   @Shared
+   String kafkaServers = System.getProperty("kafkaServers") ?: 'localhost:9092'
+
+   @Shared
+   String analyticsVersion = System.getProperty("analyticsVersion")
+
    def setupSpec() {
 
       projectDir = new File("${System.getProperty("projectDir")}/$projectName")
@@ -38,7 +47,7 @@ class TasksTest extends Specification {
       buildFile = new File(projectDir, 'build.gradle').write("""
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
-               |  id "com.redpillanalytics.gradle-analytics" version "1.2.1"
+               |  id "com.redpillanalytics.gradle-analytics" version "$analyticsVersion"
                |  id 'maven-publish'
                |  id 'application'
                |}
@@ -66,12 +75,16 @@ class TasksTest extends Specification {
                |   archives group: 'com.redpillanalytics', name: 'simple-build-pipeline', version: '+'
                |}
                |
-               |confluent.pipelineEndpoint = 'http://localhost:8088'
-               |confluent.functionPattern = 'simple-build'
-               |analytics.sinks {
+               |confluent {
+               |  pipelineEndpoint = '$pipelineEndpoint'
+               |  functionPattern = 'simple-build'
+               |}
+               |analytics {
                |   kafka {
-               |     servers = 'broker:29092'
-               |   }
+               |     test {
+               |        bootstrapServers = '$kafkaServers'
+               |     }
+               |  }
                |}
                |mainClassName = "streams.TestClass"
                |

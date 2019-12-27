@@ -4,7 +4,6 @@ import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Stepwise
 import spock.lang.Title
-import spock.lang.Unroll
 
 @Slf4j
 @Stepwise
@@ -25,6 +24,9 @@ class DeployTest extends Specification {
 
    @Shared
    String kafkaServers = System.getProperty("kafkaServers") ?: 'localhost:9092'
+
+   @Shared
+   String analyticsVersion = System.getProperty("analyticsVersion")
 
    def setup() {
 
@@ -55,7 +57,7 @@ class DeployTest extends Specification {
       buildFile.write("""
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
-               |  id "com.redpillanalytics.gradle-analytics" version "1.2.3"
+               |  id "com.redpillanalytics.gradle-analytics" version "$analyticsVersion"
                |  id 'maven-publish'
                |}
                |
@@ -85,9 +87,11 @@ class DeployTest extends Specification {
                |  functionPattern = 'simple-build'
                |  pipelineEndpoint = '$pipelineEndpoint'
                |}
-               |analytics.sinks {
+               |analytics {
                |   kafka {
-               |     servers = '$kafkaServers'
+               |     test {
+               |        bootstrapServers = '$kafkaServers'
+               |     }
                |  }
                |}
                |""".stripMargin())
@@ -135,6 +139,6 @@ class DeployTest extends Specification {
 
       expect:
       !result.tasks.collect { it.outcome }.contains('FAILURE')
-      result.tasks.collect { it.path - ":" } == ['kafkaSink', 'producer']
+      result.tasks.collect { it.path - ":" } == ['kafkaTestSink', 'producer']
    }
 }

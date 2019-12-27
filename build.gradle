@@ -7,7 +7,7 @@ plugins {
    id 'org.unbroken-dome.test-sets' version '2.2.1'
    id "com.avast.gradle.docker-compose" version "0.10.7"
    id "com.github.ben-manes.versions" version "0.27.0"
-   id "com.redpillanalytics.gradle-analytics" version "1.2.4"
+   id "com.redpillanalytics.gradle-analytics" version "1.3.0"
    id 'com.adarshr.test-logger' version '2.0.0'
    id 'build-dashboard'
 }
@@ -15,8 +15,8 @@ plugins {
 // send analytics
 analytics {
    organization = 'Red Pill Analytics'
-   sinks {
-      gs {
+   gcs {
+      devops {
          prefix = 'rpa-gradle-analytics'
       }
    }
@@ -111,18 +111,6 @@ task cleanLibs(type: Delete) {
    delete getLibsDir()
 }
 
-def reportUrl = "${actionsBucket}/${rootProject.name}/${executionId}"
-task publishTestReports(type: Exec) {
-   description = 'Copy Gradle test reports to S3.'
-   group = 'verification'
-   executable 'aws'
-   args 's3', 'sync', reportsDir, "s3://${reportUrl}"
-   doLast {
-      logger.warn "\nTest reports: https://s3.amazonaws.com/${reportUrl}/buildDashboard/index.html"
-   }
-   dependsOn buildDashboard
-}
-
 def versionUrl = "${docBucket}/${rootProject.name}/${version}"
 task publishVersionDocs(type: Exec) {
    description = 'Publish version Groovydocs to S3.'
@@ -154,13 +142,13 @@ task runAllTests {
 
 tasks.withType(Test) {
    runAllTests.dependsOn it
-   publishTestReports.mustRunAfter it
    failFast true
    ignoreFailures true
    testLogging.showStandardStreams true
    systemProperty 'projectDir', temporaryDir
    systemProperty 'pipelineEndpoint', pipelineEndpoint
    systemProperty 'kafkaServers', kafkaServers
+   systemProperty 'analyticsVersion', analyticsVersion
 }
 
 //dockerCompose.isRequiredBy tasks.runAllTests
@@ -169,51 +157,8 @@ tasks.withType(Test) {
 task publish {
    description 'Custom publish task.'
    group 'publishing'
-   dependsOn tasks.publishPlugins, tasks.publishVersionDocs, tasks.publishLatestDocs, tasks.githubRelease
+   dependsOn tasks.publishPlugins, tasks.publishVersionDocs, tasks.publishLatestDocs, tasks.githubRelease, tasks.build
 }
 
-tasks.githubRelease.mustRunAfter tasks.publishPlugins
-
-task datagen {
-   group "integration"
-   description "Load the clickstream quickstart data into Kafka topics."
-}
-
-task clickstreamCodes(type: Exec) {
-   group "integration"
-   description "Load the clickstream_codes topic."
-   dependsOn datagen
-   executable 'ksql-datagen'
-   args "bootstrap-server=${kafkaServers}",
-           "quickstart=clickstream_codes",
-           "format=json",
-           "topic=clickstream_codes",
-           "maxInterval=1",
-           "iterations=100"
-}
-
-task clickstreamUsers(type: Exec) {
-   group "integration"
-   description "Load the clickstream_users topic."
-   dependsOn datagen
-   executable 'ksql-datagen'
-   args "bootstrap-server=${kafkaServers}",
-           "quickstart=clickstream_users",
-           "format=json",
-           "topic=clickstream_users",
-           "maxInterval=1",
-           "iterations=1000"
-}
-
-task clickstream(type: Exec) {
-   group "integration"
-   description "Load the clickstream topic."
-   dependsOn datagen
-   executable 'ksql-datagen'
-   args "bootstrap-server=${kafkaServers}",
-           "quickstart=clickstream",
-           "format=json",
-           "topic=clickstream",
-           "maxInterval=1",
-           "iterations=100"
-}
+tasks.githubRelease.mustRunAfter tasks.publishPlugins, tasks.build
+tasks.deployTest.mustRunAfter tasks.buildTest

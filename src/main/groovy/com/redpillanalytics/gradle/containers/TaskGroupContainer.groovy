@@ -5,6 +5,10 @@ import groovy.util.logging.Slf4j
 @Slf4j
 class TaskGroupContainer {
 
+   TaskGroupContainer(String name) {
+      this.name = name
+   }
+
    // Build Group defaults
    private static final String DEFAULT_GROUP = 'default'
 

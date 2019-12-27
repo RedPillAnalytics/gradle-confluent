@@ -28,6 +28,9 @@ class ExecuteTest extends Specification {
    @Shared
    String kafkaServers = System.getProperty("kafkaServers") ?: 'localhost:9092'
 
+   @Shared
+   String analyticsVersion = System.getProperty("analyticsVersion")
+
    def setupSpec() {
 
       projectDir = new File("${System.getProperty("projectDir")}/$projectName")
@@ -44,13 +47,18 @@ class ExecuteTest extends Specification {
       buildFile.write("""
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
-               |  id "com.redpillanalytics.gradle-analytics" version "1.2.1"
+               |  id "com.redpillanalytics.gradle-analytics" version "$analyticsVersion"
                |}
-               |confluent.pipelineEndpoint = '$pipelineEndpoint'
                |
-               |analytics.sinks {
+               |confluent {
+               |  pipelineEndpoint '$pipelineEndpoint'
+               |}
+               |
+               |analytics {
                |   kafka {
-               |     servers = '$kafkaServers'
+               |     test {
+               |        bootstrapServers = '$kafkaServers'
+               |     }
                |  }
                |}
                |""".stripMargin())
