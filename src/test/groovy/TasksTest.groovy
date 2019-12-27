@@ -44,7 +44,7 @@ class TasksTest extends Specification {
       buildFile = new File(projectDir, 'build.gradle').write("""
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
-               |  id "com.redpillanalytics.gradle-analytics" version "1.2.1"
+               |  id "com.redpillanalytics.gradle-analytics" version "1.3.0"
                |  id 'maven-publish'
                |  id 'application'
                |}
@@ -76,10 +76,12 @@ class TasksTest extends Specification {
                |  pipelineEndpoint = '$pipelineEndpoint'
                |  functionPattern = 'simple-build'
                |}
-               |analytics.sinks {
+               |analytics {
                |   kafka {
-               |     servers = 'broker:29092'
-               |   }
+               |     test {
+               |        servers = '$kafkaServers'
+               |     }
+               |  }
                |}
                |mainClassName = "streams.TestClass"
                |

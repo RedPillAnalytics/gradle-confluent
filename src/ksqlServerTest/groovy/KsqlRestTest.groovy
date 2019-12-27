@@ -8,7 +8,10 @@ import spock.lang.Specification
 class KsqlRestTest extends Specification {
 
    @Shared
-   def ksqlRest = new KsqlRest()
+   String pipelineEndpoint = System.getProperty("pipelineEndpoint") ?: 'http://localhost:8088'
+
+   @Shared
+   def ksqlRest = new KsqlRest(restUrl: pipelineEndpoint)
 
    def "KSQL Server properties fetched"() {
 

@@ -27,6 +27,15 @@ class PropertiesTest extends Specification {
    @Shared
    AntBuilder ant = new AntBuilder()
 
+   @Shared
+   String pipelineEndpoint = System.getProperty("pipelineEndpoint") ?: 'http://localhost:8088'
+
+   @Shared
+   String kafkaServers = System.getProperty("kafkaServers") ?: 'localhost:9092'
+
+   @Shared
+   String analyticsVersion = System.getProperty("analyticsVersion")
+
    def setupSpec() {
 
       projectDir = new File("${System.getProperty("projectDir")}/$projectName")
@@ -42,7 +51,7 @@ class PropertiesTest extends Specification {
       buildFile.write("""
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
-               |  id "com.redpillanalytics.gradle-analytics" version "1.2.1"
+               |  id "com.redpillanalytics.gradle-analytics" version "$analyticsVersion"
                |  id 'maven-publish'
                |}
                |
@@ -69,8 +78,12 @@ class PropertiesTest extends Specification {
                |   archives group: 'com.redpillanalytics', name: 'simple-build-pipeline', version: '+'
                |}
                |
-               |analytics.sinks {
-               |   kafka
+               |analytics {
+               |   kafka {
+               |     test {
+               |        bootstrapServers = '$kafkaServers'
+               |     }
+               |  }
                |}
                |
                |""".stripMargin())

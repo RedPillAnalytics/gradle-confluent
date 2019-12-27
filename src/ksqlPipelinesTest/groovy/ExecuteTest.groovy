@@ -44,16 +44,18 @@ class ExecuteTest extends Specification {
       buildFile.write("""
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
-               |  id "com.redpillanalytics.gradle-analytics" version "1.2.1"
+               |  id "com.redpillanalytics.gradle-analytics" version "1.3.0"
                |}
                |
                |confluent {
                |  pipelineEndpoint '$pipelineEndpoint'
                |}
                |
-               |analytics.sinks {
+               |analytics {
                |   kafka {
-               |     servers = '$kafkaServers'
+               |     test {
+               |        servers = '$kafkaServers'
+               |     }
                |  }
                |}
                |""".stripMargin())
