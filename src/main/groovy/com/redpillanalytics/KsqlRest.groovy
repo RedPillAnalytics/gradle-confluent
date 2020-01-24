@@ -52,7 +52,7 @@ class KsqlRest {
                .header("Content-Type", "application/vnd.ksql.v1+json")
                .header("Cache-Control", "no-cache")
                .header("Postman-Token", "473fbb05-9da1-4020-95c0-f2c60fed8289")
-               .header("Authentication", "Basic ${encoded}")
+               .header("Authorization", "Basic ${encoded}")
                .body(JsonOutput.toJson([ksql: prepared, streamProperties: properties]))
                .asString()
       } else {
