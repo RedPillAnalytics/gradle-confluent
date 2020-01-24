@@ -114,7 +114,7 @@ class PropertiesTest extends Specification {
       result = executeSingleTask(taskName, ['-Si','-Pconfluent.enableStreams=true',"-PmainClassName=streams.TestClass"])
 
       expect:
-      result.task(":${taskName}").outcome.name() != 'FAILED'
+      !result.tasks.collect { it.outcome }.contains('FAILED')
 
    }
 
@@ -125,7 +125,7 @@ class PropertiesTest extends Specification {
       result = executeSingleTask(taskName, ['-Si','-Pconfluent.enableFunctions=true','-Pconfluent.functionPattern = simple-build'])
 
       expect:
-      result.task(":${taskName}").outcome.name() != 'FAILED'
+      !result.tasks.collect { it.outcome }.contains('FAILED')
 
    }
 }

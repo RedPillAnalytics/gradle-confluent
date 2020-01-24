@@ -119,7 +119,7 @@ class DeployTest extends Specification {
       result = executeSingleTask(taskName, ['-Si'])
 
       expect:
-      !result.tasks.collect { it.outcome }.contains('FAILURE')
+      !result.tasks.collect { it.outcome }.contains('FAILED')
    }
 
    def "Deploy test from Maven GCS"() {
@@ -128,7 +128,7 @@ class DeployTest extends Specification {
       result = executeSingleTask(taskName, ['-Si'])
 
       expect:
-      !result.tasks.collect { it.outcome }.contains('FAILURE')
+      !result.tasks.collect { it.outcome }.contains('FAILED')
       result.tasks.collect { it.path - ":" } == ["functionCopy", "pipelineExtract", "pipelineDeploy", "deploy"]
    }
 
@@ -138,7 +138,7 @@ class DeployTest extends Specification {
       result = executeSingleTask(taskName, ['-Si'])
 
       expect:
-      !result.tasks.collect { it.outcome }.contains('FAILURE')
+      !result.tasks.collect { it.outcome }.contains('FAILED')
       result.tasks.collect { it.path - ":" } == ['kafkaTestSink', 'producer']
    }
 }
