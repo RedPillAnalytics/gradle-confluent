@@ -25,5 +25,5 @@ spec:
       tty: true
       resources:
         requests:
-          cpu: "1"
-          memory: "2Gi"
+          cpu: "2"
+          memory: "4Gi"
