@@ -73,12 +73,12 @@ class ConfluentPluginExtension {
    /**
     * Username for Basic Authentication with the RESTful endpoint. Default: ''.
     */
-   String pipelineUsername = ''
+   String pipelineUsername
 
    /**
     * Password for Basic Authentication with the RESTful endpoint. Default: ''.
     */
-   String pipelinePassword = ''
+   String pipelinePassword
 
    /**
     * The pattern used for matching the pipeline deployment artifact. Default: 'pipeline'.
