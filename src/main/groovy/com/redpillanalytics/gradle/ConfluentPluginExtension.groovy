@@ -71,6 +71,16 @@ class ConfluentPluginExtension {
    String pipelineEndpoint = 'http://localhost:8088'
 
    /**
+    * Username for Basic Authentication with the RESTful endpoint. Default: ''.
+    */
+   String pipelineUsername = ''
+
+   /**
+    * Password for Basic Authentication with the RESTful endpoint. Default: ''.
+    */
+   String pipelinePassword = ''
+
+   /**
     * The pattern used for matching the pipeline deployment artifact. Default: 'pipeline'.
     */
    String pipelinePattern = 'pipeline'

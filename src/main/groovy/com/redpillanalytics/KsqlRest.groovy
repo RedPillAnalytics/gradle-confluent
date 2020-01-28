@@ -21,6 +21,16 @@ class KsqlRest {
    String restUrl = 'http://localhost:8088'
 
    /**
+    * The username for basic authentication for the KSQL server. Defaults to ''.
+    */
+   String username = ''
+
+   /**
+    * The password for basic authentication for the KSQL server. Defaults to ''.
+    */
+   String password = ''
+
+   /**
     * Executes a KSQL statement using the KSQL RESTful API.
     *
     * @param ksql the KSQL statement to execute.
@@ -34,13 +44,25 @@ class KsqlRest {
       def prepared = (ksql + ';').replace('\n', '').replace(';;', ';')
 
       if (['create', 'drop'].contains(getStatementType(ksql))) log.info prepared
+      HttpResponse<String> response
 
-      HttpResponse<String> response = Unirest.post("${restUrl}/ksql")
-              .header("Content-Type", "application/vnd.ksql.v1+json")
-              .header("Cache-Control", "no-cache")
-              .header("Postman-Token", "473fbb05-9da1-4020-95c0-f2c60fed8289")
-              .body(JsonOutput.toJson([ksql: prepared, streamsProperties: properties]))
-              .asString()
+      if (username?.trim() && password?.trim()) {
+         def encoded = "${username}:${password}".bytes.encodeBase64().toString()
+         response = Unirest.post("${restUrl}/ksql")
+               .header("Content-Type", "application/vnd.ksql.v1+json")
+               .header("Cache-Control", "no-cache")
+               .header("Postman-Token", "473fbb05-9da1-4020-95c0-f2c60fed8289")
+               .header("Authorization", "Basic ${encoded}")
+               .body(JsonOutput.toJson([ksql: prepared, streamProperties: properties]))
+               .asString()
+      } else {
+         response = Unirest.post("${restUrl}/ksql")
+               .header("Content-Type", "application/vnd.ksql.v1+json")
+               .header("Cache-Control", "no-cache")
+               .header("Postman-Token", "473fbb05-9da1-4020-95c0-f2c60fed8289")
+               .body(JsonOutput.toJson([ksql: prepared, streamsProperties: properties]))
+               .asString()
+      }
 
       log.debug "unirest response: ${response.dump()}"
       def body = new JsonSlurper().parseText(response.body)
