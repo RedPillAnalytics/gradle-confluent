@@ -52,7 +52,6 @@ class KsqlRest {
       HttpResponse<String> response = Unirest.post("${restUrl}/ksql")
               .header("Content-Type", "application/vnd.ksql.v1+json")
               .header("Cache-Control", "no-cache")
-              .header("Postman-Token", "473fbb05-9da1-4020-95c0-f2c60fed8289")
               .body(JsonOutput.toJson([ksql: prepared, streamsProperties: properties]))
               .asString()
 
