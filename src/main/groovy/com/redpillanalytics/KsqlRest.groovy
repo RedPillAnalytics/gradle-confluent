@@ -44,16 +44,17 @@ class KsqlRest {
       def prepared = (ksql + ';').replace('\n', '').replace(';;', ';')
 
       if (['create', 'drop'].contains(getStatementType(ksql))) log.info prepared
+
+      if (username && password) {
+         Unirest.config().setDefaultBasicAuth(username, password)
+      }
+
       HttpResponse<String> response = Unirest.post("${restUrl}/ksql")
               .header("Content-Type", "application/vnd.ksql.v1+json")
               .header("Cache-Control", "no-cache")
               .header("Postman-Token", "473fbb05-9da1-4020-95c0-f2c60fed8289")
               .body(JsonOutput.toJson([ksql: prepared, streamsProperties: properties]))
               .asString()
-
-      // streamline the addition of basic credentials slightly
-      if (username && password)
-         response.header("Authorization", "Basic " + "${username}:${password}".bytes.encodeBase64().toString())
 
       log.debug "unirest response: ${response.dump()}"
       def body = new JsonSlurper().parseText(response.body)
@@ -229,7 +230,7 @@ class KsqlRest {
 
       def result = execKsql(ksql, properties)
 
-         log.debug "result: ${result}"
+      log.debug "result: ${result}"
 
       if (result.status == 400 && result.body.message.contains('Incompatible data source type is STREAM')) {
          log.info "Type is now STREAM. Issuing DROP STREAM..."
