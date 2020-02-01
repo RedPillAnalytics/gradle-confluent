@@ -8,7 +8,7 @@ import org.gradle.api.tasks.*
  * Generate CREATE and DROP scripts used for deployment to KSQL Servers.
  */
 @Slf4j
-class PipelineScriptTask extends PipelineTask {
+class PipelineScriptTask extends PipelineFilesTask {
 
    PipelineScriptTask() {
       group = project.confluent.taskGroup
