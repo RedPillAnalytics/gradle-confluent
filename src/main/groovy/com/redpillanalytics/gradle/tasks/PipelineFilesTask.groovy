@@ -54,7 +54,6 @@ class PipelineFilesTask extends PipelineTask {
       //File dir = project.file("${project.extensions.confluent.sourceBase}/${project.extensions.confluent.pipelineSourceName}/${pipelinePath}")
 
       return dir.exists() ? dir : project.file(pipelinePath)
-
    }
 
    /**

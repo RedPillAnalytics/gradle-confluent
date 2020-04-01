@@ -71,7 +71,11 @@ class ExecuteTest extends Specification {
 
    def copySource() {
 
-      new AntBuilder().copy(todir: projectDir) {
+      def ant = new AntBuilder()
+
+      ant.delete(dir: projectDir)
+
+      ant.copy(todir: projectDir) {
          fileset(dir: resourcesDir)
       }
    }
