@@ -119,7 +119,7 @@ class ExecuteTest extends Specification {
    def "Execute :pipelineExecute task with default values"() {
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--debug', '-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ['-Si', '--rerun-tasks'])
 
       expect:
       !result.tasks.collect { it.outcome }.contains('FAILURE')
