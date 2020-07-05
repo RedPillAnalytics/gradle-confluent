@@ -101,9 +101,9 @@ class ConfluentPluginExtension {
    String configEnv = 'development'
 
    /**
-    * The number of seconds to pause execution between statements. Default: 0
+    * The number of seconds to pause execution after a create statement. Default: 0
     */
-   Integer statementPause = 0
+   String statementPause = '0'
 
    /**
     * Provides the path for Pipeline source files.

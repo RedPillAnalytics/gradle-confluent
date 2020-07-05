@@ -171,6 +171,8 @@ Options
 
      --basic-password     The Password for Basic Authentication with the REST API URL for the KSQL Server. Default: value of 'confluent.pipelinePassword' or ''.
 
+     --statement-pause     The number of seconds to pause after executing a CREATE query. This can be useful if you find your piepeline deploys 'too quickly' for joins to form completely, or you need to monitor query deployment in realtime. Default:: value of 'confluent.statementPause' or '0'.
+
 Description
      Execute all KSQL pipelines from the provided source directory, in hierarchical order, proceeded by applicable DROP and TERMINATE commands.
 
