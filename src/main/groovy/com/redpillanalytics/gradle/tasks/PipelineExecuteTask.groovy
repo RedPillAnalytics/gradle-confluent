@@ -99,6 +99,16 @@ class PipelineExecuteTask extends PipelineTask {
    )
    boolean noCreate
 
+   /**
+    * The number of seconds to pause execution after a create statement. Default: the extension property {@link com.redpillanalytics.gradle.ConfluentPluginExtensions#statementPause}.
+    */
+   @Input
+   @Optional
+   @Option(option = "statement-pause",
+           description = "The number of seconds to pause execution after a create statement. Default: value of 'confluent.statementPause'."
+   )
+   String statementPause = project.extensions.confluent.statementPause
+
    @TaskAction
    def executePipelines() {
 
@@ -196,6 +206,12 @@ class PipelineExecuteTask extends PipelineTask {
                )
             }
             numCreated++
+
+            if (statementPause != 0) {
+               // pause for the configured number of seconds after executing a create statement
+               println "Pausing for $statementPause seconds"
+               sleep(statementPause.toInteger() * 1000)
+            }
          }
       }
       log.warn "${numTerminated} queries terminated."
