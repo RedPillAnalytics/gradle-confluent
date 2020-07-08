@@ -10,6 +10,7 @@ plugins {
    id "com.redpillanalytics.gradle-analytics" version "1.3.0"
    id 'com.adarshr.test-logger' version '2.0.0'
    id 'build-dashboard'
+   id 'maven-publish'
 }
 
 // send analytics
@@ -154,11 +155,11 @@ tasks.withType(Test) {
 //dockerCompose.isRequiredBy tasks.runAllTests
 
 // create a publish task
-task publish {
-   description 'Custom publish task.'
-   group 'publishing'
-   dependsOn tasks.publishPlugins, tasks.publishVersionDocs, tasks.publishLatestDocs, tasks.githubRelease, tasks.build
-}
+//task publish {
+//   description 'Custom publish task.'
+//   group 'publishing'
+//   dependsOn tasks.publishPlugins, tasks.publishVersionDocs, tasks.publishLatestDocs, tasks.githubRelease, tasks.build
+//}
 
 tasks.githubRelease.mustRunAfter tasks.publishPlugins, tasks.build
 tasks.deployTest.mustRunAfter tasks.buildTest

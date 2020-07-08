@@ -13,7 +13,7 @@ import org.gradle.api.GradleException
  */
 class KsqlRest {
 
-   static final String KSQLREGEX = /(?i)(?:.*)(create|drop|insert)(?:\s+)(table|stream|into)(?:\s+)(?:IF EXISTS\s+)?(\w+)/
+   static final String KSQLREGEX = /(?i)(?:.*)(create|drop|insert)(?:\s+)(table|stream|into|sink connector|connector)(?:\s+)(?:IF EXISTS\s+)?(\w+)/
 
    /**
     * The base REST endpoint for the KSQL server. Defaults to 'http://localhost:8088', which is handy when developing against Confluent CLI.
@@ -231,6 +231,8 @@ class KsqlRest {
 
       log.debug "result: ${result}"
 
+      println "result: ${result}"
+
       if (result.status == 400 && result.body.message.contains('Incompatible data source type is STREAM')) {
          log.info "Type is now STREAM. Issuing DROP STREAM..."
          result = execKsql(ksql.replace('TABLE', 'STREAM'), properties)
@@ -239,6 +241,12 @@ class KsqlRest {
       if (result.status == 400 && result.body.message.contains('Incompatible data source type is TABLE')) {
          log.info "Type is now TABLE. Issuing DROP TABLE..."
          result = execKsql(ksql.replace('STREAM', 'TABLE'), properties)
+      }
+
+      if (result.status == 404) { //&& result.body.message.contains('not found')) {
+         println "tried to delete a connector that doesn't exists, pretend like everything is ok"
+         // (there is no 'DROP CONNECTOR IF EXISTS...' statement available)
+         result.status = 200
       }
 
       log.debug "final result: ${result}"
@@ -253,6 +261,12 @@ class KsqlRest {
     */
    def getSourceDescription(String object) {
       def response = execKsql("DESCRIBE ${object?.toLowerCase()}", false)
+
+      // Try as a connector instead
+      if (response.status == 400) {
+         response = execKsql("DESCRIBE CONNECTOR ${object?.toLowerCase()}", false)
+      }
+
       return response.body.sourceDescription
    }
 
@@ -354,7 +368,20 @@ class KsqlRest {
     */
    String getObjectName(String sql) {
 
-      sql.find(KSQLREGEX) { String all, String statement, String type, String name -> name.toLowerCase() }
+      sql.find(KSQLREGEX) { String all, String statement, String type, String name ->
+         name.toLowerCase()
+      }
+   }
+
+   /**
+    * Returns the object type from a KSQL CREATE or DROP statement.
+    *
+    * @return Either 'table', 'stream', 'into' (denotes it was an INSERT statement) or 'connector'
+    */
+   String getObjectType(String sql) {
+      sql.find(KSQLREGEX) { String all, String statement, String type, String name ->
+         type.toLowerCase()
+      }
    }
 
    /**
