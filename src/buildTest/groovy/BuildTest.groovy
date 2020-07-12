@@ -57,7 +57,7 @@ class BuildTest extends Specification {
                 mavenLocal()
                 maven {
                   name 'test'
-                  url 'gcs://maven.redpillanalytics.io/demo'
+                  url '${resourcesDir}/maven'
                 }
               }
             }
@@ -69,7 +69,7 @@ class BuildTest extends Specification {
                mavenLocal()
                maven {
                name 'test'
-               url 'gcs://maven.redpillanalytics.io/demo'
+               url '${resourcesDir}/maven'
               }
             }
             mainClassName = "streams.TestClass"

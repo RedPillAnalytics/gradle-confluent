@@ -69,7 +69,7 @@ class PropertiesTest extends Specification {
                |  mavenLocal()
                |  maven {
                |     name 'test'
-               |     url 'gcs://maven.redpillanalytics.io/demo'
+               |     url '${resourcesDir}/maven'
                |  }
                |}
                |
