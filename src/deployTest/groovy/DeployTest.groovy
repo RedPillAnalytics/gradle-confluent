@@ -74,7 +74,7 @@ class DeployTest extends Specification {
                |  mavenLocal()
                |  maven {
                |     name 'test'
-               |     url 'gcs://maven.redpillanalytics.com/demo'
+               |     url '${resourcesDir}/maven'
                |  }
                |}
                |
@@ -122,7 +122,7 @@ class DeployTest extends Specification {
       !result.tasks.collect { it.outcome }.contains('FAILED')
    }
 
-   def "Deploy test from Maven GCS"() {
+   def "Deploy test from Resources"() {
       given:
       taskName = 'deploy'
       result = executeSingleTask(taskName, ['-Si'])
