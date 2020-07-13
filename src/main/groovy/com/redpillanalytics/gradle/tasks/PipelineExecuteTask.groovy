@@ -107,7 +107,7 @@ class PipelineExecuteTask extends PipelineTask {
    @Option(option = "statement-pause",
            description = "The number of seconds to pause execution after a create statement. Default: value of 'confluent.statementPause'."
    )
-   String statementPause = project.extensions.confluent.statementPause
+   Integer statementPause = project.extensions.confluent.statementPause
 
    @TaskAction
    def executePipelines() {
@@ -210,7 +210,7 @@ class PipelineExecuteTask extends PipelineTask {
             if (statementPause != 0) {
                // pause for the configured number of seconds after executing a create statement
                println "Pausing for $statementPause seconds"
-               sleep(statementPause.toInteger() * 1000)
+               sleep(statementPause * 1000)
             }
          }
       }
