@@ -4,7 +4,6 @@
 --
 -- Min, Max, UDFs etc
 ----------------------------------------------------------------------------------------------------------------------------
-
 -- Aggregate (count&groupBy) using a TABLE-Window
 CREATE TABLE ENRICHED_ERROR_CODES_COUNT AS
 SELECT code, definition, COUNT(*) AS count

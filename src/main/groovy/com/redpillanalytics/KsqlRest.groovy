@@ -194,9 +194,12 @@ class KsqlRest {
     *
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
-   def createKsql(String ksql, Boolean earliest = false) {
-
-      createKsql(ksql, (earliest ? ["ksql.streams.auto.offset.reset": "earliest"] : [:]))
+   def createKsql(String ksql, Boolean earliest = false, Boolean latest = false) {
+      def val = [:]
+      if( earliest || latest ) {
+         val = ["ksql.streams.auto.offset.reset": ( earliest ? "earliest" : "latest" )]
+      }
+      createKsql(ksql, val)
    }
 
    /**

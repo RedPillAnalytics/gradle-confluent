@@ -99,6 +99,20 @@ class PipelineExecuteTask extends PipelineTask {
    )
    boolean noCreate
 
+   def doSkip(it) {
+      boolean setCmd = it.toString().toLowerCase().startsWith("set ")
+      boolean unsetCmd = it.toString().toLowerCase().startsWith("unset ")
+      boolean offsetReset = it.toString().toLowerCase().contains("auto.offset.reset")
+      if(setCmd && offsetReset) {
+         boolean earliest = it.toString().toLowerCase().contains("earliest")
+         setFromBeginning(earliest)
+      }
+      if(unsetCmd && offsetReset) {
+         setFromBeginning(false)
+      }
+      return setCmd || unsetCmd
+   }
+
    @TaskAction
    def executePipelines() {
 
@@ -113,6 +127,9 @@ class PipelineExecuteTask extends PipelineTask {
 
          // drop KSQL objects
          dropSql.each { sql ->
+
+            if(doSkip(sql))
+               return
 
             // extract the object name from the query
             String object = ksqlRest.getObjectName(sql)
@@ -175,6 +192,8 @@ class PipelineExecuteTask extends PipelineTask {
       // create KSQL objects
       if (!noCreate) {
          pipelineSql.each {
+            if(doSkip(it))
+               return
 
             // extract the object name from the query
             String object = ksqlRest.getObjectName(it)
