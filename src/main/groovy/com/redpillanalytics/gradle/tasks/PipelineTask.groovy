@@ -173,8 +173,8 @@ class PipelineTask extends DefaultTask {
 
       List script = pipelineSql.collect { String sql ->
 
-         sql.find(/(?i)(.*)(CREATE)(\s+)(table|stream|sink connector)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
-            if (type == 'SINK CONNECTOR') {
+         sql.find(/(?i)(.*)(CREATE)(\s+)(table|stream|source connector|sink connector)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
+            if (type.toLowerCase() == 'source connector' || type.toLowerCase() == 'sink connector') {
                return "DROP CONNECTOR $name;\n"
             }
             else {

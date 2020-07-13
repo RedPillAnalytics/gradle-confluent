@@ -127,11 +127,14 @@ class PipelineExecuteTask extends PipelineTask {
             // extract the object name from the query
             String object = ksqlRest.getObjectName(sql)
 
+            // extract the object type from the query
+            String objectType = ksqlRest.getObjectType(sql)
+
             // don't bother unless it actually exists
-            if (ksqlRest.getSourceDescription(object)) {
+            if (ksqlRest.getSourceDescription(object, objectType)) {
 
                // queries won't exist for connector objects
-               if (ksqlRest.getObjectType(sql) != 'connector') {
+               if (objectType != 'connector') {
 
                   // get any persistent queries reading or writing to this table/stream
                   List queryIds = ksqlRest.getQueryIds(object)
@@ -169,6 +172,7 @@ class PipelineExecuteTask extends PipelineTask {
 
                // write the analytics record if the analytics plugin is there
                if (project.rootProject.plugins.findPlugin('com.redpillanalytics.gradle-analytics')) {
+
                   project.rootProject.extensions.analytics.writeAnalytics(
                           ANALYTICS_NAME,
                           project.rootProject.buildDir,
