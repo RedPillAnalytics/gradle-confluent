@@ -99,6 +99,30 @@ class PipelineExecuteTask extends PipelineTask {
    )
    boolean noCreate
 
+   /**
+    * The number of seconds to pause execution after a create statement. Default: the extension property {@link com.redpillanalytics.gradle.ConfluentPluginExtensions#statementPause}.
+    */
+   @Input
+   @Optional
+   @Option(option = "statement-pause",
+           description = "The number of seconds to pause execution after a create statement. Default: value of 'confluent.statementPause'."
+   )
+   String statementPause = project.extensions.confluent.statementPause
+
+   def doSkip(it) {
+      boolean setCmd = it.toString().toLowerCase().startsWith("set ")
+      boolean unsetCmd = it.toString().toLowerCase().startsWith("unset ")
+      boolean offsetReset = it.toString().toLowerCase().contains("auto.offset.reset")
+      if(setCmd && offsetReset) {
+         boolean earliest = it.toString().toLowerCase().contains("earliest")
+         setFromBeginning(earliest)
+      }
+      if(unsetCmd && offsetReset) {
+         setFromBeginning(false)
+      }
+      return setCmd || unsetCmd
+   }
+
    @TaskAction
    def executePipelines() {
 
@@ -113,6 +137,9 @@ class PipelineExecuteTask extends PipelineTask {
 
          // drop KSQL objects
          dropSql.each { sql ->
+
+            if(doSkip(sql))
+               return
 
             // extract the object name from the query
             String object = ksqlRest.getObjectName(sql)
@@ -175,6 +202,8 @@ class PipelineExecuteTask extends PipelineTask {
       // create KSQL objects
       if (!noCreate) {
          pipelineSql.each {
+            if(doSkip(it))
+               return
 
             // extract the object name from the query
             String object = ksqlRest.getObjectName(it)
@@ -196,6 +225,12 @@ class PipelineExecuteTask extends PipelineTask {
                )
             }
             numCreated++
+
+            if (statementPause != 0) {
+               // pause for the configured number of seconds after executing a create statement
+               println "Pausing for $statementPause seconds"
+               sleep(statementPause.toInteger() * 1000)
+            }
          }
       }
       log.warn "${numTerminated} queries terminated."

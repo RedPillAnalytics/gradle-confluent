@@ -3,7 +3,7 @@ version: '2'
 
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:5.4.1
+    image: confluentinc/cp-zookeeper:5.5.0
     hostname: zookeeper
     container_name: zookeeper
     ports:
@@ -12,10 +12,10 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
 
-  broker:
-    image: confluentinc/cp-enterprise-kafka:5.4.1
-    hostname: broker
-    container_name: broker
+  kafka:
+    image: confluentinc/cp-enterprise-kafka:5.5.0
+    hostname: kafka
+    container_name: kafka
     depends_on:
       - zookeeper
     ports:
@@ -25,55 +25,86 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
 
-  ksqldb-server:
+  ksqldb:
     image: confluentinc/ksqldb-server:0.8.1
-    hostname: ksqldb-server
-    container_name: ksqldb-server
+    hostname: ksqldb
+    container_name: ksqldb
     depends_on:
-      - broker
+      - kafka
     ports:
       - "8088:8088"
     environment:
       KSQL_LISTENERS: http://0.0.0.0:8088
-      KSQL_BOOTSTRAP_SERVERS: broker:9092
+      KSQL_BOOTSTRAP_SERVERS: kafka:9092
       KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
       KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
 
   ksqldb-cli:
     image: confluentinc/ksqldb-cli:0.8.1
     container_name: ksqldb-cli
     depends_on:
-      - broker
-      - ksqldb-server
+      - kafka
+      - ksqldb
     entrypoint: /bin/sh
     tty: true
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:5.5.0
+    hostname: schema-registry
+    container_name: schema-registry
+    ports:
+      - "8081:8081"
+    depends_on:
+      - kafka
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:2181
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://schema-registry:8081
+      SCHEMA_REGISTRY_DEBUG: "true"
+
+  kafka-rest:
+    image: confluentinc/cp-kafka-rest:5.5.0
+    hostname: kafka-rest
+    container_name: kafka-rest
+    ports:
+      - "8082:8082"
+    depends_on:
+      - schema-registry
+    environment:
+      KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_REST_SCHEMA_REGISTRY_URL: schema-registry:8081
+      KAFKA_REST_HOST_NAME: kafka-rest
+      KAFKA_REST_LISTENERS: http://kafka-rest:8082
 
   # Runs the Kafka KSQL data generator
   datagen:
     container_name: datagen
-    image: confluentinc/ksql-examples:5.4.1
+    image: confluentinc/ksql-examples:5.4.2
     depends_on:
-      - broker
+      - kafka
     command: "bash -c 'ksql-datagen \
-                          bootstrap-server=broker:9092 \
+                          bootstrap-server=kafka:9092 \
                           quickstart=clickstream_codes \
                           format=json \
                           topic=clickstream_codes \
                           maxInterval=1 \
                           iterations=100 && \
                        ksql-datagen \
-                          bootstrap-server=broker:9092 \
+                          bootstrap-server=kafka:9092 \
                           quickstart=clickstream_users \
                           format=json \
                           topic=clickstream_users \
                           maxInterval=1 \
                           iterations=1000 && \
                        ksql-datagen \
-                          bootstrap-server=broker:9092 \
+                          bootstrap-server=kafka:9092 \
                           quickstart=clickstream \
                           format=json \
                           topic=clickstream \
