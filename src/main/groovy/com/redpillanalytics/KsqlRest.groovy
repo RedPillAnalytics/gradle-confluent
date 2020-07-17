@@ -63,8 +63,6 @@ class KsqlRest {
               statusText: response.statusText,
               body      : body
       ]
-
-
       log.debug "status: ${result.status}, statusText: ${result.statusText}"
 
       log.debug "body: $result.body"
@@ -299,6 +297,7 @@ class KsqlRest {
       // null safe all the way
       // Return any query IDs from either the write or read queries
       return ([] + getReadQueries(object) + getWriteQueries(object)).findResults { query -> query?.id }
+
    }
 
    /**
@@ -365,9 +364,7 @@ class KsqlRest {
     */
    String getObjectName(String sql) {
 
-      sql.find(KSQLREGEX) { String all, String statement, String type, String name ->
-         name.toLowerCase()
-      }
+      sql.find(KSQLREGEX) { String all, String statement, String type, String name -> name.toLowerCase() }
    }
 
    /**
