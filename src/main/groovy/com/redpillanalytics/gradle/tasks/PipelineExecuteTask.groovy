@@ -99,6 +99,16 @@ class PipelineExecuteTask extends PipelineTask {
    )
    boolean noCreate
 
+   /**
+    * The number of seconds to pause execution after a create statement. Default: the extension property {@link com.redpillanalytics.gradle.ConfluentPluginExtensions#statementPause}.
+    */
+   @Input
+   @Optional
+   @Option(option = "statement-pause",
+           description = "The number of seconds to pause execution after a create statement. Default: value of 'confluent.statementPause'."
+   )
+   String statementPause = project.extensions.confluent.statementPause
+
    def doSkip(it) {
       boolean setCmd = it.toString().toLowerCase().startsWith("set ")
       boolean unsetCmd = it.toString().toLowerCase().startsWith("unset ")
@@ -134,36 +144,44 @@ class PipelineExecuteTask extends PipelineTask {
             // extract the object name from the query
             String object = ksqlRest.getObjectName(sql)
 
+            // extract the object type from the query
+            String objectType = ksqlRest.getObjectType(sql)
+
             // don't bother unless it actually exists
-            if (ksqlRest.getSourceDescription(object)) {
+            if (ksqlRest.getSourceDescription(object, objectType)) {
 
-               // get any persistent queries reading or writing to this table/stream
-               List queryIds = ksqlRest.getQueryIds(object)
+               // queries won't exist for connector objects
+               if (objectType != 'connector') {
 
-               if (!queryIds.isEmpty()) {
-                  if (!noTerminate) {
-                     queryIds.each { query ->
-                        logger.info "Terminating query $query..."
-                        def result = ksqlRest.execKsql("TERMINATE ${query}")
-                        // write the analytics record if the analytics plugin is there
-                        if (project.rootProject.plugins.findPlugin('com.redpillanalytics.gradle-analytics')) {
-                           project.rootProject.extensions.analytics.writeAnalytics(
-                                   ANALYTICS_NAME,
-                                   project.rootProject.buildDir,
-                                   project.rootProject.extensions.analytics.getBuildHeader() <<
-                                           [
-                                                   type      : 'terminate',
-                                                   object    : object,
-                                                   statement : sql,
-                                                   status    : result.status,
-                                                   statustext: result.statusText
-                                           ]
-                           )
+                  // get any persistent queries reading or writing to this table/stream
+                  List queryIds = ksqlRest.getQueryIds(object)
+
+                  if (!queryIds.isEmpty()) {
+
+                     if (!noTerminate) {
+                        queryIds.each { query ->
+                           logger.info "Terminating query $query..."
+                           def result = ksqlRest.execKsql("TERMINATE ${query}")
+                           // write the analytics record if the analytics plugin is there
+                           if (project.rootProject.plugins.findPlugin('com.redpillanalytics.gradle-analytics')) {
+                              project.rootProject.extensions.analytics.writeAnalytics(
+                                      ANALYTICS_NAME,
+                                      project.rootProject.buildDir,
+                                      project.rootProject.extensions.analytics.getBuildHeader() <<
+                                              [
+                                                      type      : 'terminate',
+                                                      object    : object,
+                                                      statement : sql,
+                                                      status    : result.status,
+                                                      statustext: result.statusText
+                                              ]
+                              )
+                           }
+                           numTerminated++
                         }
-                        numTerminated++
-                     }
 
-                  } else log.info "Persistent queries exist, but '--no-terminate' option provided."
+                     } else log.info "Persistent queries exist, but '--no-terminate' option provided."
+                  }
                }
 
                // execute the statement
@@ -171,6 +189,7 @@ class PipelineExecuteTask extends PipelineTask {
 
                // write the analytics record if the analytics plugin is there
                if (project.rootProject.plugins.findPlugin('com.redpillanalytics.gradle-analytics')) {
+
                   project.rootProject.extensions.analytics.writeAnalytics(
                           ANALYTICS_NAME,
                           project.rootProject.buildDir,
@@ -215,6 +234,12 @@ class PipelineExecuteTask extends PipelineTask {
                )
             }
             numCreated++
+
+            if (statementPause != 0) {
+               // pause for the configured number of seconds after executing a create statement
+               println "Pausing for $statementPause seconds"
+               sleep(statementPause.toInteger() * 1000)
+            }
          }
       }
       log.warn "${numTerminated} queries terminated."

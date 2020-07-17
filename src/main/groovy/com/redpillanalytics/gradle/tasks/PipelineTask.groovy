@@ -173,8 +173,13 @@ class PipelineTask extends DefaultTask {
 
       List script = pipelineSql.collect { String sql ->
 
-         sql.find(/(?i)(.*)(CREATE)(\s+)(table|stream)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
-            "DROP $type IF EXISTS ${name}${getDirectiveObjects('DeleteTopic').contains(name) ? ' DELETE TOPIC' : ''};\n"
+         sql.find(/(?i)(.*)(CREATE)(\s+)(table|stream|source connector|sink connector)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
+            if (type.toLowerCase() == 'source connector' || type.toLowerCase() == 'sink connector') {
+               return "DROP CONNECTOR $name;\n"
+            }
+            else {
+               return "DROP $type IF EXISTS ${name}${getDirectiveObjects('DeleteTopic').contains(name) ? ' DELETE TOPIC' : ''};\n"
+            }
          }
       }
 

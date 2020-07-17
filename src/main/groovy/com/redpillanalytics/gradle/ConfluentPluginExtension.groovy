@@ -101,6 +101,11 @@ class ConfluentPluginExtension {
    String configEnv = 'development'
 
    /**
+    * The number of seconds to pause execution after a create statement. Default: 0
+    */
+   String statementPause = '0'
+
+   /**
     * Provides the path for Pipeline source files.
     *
     * @return The full path of the Pipeline source files. Uses {@link #pipelineSourcePath} first if it exists, and if it doesn't (the default), then it uses {@link #sourceBase} and {@link #pipelineSourceName}.
