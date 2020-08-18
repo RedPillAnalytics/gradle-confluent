@@ -74,7 +74,7 @@ class DeployTest extends Specification {
                |  mavenLocal()
                |  maven {
                |     name 'test'
-               |     url '${resourcesDir}/maven'
+               |     url 'maven'
                |  }
                |}
                |
