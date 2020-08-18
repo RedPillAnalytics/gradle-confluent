@@ -66,7 +66,7 @@ class TasksTest extends Specification {
                |  mavenLocal()
                |  maven {
                |     name 'test'
-               |     url '${resourcesDir}/maven'
+               |     url 'maven'
                |  }
                |}
                |

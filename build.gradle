@@ -5,9 +5,9 @@ plugins {
    id "pl.allegro.tech.build.axion-release" version "1.11.0"
    id "com.github.breadmoirai.github-release" version "2.2.12"
    id 'org.unbroken-dome.test-sets' version '3.0.1'
-   id "com.avast.gradle.docker-compose" version "0.13.0"
-   id "com.github.ben-manes.versions" version "0.28.0"
-   id "com.redpillanalytics.gradle-analytics" version "1.3.2"
+   id "com.avast.gradle.docker-compose" version "0.13.2"
+   id "com.github.ben-manes.versions" version "0.29.0"
+   id "com.redpillanalytics.gradle-analytics" version "1.3.7"
    id 'com.adarshr.test-logger' version '2.1.0'
    id 'build-dashboard'
 }
@@ -15,9 +15,10 @@ plugins {
 // send analytics
 analytics {
    organization = 'Red Pill Analytics'
-   gcs {
+   bq {
       devops {
-         prefix = 'rpa-gradle-analytics'
+         bucket = 'rpa-gradle-analytics'
+         dataset = 'gradle_analytics'
       }
    }
 }
