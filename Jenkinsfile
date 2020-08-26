@@ -38,6 +38,7 @@ pipeline {
          post {
             always {
                junit testResults: 'build/test-results/**/*.xml', allowEmptyResults: true
+               sh "$gradle producer"
             }
          }
       }
@@ -50,6 +51,7 @@ pipeline {
          post {
             always {
                archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true, allowEmptyArchive: true
+               sh "$gradle producer"
             }
          }
       }
