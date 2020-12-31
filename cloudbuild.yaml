@@ -7,9 +7,12 @@ substitutions:
 steps:
 - name: 'docker/compose:1.27.4'
   id: compose
-  args: ['up', '-d']
+  args:
+    - up
+    - -d
   env:
   - 'PROJECT_ID=$PROJECT_ID'
+  waitFor: ['-']
 - name: gcr.io/rpa-devops/lastversion
   id: version
   entrypoint: bash
@@ -17,11 +20,13 @@ steps:
    - '-c'
    - |
       lastversion $REPO_NAME > version.txt
+  waitFor: ['-']
 - name: 'gcr.io/$PROJECT_ID/restore_cache'
   id: restore-cache
   args:
     - '--bucket=$_CACHE_BUCKET'
     - '--key=${_PROJECT}_$( checksum build.gradle )'
+  waitFor: ['-']
 - name: gcr.io/google.com/cloudsdktool/cloud-sdk
   id: release
   entrypoint: bash
@@ -34,13 +39,19 @@ steps:
       else
         ./gradlew bumpPatch applySnapshot
       fi
+  waitFor:
+    - restore-cache
+    - version
 - name: gcr.io/google.com/cloudsdktool/cloud-sdk
   id: test
   entrypoint: bash
   args:
     - '-c'
     - |
-       ./gradlew cleanLibs build groovydoc runAllTests buildDashboard -DpipelineEndpoint=http://ksqldb-server:8088
+       ./gradlew cleanLibs build groovydoc runAllTests buildDashboard -PpipelineEndpoint=http://ksqldb-server:8088
+  waitFor:
+    - release
+    - compose
 - name: gcr.io/google.com/cloudsdktool/cloud-sdk
   id: publish
   entrypoint: bash
@@ -51,6 +62,8 @@ steps:
       then
         ./gradlew publish
       fi
+  waitFor:
+    - test
 - name: amazon/aws-cli
   id: publish-docs
   entrypoint: bash
@@ -61,6 +74,8 @@ steps:
       then
         aws s3 sync ${_DOC_LOCAL} ${_DOC_REMOTE}/`cat version.txt`/ && aws s3 sync ${_DOC_LOCAL} ${_DOC_REMOTE}/latest
       fi
+  waitFor:
+    - test
 - name: 'gcr.io/$PROJECT_ID/save_cache'
   id: save-cache
   args:
@@ -68,7 +83,7 @@ steps:
     - '--key=gradle-${_PROJECT}_$( checksum build.gradle )'
     - '--path=.gradle/'
   waitFor:
-  - test
+    - test
 timeout: 3600s
 options:
   dynamic_substitutions: true
