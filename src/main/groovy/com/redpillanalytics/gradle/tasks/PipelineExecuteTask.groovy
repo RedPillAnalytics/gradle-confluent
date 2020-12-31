@@ -107,7 +107,7 @@ class PipelineExecuteTask extends PipelineTask {
    @Option(option = "statement-pause",
            description = "The number of seconds to pause execution after a create statement. Default: value of 'confluent.statementPause'."
    )
-   String statementPause = project.extensions.confluent.statementPause
+   String statementPause = project.extensions.confluent.statementPause.toString()
 
    def doSkip(it) {
       boolean setCmd = it.toString().toLowerCase().startsWith("set ")

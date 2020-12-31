@@ -86,6 +86,7 @@ class DeployTest extends Specification {
                |confluent {
                |  functionPattern = 'simple-build'
                |  pipelineEndpoint = '$pipelineEndpoint'
+               |  statementPause = 2
                |}
                |analytics {
                |   kafka {
