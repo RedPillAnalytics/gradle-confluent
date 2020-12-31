@@ -62,7 +62,6 @@ class PipelineTask extends DefaultTask {
     */
    @OutputFile
    File getCreateScript() {
-
       return project.file("${dir}/${project.extensions.confluent.pipelineCreateName}")
    }
 
@@ -73,9 +72,7 @@ class PipelineTask extends DefaultTask {
     */
    @Internal
    List getPipelineFiles() {
-
       def tree = project.fileTree(dir: dir, includes: ['**/*.sql', '**/*.SQL', '**/*.ksql','**/*.KSQL'], exclude: project.extensions.confluent.pipelineCreateName)
-
       return tree.sort()
    }
 
@@ -86,7 +83,6 @@ class PipelineTask extends DefaultTask {
     */
    @Internal
    def getTokenizedSql() {
-
       //tokenize individual KSQL statements out of each SQL script
       def tokenized = []
       getPipelineFiles().each { file ->
@@ -119,7 +115,6 @@ class PipelineTask extends DefaultTask {
       }
 
       transformed.removeAll('')
-
       log.debug "cleaned:"
       transformed.each { log.debug "sql: $it \n" }
 
@@ -133,9 +128,7 @@ class PipelineTask extends DefaultTask {
     */
    @Internal
    def getDirectives() {
-
       List directives = []
-
       tokenizedSql.each { String sql ->
          sql.find(/(?i)(--@{1,1})(\w+)(\n)(CREATE{1,1})( {1,})(\w+)( {1,})(\w+)/) { match, directive, directiveType, s1, create, s2, table, s3, object ->
             if (match != null) directives << [type: directiveType, object: object]
@@ -155,7 +148,6 @@ class PipelineTask extends DefaultTask {
     * @return objects A list of tables/streams that have the specific directive.
     */
    def getDirectiveObjects(String directiveType) {
-
       directives.collect { map ->
          if (map.type == directiveType) map.object
       }
@@ -170,9 +162,7 @@ class PipelineTask extends DefaultTask {
     */
    @Internal
    List getDropSql() {
-
       List script = pipelineSql.collect { String sql ->
-
          sql.find(/(?i)(.*)(CREATE)(\s+)(table|stream|source connector|sink connector)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
             if (type.toLowerCase() == 'source connector' || type.toLowerCase() == 'sink connector') {
                return "DROP CONNECTOR $name;\n"

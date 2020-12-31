@@ -85,7 +85,9 @@ class ConfluentPlugin implements Plugin<Project> {
          //log.debug "enableStreams: ${enableStreams}"
 
          // show all topics
-         project.task('listTopics', type: ListTopicsTask) {}
+         project.task('listTopics', type: ListTopicsTask) {
+            pipelinePath pipelineBuildDir.canonicalPath
+         }
 
          // create deploy task
          project.task('deploy') {
@@ -111,7 +113,6 @@ class ConfluentPlugin implements Plugin<Project> {
                project.build.dependsOn tg.getTaskName('pipelineSync')
 
                project.task(tg.getTaskName('pipelineScript'), type: PipelineScriptTask) {
-
                   pipelinePath pipelineBuildDir.canonicalPath
                   onlyIf { dir.exists() }
                   dependsOn tg.getTaskName('pipelineSync')
