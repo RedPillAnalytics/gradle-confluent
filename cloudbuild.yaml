@@ -1,0 +1,87 @@
+substitutions:
+  _PROJECT: gradle-confluent
+  _DOC_REMOTE: s3://documentation.redpillanalytics.com/$_PROJECT
+  _DOC_LOCAL: build/docs/groovydoc/
+  _CACHE_BUCKET: rpa-devops-build-cache
+  _ARTIFACT_LOCATION: 'gs://rpa-devops-artifacts/$_PROJECT/'
+steps:
+- name: 'docker/compose:1.27.4'
+  id: compose
+  args: ['up', '-d']
+  env:
+  - 'PROJECT_ID=$PROJECT_ID'
+- name: gcr.io/rpa-devops/lastversion
+  id: version
+  entrypoint: bash
+  args:
+   - '-c'
+   - |
+      lastversion $REPO_NAME > version.txt
+- name: 'gcr.io/$PROJECT_ID/restore_cache'
+  id: restore-cache
+  args:
+    - '--bucket=$_CACHE_BUCKET'
+    - '--key=${_PROJECT}_$( checksum build.gradle )'
+- name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  id: release
+  entrypoint: bash
+  args:
+   - '-c'
+   - |
+      if [ $BRANCH_NAME == "master" ]
+      then
+        ./gradlew bumpPatch
+      else
+        ./gradlew bumpPatch applySnapshot
+      fi
+- name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  id: test
+  entrypoint: bash
+  args:
+    - '-c'
+    - |
+       ./gradlew cleanLibs build groovydoc runAllTests buildDashboard -DpipelineEndpoint=http://ksqldb-server:8088
+- name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  id: publish
+  entrypoint: bash
+  args:
+   - '-c'
+   - |
+      if [ $BRANCH_NAME == "master" ]
+      then
+        ./gradlew publish
+      fi
+- name: amazon/aws-cli
+  id: publish-docs
+  entrypoint: bash
+  args:
+   - '-c'
+   - |
+      if [ $BRANCH_NAME == "master" ]
+      then
+        aws s3 sync ${_DOC_LOCAL} ${_DOC_REMOTE}/`cat version.txt`/ && aws s3 sync ${_DOC_LOCAL} ${_DOC_REMOTE}/latest
+      fi
+- name: 'gcr.io/$PROJECT_ID/save_cache'
+  id: save-cache
+  args:
+    - '--bucket=$_CACHE_BUCKET'
+    - '--key=gradle-${_PROJECT}_$( checksum build.gradle )'
+    - '--path=.gradle/'
+  waitFor:
+  - test
+timeout: 3600s
+options:
+  dynamic_substitutions: true
+  env:
+    - GRADLE_USER_HOME=/workspace/.gradle
+    - GRADLE_OPTS="-Dorg.gradle.daemon=false"
+    - ORG_GRADLE_PROJECT_analytics_buildTag=$BUILD_ID
+    - ORG_GRADLE_PROJECT_githubToken=$_GITHUB_TOKEN
+    - GITHUB_API_TOKEN=$_GITHUB_TOKEN
+    - AWS_ACCESS_KEY_ID=$_AWS_ACCESS_KEY_ID
+    - AWS_SECRET_ACCESS_KEY=$_AWS_SECRET_ACCESS_KEY
+artifacts:
+  objects:
+    location: '$_ARTIFACT_LOCATION'
+    paths:
+      - build/libs/*.jar

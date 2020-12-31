@@ -1,87 +1,62 @@
----
 version: '2'
-
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:5.5.0
-    hostname: zookeeper
-    container_name: zookeeper
-    ports:
-      - "2181:2181"
+    image: confluentinc/cp-zookeeper:${CP_VERSION}
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_CLIENT_PORT: 32181
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka:
-    image: confluentinc/cp-enterprise-kafka:5.5.0
-    hostname: kafka
-    container_name: kafka
-    depends_on:
-      - zookeeper
+    image: confluentinc/cp-enterprise-kafka:${CP_VERSION}
     ports:
       - "29092:29092"
-      - "9092:9092"
+    depends_on:
+      - zookeeper
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:32181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
 
-  ksqldb:
-    image: confluentinc/ksqldb-server:0.8.1
-    hostname: ksqldb
-    container_name: ksqldb
+  schema-registry:
+    image: confluentinc/cp-schema-registry:${CP_VERSION}
+    depends_on:
+      - zookeeper
+      - kafka
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:32181
+
+  ksqldb-server:
+    image: ${KSQL_IMAGE_BASE}confluentinc/ksqldb-server:${KSQL_VERSION}
+    hostname: ksqldb-server
+    container_name: ksqldb-server
     depends_on:
       - kafka
+      - schema-registry
     ports:
       - "8088:8088"
     environment:
       KSQL_LISTENERS: http://0.0.0.0:8088
       KSQL_BOOTSTRAP_SERVERS: kafka:9092
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: http://schema-registry:8081
       KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
       KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
-      KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
 
+  # Access the cli by running:
+  # > docker-compose exec ksqldb-cli  ksql http://primary-ksqldb-server:8088
   ksqldb-cli:
-    image: confluentinc/ksqldb-cli:0.8.1
+    image: ${KSQL_IMAGE_BASE}confluentinc/ksqldb-cli:${KSQL_VERSION}
     container_name: ksqldb-cli
     depends_on:
-      - kafka
-      - ksqldb
+      - ksqldb-server
     entrypoint: /bin/sh
     tty: true
-
-  schema-registry:
-    image: confluentinc/cp-schema-registry:5.5.0
-    hostname: schema-registry
-    container_name: schema-registry
-    ports:
-      - "8081:8081"
-    depends_on:
-      - kafka
-    environment:
-      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:2181
-      SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      SCHEMA_REGISTRY_LISTENERS: http://schema-registry:8081
-      SCHEMA_REGISTRY_DEBUG: "true"
-
-  kafka-rest:
-    image: confluentinc/cp-kafka-rest:5.5.0
-    hostname: kafka-rest
-    container_name: kafka-rest
-    ports:
-      - "8082:8082"
-    depends_on:
-      - schema-registry
-    environment:
-      KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_REST_SCHEMA_REGISTRY_URL: schema-registry:8081
-      KAFKA_REST_HOST_NAME: kafka-rest
-      KAFKA_REST_LISTENERS: http://kafka-rest:8082
 
   # Runs the Kafka KSQL data generator
   datagen:
@@ -111,3 +86,7 @@ services:
                           maxInterval=1 \
                           iterations=100'"
 
+networks:
+    default:
+        external:
+            name: cloudbuild
