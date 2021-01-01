@@ -6,7 +6,7 @@ substitutions:
   _DOC_REMOTE: s3://${_DOC_PATH}
   _DOC_LOCAL: build/docs/groovydoc/
   _DOC_BASE_URL: https://s3.amazonaws.com/${_DOC_PATH}
-  _CACHE_BUCKET: gs://rpa-devops-build-cache
+  _CACHE_BUCKET: gs://rpa-devops-build-cache/
   _ARTIFACT_LOCATION: ${_ARTIFACT_BUCKET}/$_PROJECT/
   _STATUS_FILE: build-status.txt
 steps:
@@ -62,7 +62,7 @@ steps:
   id: save-cache
   args:
     - '--bucket=$_CACHE_BUCKET'
-    - '--key=gradle-${_PROJECT}_$( checksum build.gradle )'
+    - '--key=${_PROJECT}_$( checksum build.gradle )'
     - '--path=.gradle/'
   waitFor:
     - test
@@ -90,6 +90,15 @@ steps:
       fi
   waitFor:
     - test-check
+- name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  id: analytics
+  entrypoint: bash
+  args:
+   - '-c'
+   - |
+      ./gradlew producer
+  waitFor:
+    - publish
 - name: amazon/aws-cli
   id: publish-docs
   entrypoint: bash
@@ -109,7 +118,7 @@ timeout: 3600s
 options:
   dynamic_substitutions: true
   env:
-    - GRADLE_USER_HOME=/workspace/.gradle
+    - GRADLE_USER_HOME=.gradle
     - GRADLE_OPTS="-Dorg.gradle.daemon=false"
     - ORG_GRADLE_PROJECT_analytics_buildTag=$BUILD_ID
     - ORG_GRADLE_PROJECT_githubToken=$_GITHUB_TOKEN
