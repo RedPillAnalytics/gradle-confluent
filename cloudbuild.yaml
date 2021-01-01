@@ -79,14 +79,14 @@ steps:
   waitFor:
     - save-cache
 - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-  id: publish -Pgradle.publish.key=${_GRADLE_KEY} -Pgradle.publish.secret=${_GRADLE_SECRET}
+  id: publish
   entrypoint: bash
   args:
    - '-c'
    - |
       if [ $BRANCH_NAME == "master" ]
       then
-        ./gradlew publish
+        ./gradlew publish -Pgradle.publish.key=${_GRADLE_KEY} -Pgradle.publish.secret=${_GRADLE_SECRET}
       fi
   waitFor:
     - test-check
