@@ -90,15 +90,16 @@ steps:
       fi
   waitFor:
     - test-check
-- name: gcr.io/google.com/cloudsdktool/cloud-sdk
-  id: analytics
-  entrypoint: bash
-  args:
-   - '-c'
-   - |
-      ./gradlew producer
-  waitFor:
-    - publish
+# Need a rewrite of gradle-analytics that doesn't rely on a local git repo
+# - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+#   id: analytics
+#   entrypoint: bash
+#   args:
+#    - '-c'
+#    - |
+#       ./gradlew producer
+#   waitFor:
+#     - publish
 - name: amazon/aws-cli
   id: publish-docs
   entrypoint: bash
