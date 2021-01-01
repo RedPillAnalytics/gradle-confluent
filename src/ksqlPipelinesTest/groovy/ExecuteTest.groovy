@@ -198,12 +198,9 @@ class ExecuteTest extends Specification {
    }
 
    def "Execute :pipelineExecute task with custom REST endpoint"() {
-
       given:
-      buildFile.append("""\nconfluent.pipelineEndpoint = 'http://nothing:8088'""")
-
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ["-Pconfluent.pipelineEndpoint=http://localhost:8088", '-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ["--rest-url", pipelineEndpoint, '-Si', '--rerun-tasks'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'

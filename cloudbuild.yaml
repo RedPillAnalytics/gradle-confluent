@@ -5,6 +5,7 @@ substitutions:
   _DOC_PATH: ${_DOC_BUCKET}/${_PROJECT}
   _DOC_REMOTE: s3://${_DOC_PATH}
   _DOC_LOCAL: build/docs/groovydoc/
+  _DOC_BASE_URL: https://s3.amazonaws.com/${_DOC_PATH}
   _CACHE_BUCKET: gs://rpa-devops-build-cache
   _ARTIFACT_LOCATION: ${_ARTIFACT_BUCKET}/$_PROJECT/
   _STATUS_FILE: build-status.txt
@@ -71,7 +72,7 @@ steps:
   args:
     - '-c'
     - |
-      if [ `< $_STATUS_FILE` == "fail" ]
+      if [[ $(< build-status.txt) == "fail" ]]
       then
         exit 1
       fi
@@ -99,13 +100,14 @@ steps:
       then
         aws s3 sync ${_DOC_LOCAL} ${_DOC_REMOTE}/`cat version.txt`/ \
         && aws s3 sync ${_DOC_LOCAL} ${_DOC_REMOTE}/latest \
-        && echo "Version API documentation located at: https://s3.amazonaws.com/${_DOC_PATH}/`cat version.txt`/overview-summary.html" \
-        && echo "Latest API documentation located at: https://s3.amazonaws.com/${_DOC_PATH}/latest/overview-summary.html"
+        && echo "Version API documentation located at: ${_DOC_BASE_URL}/`cat version.txt`/overview-summary.html" \
+        && echo "Latest API documentation located at: ${_DOC_BASE_URL}/latest/overview-summary.html"
       fi
   waitFor:
     - test-check
 timeout: 3600s
 options:
+  machineType: 'N1_HIGHCPU_8'
   dynamic_substitutions: true
   env:
     - GRADLE_USER_HOME=/workspace/.gradle
