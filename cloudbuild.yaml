@@ -1,9 +1,13 @@
 substitutions:
   _PROJECT: gradle-confluent
-  _DOC_REMOTE: s3://documentation.redpillanalytics.com/$_PROJECT
+  _ARTIFACT_BUCKET: gs://rpa-devops-artifacts
+  _DOC_BUCKET: documentation.redpillanalytics.com
+  _DOC_PATH: ${_DOC_BUCKET}/${_PROJECT}
+  _DOC_REMOTE: s3://${_DOC_PATH}
   _DOC_LOCAL: build/docs/groovydoc/
-  _CACHE_BUCKET: rpa-devops-build-cache
-  _ARTIFACT_LOCATION: 'gs://rpa-devops-artifacts/$_PROJECT/'
+  _CACHE_BUCKET: gs://rpa-devops-build-cache
+  _ARTIFACT_LOCATION: ${_ARTIFACT_BUCKET}/$_PROJECT/
+  _STATUS_FILE: build-status.txt
 steps:
 - name: 'docker/compose:1.27.4'
   id: compose
@@ -48,10 +52,31 @@ steps:
   args:
     - '-c'
     - |
-       ./gradlew cleanLibs build groovydoc runAllTests buildDashboard -PpipelineEndpoint=http://ksqldb-server:8088
+       ./gradlew cleanLibs build groovydoc runAllTests buildDashboard -PpipelineEndpoint=http://ksqldb-server:8088 \
+       || echo "fail" > _STATUS_FILE
   waitFor:
     - release
     - compose
+- name: 'gcr.io/$PROJECT_ID/save_cache'
+  id: save-cache
+  args:
+    - '--bucket=$_CACHE_BUCKET'
+    - '--key=gradle-${_PROJECT}_$( checksum build.gradle )'
+    - '--path=.gradle/'
+  waitFor:
+    - test
+- id: test-check
+  name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      if [ `< $_STATUS_FILE` == "fail" ]
+      then
+        exit 1
+      fi
+  waitFor:
+    - save-cache
 - name: gcr.io/google.com/cloudsdktool/cloud-sdk
   id: publish
   entrypoint: bash
@@ -63,7 +88,7 @@ steps:
         ./gradlew publish
       fi
   waitFor:
-    - test
+    - test-check
 - name: amazon/aws-cli
   id: publish-docs
   entrypoint: bash
@@ -72,18 +97,13 @@ steps:
    - |
       if [ $BRANCH_NAME == "master" ]
       then
-        aws s3 sync ${_DOC_LOCAL} ${_DOC_REMOTE}/`cat version.txt`/ && aws s3 sync ${_DOC_LOCAL} ${_DOC_REMOTE}/latest
+        aws s3 sync ${_DOC_LOCAL} ${_DOC_REMOTE}/`cat version.txt`/ \
+        && aws s3 sync ${_DOC_LOCAL} ${_DOC_REMOTE}/latest \
+        && echo "Version API documentation located at: https://s3.amazonaws.com/${_DOC_PATH}/`cat version.txt`/overview-summary.html" \
+        && echo "Latest API documentation located at: https://s3.amazonaws.com/${_DOC_PATH}/latest/overview-summary.html"
       fi
   waitFor:
-    - test
-- name: 'gcr.io/$PROJECT_ID/save_cache'
-  id: save-cache
-  args:
-    - '--bucket=$_CACHE_BUCKET'
-    - '--key=gradle-${_PROJECT}_$( checksum build.gradle )'
-    - '--path=.gradle/'
-  waitFor:
-    - test
+    - test-check
 timeout: 3600s
 options:
   dynamic_substitutions: true
