@@ -49,6 +49,10 @@ dependencies {
 // Default artifact naming.
 group = 'com.redpillanalytics'
 
+compileJava {
+   options.release = 8
+}
+
 repositories {
    jcenter()
    maven {
