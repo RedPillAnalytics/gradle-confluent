@@ -23,7 +23,7 @@ class PipelineEndpointTask extends PipelineTask {
    String restUrl = project.extensions.confluent.pipelineEndpoint
 
    /**
-    * The Username for Basic Authentication with the REST API URL for the KSQL Server. Default: the extension property {@link com.redpillanalytics.gradle.ConfluentPluginExtensions#pipelineUsername}.
+    * The Username for Basic Authentication with the REST API URL for the KSQL Server. Default: the extension property {@link com.redpillanalytics.gradle.ConfluentPluginExtension#pipelineUsername}.
     */
    @Input
    @Optional
@@ -33,7 +33,7 @@ class PipelineEndpointTask extends PipelineTask {
    String username = project.extensions.confluent.pipelineUsername
 
    /**
-    * The Password for Basic Authentication with the REST API URL for the KSQL Server. Default: the extension property {@link com.redpillanalytics.gradle.ConfluentPluginExtensions#pipelinePassword}.
+    * The Password for Basic Authentication with the REST API URL for the KSQL Server. Default: the extension property {@link com.redpillanalytics.gradle.ConfluentPluginExtension#pipelinePassword}.
     */
    @Input
    @Optional

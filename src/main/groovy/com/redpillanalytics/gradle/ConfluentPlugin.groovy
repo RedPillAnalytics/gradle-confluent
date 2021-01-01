@@ -86,7 +86,7 @@ class ConfluentPlugin implements Plugin<Project> {
 
          // show all topics
          project.task('listTopics', type: ListTopicsTask) {
-            pipelinePath pipelineBuildDir.canonicalPath
+            pipelinePath pipelineDir.canonicalPath
          }
 
          // create deploy task
