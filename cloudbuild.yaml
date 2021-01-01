@@ -107,7 +107,6 @@ steps:
     - test-check
 timeout: 3600s
 options:
-  machineType: 'N1_HIGHCPU_8'
   dynamic_substitutions: true
   env:
     - GRADLE_USER_HOME=/workspace/.gradle
