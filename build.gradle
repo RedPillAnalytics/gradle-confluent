@@ -80,7 +80,6 @@ pluginBundle {
          displayName = 'gradle-confluent'
          description = "A plugin for deploying streaming applications to a Confluent Kafka cluster."
          tags = ['kafka', 'confluent', 'ksql', 'streams']
-         version = project.version
       }
    }
 }
