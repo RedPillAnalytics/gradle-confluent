@@ -79,7 +79,7 @@ steps:
   waitFor:
     - save-cache
 - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-  id: publish
+  id: publish -Pgradle.publish.key=${_GRADLE_KEY} -Pgradle.publish.secret=${_GRADLE_SECRET}
   entrypoint: bash
   args:
    - '-c'
