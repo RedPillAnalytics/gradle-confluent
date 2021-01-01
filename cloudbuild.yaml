@@ -53,7 +53,7 @@ steps:
   args:
     - '-c'
     - |
-       ./gradlew cleanLibs build groovydoc runAllTests buildDashboard -PpipelineEndpoint=http://ksqldb-server:8088 \
+       ./gradlew cleanLibs build groovydoc runAllTests buildDashboard -PpipelineEndpoint=http://ksqldb-server:8088 -PkafkaServers=kafka:9092 \
        || echo "fail" > _STATUS_FILE
   waitFor:
     - release
