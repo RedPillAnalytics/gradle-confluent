@@ -12,7 +12,9 @@ import org.gradle.api.GradleException
  * Class for interacting and normalizing behavior using the Confluent KSQL RESTful API.
  */
 class KsqlRest {
-
+   /**
+    * Regular expression for parsing KSQL statements into underlying chunks.
+    */
    static final String KSQLREGEX = /(?i)(?:.*)(create|drop|insert)(?:\s+)(table|stream|into|source connector|sink connector|connector)(?:\s+)(?:IF EXISTS\s+)?(\w+)/
 
    /**
@@ -199,8 +201,8 @@ class KsqlRest {
     */
    def createKsql(String ksql, Boolean earliest = false, Boolean latest = false) {
       def val = [:]
-      if( earliest || latest ) {
-         val = ["ksql.streams.auto.offset.reset": ( earliest ? "earliest" : "latest" )]
+      if (earliest || latest) {
+         val = ["ksql.streams.auto.offset.reset": (earliest ? "earliest" : "latest")]
       }
       createKsql(ksql, val)
    }
@@ -262,8 +264,7 @@ class KsqlRest {
       if (type == 'connector' || type == 'source connector' || type == 'sink connector') {
          def response = execKsql("DESCRIBE CONNECTOR ${object?.toLowerCase()}", false)
          return response.body.status
-      }
-      else {
+      } else {
          def response = execKsql("DESCRIBE ${object?.toLowerCase()}", false)
          return response.body.sourceDescription
       }

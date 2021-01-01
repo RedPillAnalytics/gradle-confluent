@@ -114,7 +114,7 @@ steps:
         && echo "Latest API documentation located at: ${_DOC_BASE_URL}/latest/overview-summary.html"
       fi
   waitFor:
-    - test-check
+    - publish
 timeout: 3600s
 options:
   dynamic_substitutions: true
