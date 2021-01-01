@@ -1,15 +1,13 @@
 package com.redpillanalytics.gradle.tasks
 
-import com.redpillanalytics.KsqlRest
 import groovy.util.logging.Slf4j
-import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
 /**
  * List all topics available to KSQL
  */
 @Slf4j
-class ListTopicsTask extends DefaultTask {
+class ListTopicsTask extends PipelineEndpointTask {
 
    ListTopicsTask() {
       description = "List all topics."
@@ -19,7 +17,7 @@ class ListTopicsTask extends DefaultTask {
    @TaskAction
    def listTopics(){
 
-      new KsqlRest().getTopics().each { topic ->
+      ksqlRest.getTopics().each { topic ->
          println "Name: $topic.name, Registered: $topic.registered, Partitions: ${topic.replicaInfo.size()}, Consumers: $topic.consumerCount, Consumer Groups: $topic.consumerGroupCount"
       }
    }

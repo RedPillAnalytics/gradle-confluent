@@ -12,7 +12,7 @@ import org.gradle.api.tasks.options.Option
  * Use the KSQL RESTful API to execute all pipelines in a particular directory.
  */
 @Slf4j
-class PipelineExecuteTask extends PipelineTask {
+class PipelineExecuteTask extends PipelineEndpointTask {
 
    static final String ANALYTICS_NAME = 'ksqlstatements.json'
 
@@ -21,46 +21,6 @@ class PipelineExecuteTask extends PipelineTask {
       description = "Execute all KSQL pipelines from the provided source directory, in hierarchical order, with options for auto-generating and executing DROP and TERMINATE commands."
 
       outputs.upToDateWhen { false }
-   }
-
-   /**
-    * The REST API URL for the KSQL Server. Default: the extension property {@link com.redpillanalytics.gradle.ConfluentPluginExtension#pipelineEndpoint}.
-    */
-   @Input
-   @Option(option = "rest-url",
-           description = "The REST API URL for the KSQL Server. Default: value of 'confluent.pipelineEndpoint' or 'http://localhost:8088'."
-   )
-   String restUrl = project.extensions.confluent.pipelineEndpoint
-
-   /**
-    * The Username for Basic Authentication with the REST API URL for the KSQL Server. Default: the extension property {@link com.redpillanalytics.gradle.ConfluentPluginExtensions#pipelineUsername}.
-    */
-   @Input
-   @Optional
-   @Option(option = "basic-username",
-           description = "The Username for Basic Authentication with the REST API URL for the KSQL Server. Default: value of 'confluent.pipelineUsername' or ''."
-   )
-   String username = project.extensions.confluent.pipelineUsername
-
-   /**
-    * The Password for Basic Authentication with the REST API URL for the KSQL Server. Default: the extension property {@link com.redpillanalytics.gradle.ConfluentPluginExtensions#pipelinePassword}.
-    */
-   @Input
-   @Optional
-   @Option(option = "basic-password",
-           description = "The Password for Basic Authentication with the REST API URL for the KSQL Server. Default: value of 'confluent.pipelinePassword' or ''."
-   )
-   String password = project.extensions.confluent.pipelinePassword
-
-   /**
-    * Instantiates a KsqlRest Class, which is used for interacting with the KSQL RESTful API.
-    *
-    * @return {@link com.redpillanalytics.KsqlRest}
-    */
-   @Internal
-   def getKsqlRest() {
-
-      return new KsqlRest(restUrl: restUrl, username: username, password: password)
    }
 
    /**
@@ -107,7 +67,7 @@ class PipelineExecuteTask extends PipelineTask {
    @Option(option = "statement-pause",
            description = "The number of seconds to pause execution after a create statement. Default: value of 'confluent.statementPause'."
    )
-   String statementPause = project.extensions.confluent.statementPause
+   String statementPause = project.extensions.confluent.statementPause.toString()
 
    def doSkip(it) {
       boolean setCmd = it.toString().toLowerCase().startsWith("set ")

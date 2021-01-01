@@ -18,7 +18,12 @@ gradle-app.setting
 .*
 !.gitignore
 !.github/
+!.env
 
 # Visual Studio Code build directory
 bin
 out
+
+# Misc
+*.hprof
+version.txt

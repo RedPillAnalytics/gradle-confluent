@@ -2,13 +2,13 @@ plugins {
    id 'groovy'
    id 'java-gradle-plugin'
    id "com.gradle.plugin-publish" version "0.12.0"
-   id "pl.allegro.tech.build.axion-release" version "1.11.0"
+   id "de.epitschke.gradle-file-versioning" version "1.0.0"
    id "com.github.breadmoirai.github-release" version "2.2.12"
    id 'org.unbroken-dome.test-sets' version '3.0.1'
-   id "com.avast.gradle.docker-compose" version "0.13.2"
-   id "com.github.ben-manes.versions" version "0.29.0"
-   id "com.redpillanalytics.gradle-analytics" version "1.3.7"
-   id 'com.adarshr.test-logger' version '2.1.0'
+   id "com.avast.gradle.docker-compose" version "0.14.0"
+   id "com.github.ben-manes.versions" version "0.36.0"
+   id "com.redpillanalytics.gradle-analytics" version "1.3.10"
+   id 'com.adarshr.test-logger' version '2.1.1'
    id 'build-dashboard'
 }
 
@@ -23,25 +23,11 @@ analytics {
    }
 }
 
-scmVersion {
-   tag {
-      prefix = 'v'
-      versionSeparator = ''
-   }
-   ignoreUncommittedChanges = true
-}
-
-//set Gradle version to SCM Version
-allprojects {
-   project.version = scmVersion.version
-}
-
 githubRelease {
    token = githubToken
    owner = 'RedPillAnalytics'
-   repo = 'gradle-confluent'
-   tagName = "v${version}"
-   releaseAssets = fileTree(dir: buildDir, includes: ["**/*${version}*", "**/*${version}*.jar"]).toList()
+   repo = rootProject.name
+   releaseAssets = libsDir.listFiles()
 }
 
 dependencies {
@@ -62,6 +48,10 @@ dependencies {
 
 // Default artifact naming.
 group = 'com.redpillanalytics'
+
+compileJava {
+   options.release = 8
+}
 
 repositories {
    jcenter()
@@ -112,30 +102,6 @@ task cleanLibs(type: Delete) {
    delete getLibsDir()
 }
 
-def versionUrl = "${docBucket}/${rootProject.name}/${version}"
-task publishVersionDocs(type: Exec) {
-   description = 'Publish version Groovydocs to S3.'
-   group = 'publishing'
-   executable 'aws'
-   args 's3', 'sync', groovydoc.destinationDir.getPath(), "s3://${versionUrl}"
-   doLast {
-      logger.warn "\nVersion docs: https://s3.amazonaws.com/${versionUrl}/index.html"
-   }
-   dependsOn groovydoc
-}
-
-def latestUrl = "${docBucket}/${rootProject.name}/latest"
-task publishLatestDocs(type: Exec) {
-   description = 'Publish latest Groovydocs to S3.'
-   group = 'publishing'
-   executable 'aws'
-   args 's3', 'sync', groovydoc.destinationDir.getPath(), "s3://${latestUrl}"
-   doLast {
-      logger.warn "\nLatest docs: https://s3.amazonaws.com/${latestUrl}/index.html"
-   }
-   dependsOn groovydoc
-}
-
 task runAllTests {
    description 'Run all defined tests.'
    group 'verification'
@@ -144,7 +110,6 @@ task runAllTests {
 tasks.withType(Test) {
    runAllTests.dependsOn it
    failFast true
-   ignoreFailures true
    testLogging.showStandardStreams true
    systemProperty 'projectDir', temporaryDir
    systemProperty 'pipelineEndpoint', pipelineEndpoint
@@ -158,7 +123,7 @@ tasks.withType(Test) {
 task publish {
    description 'Custom publish task.'
    group 'publishing'
-   dependsOn tasks.publishPlugins, tasks.publishVersionDocs, tasks.publishLatestDocs, tasks.githubRelease, tasks.build
+   dependsOn tasks.publishPlugins, tasks.githubRelease, tasks.build
 }
 
 tasks.githubRelease.mustRunAfter tasks.publishPlugins, tasks.build
