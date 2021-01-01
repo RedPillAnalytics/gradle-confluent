@@ -52,6 +52,7 @@ class ExecuteTest extends Specification {
                |
                |confluent {
                |  pipelineEndpoint '$pipelineEndpoint'
+               |  statementPause = 1
                |}
                |
                |analytics {
