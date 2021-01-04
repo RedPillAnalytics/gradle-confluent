@@ -41,6 +41,7 @@ steps:
   waitFor:
     - version
     - compose
+    - restore-cache
 - name: 'gcr.io/$PROJECT_ID/save_cache'
   id: save-cache
   args:
