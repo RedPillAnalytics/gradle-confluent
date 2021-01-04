@@ -99,6 +99,7 @@ steps:
       fi
   waitFor:
     - test-check
+    - publish
 timeout: 3600s
 options:
   dynamic_substitutions: true
