@@ -61,7 +61,7 @@ steps:
         exit 1
       fi
   waitFor:
-    - test
+    - save-cache
 - name: gcr.io/google.com/cloudsdktool/cloud-sdk
   id: publish
   entrypoint: bash
