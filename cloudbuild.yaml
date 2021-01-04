@@ -6,7 +6,7 @@ substitutions:
   _DOC_REMOTE: s3://${_DOC_PATH}
   _DOC_LOCAL: build/docs/groovydoc/
   _DOC_BASE_URL: https://s3.amazonaws.com/${_DOC_PATH}
-  _CACHE_BUCKET: gs://rpa-devops-build-cache/
+  _CACHE_BUCKET: gs://rpa-devops-build-cache
   _ARTIFACT_LOCATION: ${_ARTIFACT_BUCKET}/$_PROJECT/
   _STATUS_FILE: build-status.txt
 steps:
@@ -37,7 +37,7 @@ steps:
     - '-c'
     - |
        ./gradlew cleanLibs build groovydoc runAllTests buildDashboard -PpipelineEndpoint=http://ksqldb-server:8088 -PkafkaServers=kafka:9092 \
-       || echo "fail" > _STATUS_FILE
+       || echo "fail" > ${_STATUS_FILE}
   waitFor:
     - version
     - compose
@@ -56,7 +56,7 @@ steps:
   args:
     - '-c'
     - |
-      if [[ $(< build-status.txt) == "fail" ]]
+      if [[ $(< ${_STATUS_FILE}) == "fail" ]]
       then
         exit 1
       fi
