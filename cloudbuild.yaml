@@ -37,7 +37,7 @@ steps:
     - '-c'
     - |
        ./gradlew cleanLibs build groovydoc runAllTests buildDashboard -PpipelineEndpoint=http://ksqldb-server:8088 -PkafkaServers=kafka:9092 \
-       || echo "fail" > _STATUS_FILE
+       || echo "fail" > ${_STATUS_FILE}
   waitFor:
     - version
     - compose
@@ -56,12 +56,12 @@ steps:
   args:
     - '-c'
     - |
-      if [[ $(< build-status.txt) == "fail" ]]
+      if [[ $(< ${_STATUS_FILE}) == "fail" ]]
       then
         exit 1
       fi
   waitFor:
-    - save-cache
+    - test
 - name: gcr.io/google.com/cloudsdktool/cloud-sdk
   id: publish
   entrypoint: bash
