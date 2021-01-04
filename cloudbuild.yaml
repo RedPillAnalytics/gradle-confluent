@@ -6,7 +6,7 @@ substitutions:
   _DOC_REMOTE: s3://${_DOC_PATH}
   _DOC_LOCAL: build/docs/groovydoc/
   _DOC_BASE_URL: https://s3.amazonaws.com/${_DOC_PATH}
-  _CACHE_BUCKET: gs://rpa-devops-build-cache/
+  _CACHE_BUCKET: gs://rpa-devops-build-cache
   _ARTIFACT_LOCATION: ${_ARTIFACT_BUCKET}/$_PROJECT/
   _STATUS_FILE: build-status.txt
 steps:
