@@ -18,13 +18,11 @@ steps:
   env:
   - 'PROJECT_ID=$PROJECT_ID'
   waitFor: ['-']
-- name: gcr.io/rpa-devops/lastversion
+- name: gcr.io/rpa-devops/project-version
   id: version
-  entrypoint: bash
   args:
-   - '-c'
-   - |
-      lastversion $REPO_NAME > version.txt
+   - $REPO_NAME
+   - $BRANCH_NAME
   waitFor: ['-']
 - name: 'gcr.io/$PROJECT_ID/restore_cache'
   id: restore-cache
@@ -32,21 +30,6 @@ steps:
     - '--bucket=$_CACHE_BUCKET'
     - '--key=${_PROJECT}_$( checksum build.gradle )'
   waitFor: ['-']
-- name: gcr.io/google.com/cloudsdktool/cloud-sdk
-  id: release
-  entrypoint: bash
-  args:
-   - '-c'
-   - |
-      if [ $BRANCH_NAME == "master" ]
-      then
-        ./gradlew bumpPatch
-      else
-        ./gradlew bumpPatch applySnapshot
-      fi
-  waitFor:
-    - restore-cache
-    - version
 - name: gcr.io/google.com/cloudsdktool/cloud-sdk
   id: test
   entrypoint: bash
@@ -56,8 +39,9 @@ steps:
        ./gradlew cleanLibs build groovydoc runAllTests buildDashboard -PpipelineEndpoint=http://ksqldb-server:8088 -PkafkaServers=kafka:9092 \
        || echo "fail" > _STATUS_FILE
   waitFor:
-    - release
+    - version
     - compose
+    - restore-cache
 - name: 'gcr.io/$PROJECT_ID/save_cache'
   id: save-cache
   args:
@@ -114,6 +98,7 @@ steps:
         && echo "Latest API documentation located at: ${_DOC_BASE_URL}/latest/overview-summary.html"
       fi
   waitFor:
+    - test-check
     - publish
 timeout: 3600s
 options:

@@ -24,10 +24,11 @@ analytics {
 }
 
 githubRelease {
-   token = githubToken
-   owner = 'RedPillAnalytics'
-   repo = rootProject.name
-   releaseAssets = libsDir.listFiles()
+   token         githubToken
+   owner         'RedPillAnalytics'
+   repo          rootProject.name
+   overwrite     true
+   releaseAssets libsDir.listFiles()
 }
 
 dependencies {
