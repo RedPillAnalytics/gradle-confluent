@@ -2,7 +2,6 @@ plugins {
    id 'groovy'
    id 'java-gradle-plugin'
    id "com.gradle.plugin-publish" version "0.12.0"
-   id "de.epitschke.gradle-file-versioning" version "1.1.0"
    id "com.github.breadmoirai.github-release" version "2.2.12"
    id 'org.unbroken-dome.test-sets' version '3.0.1'
    id "com.avast.gradle.docker-compose" version "0.14.0"
