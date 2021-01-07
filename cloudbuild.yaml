@@ -7,7 +7,7 @@ substitutions:
   _DOC_LOCAL: build/docs/groovydoc/
   _DOC_BASE_URL: https://s3.amazonaws.com/${_DOC_PATH}
   _CACHE_BUCKET: gs://rpa-devops-build-cache
-  _ARTIFACT_LOCATION: ${_ARTIFACT_BUCKET}/$_PROJECT/
+  _ARTIFACT_LOCATION: ${_ARTIFACT_BUCKET}/${_PROJECT}
   _STATUS_FILE: build-status.txt
 steps:
 - name: 'docker/compose:1.27.4'
@@ -113,6 +113,6 @@ options:
     - AWS_SECRET_ACCESS_KEY=$_AWS_SECRET_ACCESS_KEY
 artifacts:
   objects:
-    location: '$_ARTIFACT_LOCATION'
+    location: ${_ARTIFACT_LOCATION}
     paths:
       - build/libs/*.jar
