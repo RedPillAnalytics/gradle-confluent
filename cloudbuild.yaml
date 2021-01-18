@@ -92,9 +92,9 @@ steps:
    - |
       if [ $BRANCH_NAME == "master" ]
       then
-        aws s3 sync ${_DOC_LOCAL} ${_DOC_REMOTE}/`cat version.txt`/ \
+        aws s3 sync ${_DOC_LOCAL} ${_DOC_REMOTE}/`<stepvars/version`/ \
         && aws s3 sync ${_DOC_LOCAL} ${_DOC_REMOTE}/latest \
-        && echo "Version API documentation located at: ${_DOC_BASE_URL}/`cat version.txt`/overview-summary.html" \
+        && echo "Version API documentation located at: ${_DOC_BASE_URL}/`<stepvars/version`/overview-summary.html" \
         && echo "Latest API documentation located at: ${_DOC_BASE_URL}/latest/overview-summary.html"
       fi
   waitFor:
@@ -107,8 +107,7 @@ options:
     - GRADLE_USER_HOME=.gradle
     - GRADLE_OPTS="-Dorg.gradle.daemon=false"
     - ORG_GRADLE_PROJECT_analytics_buildTag=$BUILD_ID
-    - ORG_GRADLE_PROJECT_githubToken=$_GITHUB_TOKEN
-    - GITHUB_API_TOKEN=$_GITHUB_TOKEN
+    - GITHUB_TOKEN=$_GITHUB_TOKEN
     - AWS_ACCESS_KEY_ID=$_AWS_ACCESS_KEY_ID
     - AWS_SECRET_ACCESS_KEY=$_AWS_SECRET_ACCESS_KEY
 artifacts:
