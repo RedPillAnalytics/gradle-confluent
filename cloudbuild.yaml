@@ -9,6 +9,8 @@ substitutions:
   _CACHE_BUCKET: gs://rpa-devops-build-cache
   _ARTIFACT_LOCATION: ${_ARTIFACT_BUCKET}/${_PROJECT}
   _STATUS_FILE: build-status.txt
+  # Get repository URL
+  _REPO_URL: $(body.repository.html_url)
 steps:
 - name: 'docker/compose:1.27.4'
   id: compose
@@ -21,7 +23,7 @@ steps:
 - name: gcr.io/rpa-devops/project-version
   id: version
   args:
-   - $REPO_NAME
+   - $_REPO_URL
    - $BRANCH_NAME
   waitFor: ['-']
 - name: 'gcr.io/$PROJECT_ID/restore_cache'
