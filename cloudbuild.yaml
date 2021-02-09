@@ -104,6 +104,7 @@ steps:
     - publish
 timeout: 3600s
 options:
+  substitution_option: 'ALLOW_LOOSE'
   dynamic_substitutions: true
   env:
     - GRADLE_USER_HOME=.gradle
