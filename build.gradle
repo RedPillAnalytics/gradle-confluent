@@ -32,18 +32,18 @@ githubRelease {
 
 dependencies {
 
-   compile gradleApi()
-   compile localGroovy()
+   implementation gradleApi()
+   implementation localGroovy()
 
-   compile group: 'org.slf4j', name: 'slf4j-simple', version: '+'
-   compile 'com.konghq:unirest-java:+'
+   implementation 'org.slf4j:slf4j-simple:1.7.30'
+   implementation 'com.konghq:unirest-java:3.11.10'
 
    // Gradle Properties
    // It also has the Common library in it, thus the dependency here
-   compile "gradle.plugin.com.redpillanalytics:gradle-properties:+"
+   implementation 'gradle.plugin.com.redpillanalytics:gradle-properties:0.1.9'
 
    // testing
-   testCompile 'org.spockframework:spock-core:1.3-groovy-2.5'
+   testImplementation 'org.spockframework:spock-core:1.3-groovy-2.5'
 }
 
 // Default artifact naming.
