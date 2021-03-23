@@ -39,10 +39,6 @@ steps:
     - '-cx'
     - |
        ./gradlew cleanLibs build groovydoc runAllTests buildDashboard -PpipelineEndpoint=http://ksqldb-server:8088 -PkafkaServers=kafka:9092
-  waitFor:
-    - version
-    - compose
-    - restore-cache
 - name: 'gcr.io/$PROJECT_ID/save_cache'
   id: save-cache
   args:
