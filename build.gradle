@@ -116,7 +116,7 @@ tasks.withType(Test) {
    systemProperty 'analyticsVersion', analyticsVersion
 }
 
-runAllTests.mustRunAfter dockerCompose
+runAllTests.mustRunAfter tasks.composeUp
 
 // create a publish task
 task publish {
