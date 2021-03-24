@@ -1,13 +1,12 @@
 substitutions:
-  _PROJECT: gradle-confluent
   _ARTIFACT_BUCKET: gs://rpa-devops-artifacts
   _DOC_BUCKET: documentation.redpillanalytics.com
-  _DOC_PATH: ${_DOC_BUCKET}/${_PROJECT}
+  _DOC_PATH: ${_DOC_BUCKET}/${REPO_NAME}
   _DOC_REMOTE: s3://${_DOC_PATH}
   _DOC_LOCAL: build/docs/groovydoc/
   _DOC_BASE_URL: https://s3.amazonaws.com/${_DOC_PATH}
   _CACHE_BUCKET: gs://rpa-devops-build-cache
-  _ARTIFACT_LOCATION: ${_ARTIFACT_BUCKET}/${_PROJECT}
+  _ARTIFACT_LOCATION: ${_ARTIFACT_BUCKET}/${REPO_NAME}
   _STATUS_FILE: build-status.txt
   # Get repository URL
   _REPO_URL: $(body.repository.html_url)
@@ -18,19 +17,19 @@ steps:
     - $_REPO_URL
     - $BRANCH_NAME
   waitFor: [ '-' ]
-- name: 'docker/compose:1.27.4'
-  id: compose
-  args:
-    - up
-    - -d
-  env:
-  - 'PROJECT_ID=$PROJECT_ID'
-  waitFor: ['-']
+#- name: 'docker/compose:1.27.4'
+#  id: compose
+#  args:
+#    - up
+#    - -d
+#  env:
+#  - 'PROJECT_ID=$PROJECT_ID'
+#  waitFor: ['-']
 - name: 'gcr.io/$PROJECT_ID/restore_cache'
   id: restore-cache
   args:
     - '--bucket=$_CACHE_BUCKET'
-    - '--key=${_PROJECT}_$( checksum build.gradle )'
+    - '--key=${REPO_NAME}-$( checksum build.gradle )'
   waitFor: ['-']
 - name: gcr.io/google.com/cloudsdktool/cloud-sdk
   id: test
@@ -39,11 +38,15 @@ steps:
     - '-cx'
     - |
        ./gradlew cleanLibs build groovydoc runAllTests buildDashboard -PpipelineEndpoint=http://ksqldb-server:8088 -PkafkaServers=kafka:9092
+  waitFor:
+    - version
+#    - compose
+    - restore-cache
 - name: 'gcr.io/$PROJECT_ID/save_cache'
   id: save-cache
   args:
     - '--bucket=$_CACHE_BUCKET'
-    - '--key=${_PROJECT}_$( checksum build.gradle )'
+    - '--key=${REPO_NAME}-$( checksum build.gradle )'
     - '--path=.gradle/'
   waitFor:
     - test
