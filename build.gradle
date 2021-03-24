@@ -23,11 +23,11 @@ analytics {
 }
 
 githubRelease {
-   token         githubToken
-   owner         'RedPillAnalytics'
-   repo          rootProject.name
-   overwrite     true
-   releaseAssets libsDir.listFiles()
+   token findProperty('githubToken').toString()
+   owner 'RedPillAnalytics'
+   repo rootProject.name
+   overwrite true
+   releaseAssets jar.destinationDirectory.files()
 }
 
 dependencies {
@@ -49,8 +49,10 @@ dependencies {
 // Default artifact naming.
 group = 'com.redpillanalytics'
 
-compileJava {
-   options.release = 8
+java {
+   toolchain {
+      languageVersion = JavaLanguageVersion.of(8)
+   }
 }
 
 repositories {
@@ -116,7 +118,7 @@ tasks.withType(Test) {
    systemProperty 'analyticsVersion', analyticsVersion
 }
 
-dockerCompose.isRequiredBy(test)
+runAllTests.mustRunAfter tasks.composeUp
 
 // create a publish task
 task publish {
