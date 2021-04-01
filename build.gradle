@@ -37,6 +37,7 @@ dependencies {
 
    implementation 'org.slf4j:slf4j-simple:1.7.30'
    implementation 'com.konghq:unirest-java:3.11.10'
+   implementation 'com.google.code.gson:gson:2.8.6'
 
    // Gradle Properties
    // It also has the Common library in it, thus the dependency here

@@ -5,6 +5,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
 
+
 /**
  * This class is meant to be inherited, which is why it doesn't have a @TaskAction-annotated method.
  */
@@ -72,7 +73,7 @@ class PipelineTask extends DefaultTask {
     */
    @Internal
    List getPipelineFiles() {
-      def tree = project.fileTree(dir: dir, includes: ['**/*.sql', '**/*.SQL', '**/*.ksql','**/*.KSQL'], exclude: project.extensions.confluent.pipelineCreateName)
+      def tree = project.fileTree(dir: dir, includes: ['**/*.sql', '**/*.SQL', '**/*.ksql', '**/*.KSQL'], exclude: project.extensions.confluent.pipelineCreateName)
       return tree.sort()
    }
 
@@ -103,15 +104,16 @@ class PipelineTask extends DefaultTask {
    def getPipelineSql() {
 
       // clean up, removing any backslashes
-      def transformed = tokenizedSql.findResults { sql ->
+      def transformed = tokenizedSql.findResults { String sql ->
 
          // all the transformations of the statements after tokenization
          sql
+
                  .replaceAll(~/(\s)*(?:--.*)?/) { all, statement -> (statement ?: '') } // remove comments
                  .trim() // basically trim things up
+                 .replace("\\\n", ' ') // replace \ with newlines
                  .replace("\n", ' ') // replace newlines with spaces
                  .replace('  ', ' ') // replace 2 spaces with 1
-                 .replace("\\", '') // remove backslashes if they exist (and they shouldn't)
       }
 
       transformed.removeAll('')
@@ -166,8 +168,7 @@ class PipelineTask extends DefaultTask {
          sql.find(/(?i)(.*)(CREATE)(\s+)(table|stream|source connector|sink connector)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
             if (type.toLowerCase() == 'source connector' || type.toLowerCase() == 'sink connector') {
                return "DROP CONNECTOR $name;\n"
-            }
-            else {
+            } else {
                return "DROP $type IF EXISTS ${name}${getDirectiveObjects('DeleteTopic').contains(name) ? ' DELETE TOPIC' : ''};\n"
             }
          }

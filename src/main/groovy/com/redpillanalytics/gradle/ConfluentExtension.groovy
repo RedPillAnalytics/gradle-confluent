@@ -3,7 +3,7 @@ package com.redpillanalytics.gradle
 import groovy.util.logging.Slf4j
 
 @Slf4j
-class ConfluentPluginExtension {
+class ConfluentExtension {
 
    /**
     * The group name to use for all tasks. Default: 'confluent'.
@@ -111,7 +111,6 @@ class ConfluentPluginExtension {
     * @return The full path of the Pipeline source files. Uses {@link #pipelineSourcePath} first if it exists, and if it doesn't (the default), then it uses {@link #sourceBase} and {@link #pipelineSourceName}.
     */
    String getPipelinePath() {
-
       return (pipelineSourcePath ?: "${sourceBase}/${pipelineSourceName}")
    }
 }

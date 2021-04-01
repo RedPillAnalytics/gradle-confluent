@@ -11,4 +11,5 @@ AS
 SELECT code, definition, COUNT(*) AS count
 FROM ENRICHED_ERROR_CODES WINDOW TUMBLING (size 30 second)
 GROUP BY code, definition
-HAVING COUNT(*) > 1;
+HAVING COUNT(*) > 1
+emit changes;

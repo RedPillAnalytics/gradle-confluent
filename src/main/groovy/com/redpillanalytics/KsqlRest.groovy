@@ -1,5 +1,6 @@
 package com.redpillanalytics
 
+import com.google.gson.Gson
 import kong.unirest.HttpResponse
 import kong.unirest.Unirest
 import groovy.json.JsonOutput
@@ -33,6 +34,22 @@ class KsqlRest {
    String password
 
    /**
+    * GSON serialization object.
+    */
+   Gson gson = new Gson()
+
+   /**
+    * Prepare a KSQL statement.
+    *
+    * @param ksql The KSQL statement to prepare.
+    *
+    * @return String The prepared KSQL statement.
+    */
+   String prepareSql(String ksql) {
+      return (ksql + ';').replace('\n', '').replace(';;', ';')
+   }
+
+   /**
     * Executes a KSQL statement using the KSQL RESTful API.
     *
     * @param ksql the KSQL statement to execute.
@@ -42,8 +59,7 @@ class KsqlRest {
     * @return Map with meaningful elements returned in the REST call, plus a 'body' key with the full JSON payload.
     */
    def execKsql(String ksql, Map properties) {
-
-      def prepared = (ksql + ';').replace('\n', '').replace(';;', ';')
+      String prepared = prepareSql(ksql)
 
       if (['create', 'drop'].contains(getStatementType(ksql))) log.info prepared
 
@@ -66,11 +82,8 @@ class KsqlRest {
               body      : body
       ]
       log.debug "status: ${result.status}, statusText: ${result.statusText}"
-
       log.debug "body: $result.body"
-
       return result
-
    }
 
    /**
@@ -83,7 +96,6 @@ class KsqlRest {
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
    def execKsql(List ksql, Map properties) {
-
       ksql.each {
          execKsql(it, properties)
       }
@@ -99,7 +111,6 @@ class KsqlRest {
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
    def execKsql(String ksql, Boolean earliest = false) {
-
       def data = execKsql(ksql, (earliest ? ["ksql.streams.auto.offset.reset": "earliest"] : [:]))
       return data
    }
@@ -114,7 +125,6 @@ class KsqlRest {
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
    def execKsql(List ksql, Boolean earliest = false) {
-
       ksql.each {
          execKsql(it, earliest)
       }
@@ -149,27 +159,15 @@ class KsqlRest {
          throw new GradleException("error_code: ${result.error_code}: ${result.message}")
       }
 
-      // get the object name
-      String object = getObjectName(ksql)
+      // test normalizing the commandId
+      String commandId = result.commandId[0].toString().replace('`','')
 
-      // get the object type
-      String objectType = getObjectType(ksql)
-
-      // groovy doesn't yet have a do-while loop (it will in 3.0)
-      // hack to do bottom-checking loop
-      for (; ;) { // infinite for
-
-         // get a describe of the table
-         def describe = getSourceDescription(object, objectType)
-
-         // break if the describe is non-null
-         if (describe) {
-            break
-         }
+      // ensure the statement is complete
+      while (['QUEUED', 'PARSING', 'EXECUTING'].contains(getCommandStatus(commandId))) {
+         log.info "Command ${result.body.commandId} still pending..."
       }
 
       log.debug "result: $result"
-
       return result
    }
 
@@ -183,7 +181,6 @@ class KsqlRest {
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
    def createKsql(List ksql, Map properties) {
-
       ksql.each {
          createKsql(it, properties)
       }
@@ -217,7 +214,6 @@ class KsqlRest {
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key will the full JSON payload.
     */
    def createKsql(List ksql, Boolean earliest = false) {
-
       ksql.each {
          createKsql(it, earliest)
       }
@@ -234,9 +230,7 @@ class KsqlRest {
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key with the full JSON payload.
     */
    def dropKsql(String ksql, Map properties) {
-
       def result = execKsql(ksql, properties)
-
       log.debug "result: ${result}"
 
       if (result.status == 400 && result.body.message.contains('Incompatible data source type is STREAM')) {
@@ -249,9 +243,32 @@ class KsqlRest {
          result = execKsql(ksql.replace('STREAM', 'TABLE'), properties)
       }
 
+      while (['QUEUED', 'PARSING', 'EXECUTING'].contains(getCommandStatus(result.body.commandId))) {
+         log.info "Command ${result.body.commandId} still pending..."
+      }
       log.debug "final result: ${result}"
-
       return result
+   }
+
+   /**
+    * Returns the current command status for a 'commandId'.
+    *
+    * @return The status of the current command.
+    */
+   String getCommandStatus(String commandId) {
+      if (username && password) {
+         Unirest.config().setDefaultBasicAuth(username, password)
+      }
+
+      HttpResponse<String> response = Unirest.get("${restUrl}/status/${commandId}")
+              .header("Content-Type", "application/vnd.ksql.v1+json")
+              .header("Cache-Control", "no-cache")
+              .asString()
+
+      Map body = gson.fromJson(response.body, Map)
+      body
+      log.debug "Response: $response"
+      return body.status
    }
 
    /**
@@ -260,7 +277,6 @@ class KsqlRest {
     * @return sourceDescription object, generated by the KSQL 'DESCRIBE' command.
     */
    def getSourceDescription(String object, String type = '') {
-
       if (type == 'connector' || type == 'source connector' || type == 'sink connector') {
          def response = execKsql("DESCRIBE CONNECTOR ${object?.toLowerCase()}", false)
          return response.body.status
@@ -276,9 +292,7 @@ class KsqlRest {
     * @return readQueries object, generated by the KSQL 'DESCRIBE' command.
     */
    def getReadQueries(String object) {
-
       getSourceDescription(object)?.readQueries?.get(0)
-
    }
 
    /**
@@ -287,7 +301,6 @@ class KsqlRest {
     * @return writeQueries object, generated by the KSQL 'DESCRIBE' command.
     */
    def getWriteQueries(String object) {
-
       getSourceDescription(object)?.writeQueries?.get(0)
    }
 
@@ -297,11 +310,9 @@ class KsqlRest {
     * @return List of query IDs associated with a particular object.
     */
    def getQueryIds(String object) {
-
       // null safe all the way
       // Return any query IDs from either the write or read queries
       return ([] + getReadQueries(object) + getWriteQueries(object)).findResults { query -> query?.id }
-
    }
 
    /**
@@ -310,7 +321,6 @@ class KsqlRest {
     * @return All the KSQL properties. This is a helper method, used to return individual properties in other methods such as {@link #getExtensionPath} and {@link #getSchemaRegistry}.
     */
    def getProperties() {
-
       def response = execKsql('LIST PROPERTIES', false)
       log.debug "response: ${response.toString()}"
       def properties = response.body[0].properties
@@ -326,7 +336,6 @@ class KsqlRest {
     * @return The value of the property specified in the 'property' parameter.
     */
    String getProperty(String property) {
-
       def prop = getProperties()."$property"
       return prop
    }
@@ -337,7 +346,6 @@ class KsqlRest {
     * @return KSQL Server property value for 'ksql.extension.dir'.
     */
    String getExtensionPath() {
-
       return getProperty('ksql.extension.dir')
    }
 
@@ -347,7 +355,6 @@ class KsqlRest {
     * @return File object for the KSQL Server property value for 'ksql.extension.dir'.
     */
    File getExtensionDir() {
-
       return new File(getExtensionPath())
    }
 
@@ -357,7 +364,6 @@ class KsqlRest {
     * @return The KSQL Server property value for 'ksql.schema.registry.url'.
     */
    String getSchemaRegistry() {
-
       return getProperty('ksql.schema.registry.url')
    }
 
@@ -367,7 +373,6 @@ class KsqlRest {
     * @return Either 'table' or 'stream' or 'into' (the latter denotes it was an INSERT statement).
     */
    String getObjectName(String sql) {
-
       sql.find(KSQLREGEX) { String all, String statement, String type, String name -> name.toLowerCase() }
    }
 
@@ -388,7 +393,6 @@ class KsqlRest {
     * @return Either 'create' or 'drop' or 'insert'
     */
    String getStatementType(String sql) {
-
       return sql.find(KSQLREGEX) { String all, String statement, String type, String name -> statement.toLowerCase() } ?: 'other'
    }
 
@@ -398,11 +402,8 @@ class KsqlRest {
     * @return List of topic objects
     */
    def getTopics() {
-
       def topics = execKsql('show topics').body.topics[0]
-
       log.debug "Topics: ${topics}"
-
       return topics
    }
 
@@ -412,11 +413,8 @@ class KsqlRest {
     * @return List of KSQL stream objects
     */
    def getStreams() {
-
       def topics = execKsql('show streams').body.topics[0]
-
       log.warn "Topics: ${topics}"
-
       return topics
    }
 }

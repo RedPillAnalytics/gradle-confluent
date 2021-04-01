@@ -52,7 +52,6 @@ class ExecuteTest extends Specification {
                |
                |confluent {
                |  pipelineEndpoint '$pipelineEndpoint'
-               |  statementPause = 1
                |}
                |
                |analytics {
@@ -126,6 +125,18 @@ class ExecuteTest extends Specification {
       !result.tasks.collect { it.outcome }.contains('FAILURE')
    }
 
+   def "Execute :pipelineExecute task with --no-create first"() {
+
+      given:
+      taskName = 'pipelineExecute'
+      result = executeSingleTask(taskName, ['--no-create', '-Si', '--rerun-tasks'])
+
+      expect:
+      !result.tasks.collect { it.outcome }.contains('FAILURE')
+      !result.output.toLowerCase().contains('create table')
+      !result.output.toLowerCase().contains('insert into')
+   }
+
    def "Execute :pipelineExecute task with custom directory"() {
       given:
       taskName = 'pipelineExecute'
@@ -135,8 +146,7 @@ class ExecuteTest extends Specification {
       !result.tasks.collect { it.outcome }.contains('FAILURE')
    }
 
-   def "Execute :pipelineExecute task with --no-create"() {
-
+   def "Execute :pipelineExecute task with --no-create second"() {
       given:
       taskName = 'pipelineExecute'
       result = executeSingleTask(taskName, ['--no-create', '-Si', '--rerun-tasks'])
@@ -157,7 +167,7 @@ class ExecuteTest extends Specification {
       !result.output.toLowerCase().contains('drop table')
    }
 
-   def "Execute :pipelineExecute task with --no-create again"() {
+   def "Execute :pipelineExecute task with --no-create third"() {
       given:
       taskName = 'pipelineExecute'
       result = executeSingleTask(taskName, ['--no-create', '-Si', '--rerun-tasks'])
