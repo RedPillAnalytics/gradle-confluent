@@ -221,7 +221,7 @@ class ConfluentPlugin implements Plugin<Project> {
    void applyExtension(Project project) {
 
       project.configure(project) {
-         extensions.create('confluent', ConfluentPluginExtension)
+         extensions.create('confluent', ConfluentExtension)
       }
 
       project.confluent.extensions.taskGroups = project.container(TaskGroupContainer)

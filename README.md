@@ -8,16 +8,21 @@ You can run the unit tests by executing:
 ./gradlew test
 ```
 
-There are a series of integration tests that use the topics from the [Confluent clickstream quickstart](https://docs.confluent.io/current/ksql/docs/tutorials/clickstream-docker.html#ksql-clickstream-docker). These integration tests can be run with the command below, and this command also automatically spins up a Confluent environment with docker-compose that is used for running those tests:
+There are a series of integration tests that use the topics from the [Confluent clickstream quickstart](https://docs.confluent.io/current/ksql/docs/tutorials/clickstream-docker.html#ksql-clickstream-docker).
+These integration tests, plus the unit tests, can be run with the command below, and this command automatically spins up a Confluent environment with docker-compose that is used for running those tests:
 
 ```bash
-./gradlew runAllTests
+./gradlew composeUp runAllTests
 ```
 # Motivation
-This plugin was motivated by a real-world project. We were stuggling to easily deploy all the pieces of our Confluent pipeline: KSQL scripts, KSQL user-defined functions (UDFs), and Kafka Streams microservices. The biggest gap we had was deploying KSQL scripts to downstream environments, so the majority of this plugin is for remedying that. Since Gradle already has functionality and plugins for compiling JARS (for UDFs) and building Java applications (for Kafka Streams microservices), this plugin addresses just a few gaps for those patterns.
+This plugin was motivated by a real-world project.
+We were stuggling to easily deploy all the pieces of our Confluent pipeline: KSQL scripts, KSQL user-defined functions (UDFs), and Kafka Streams microservices.
+The biggest gap we had was deploying KSQL scripts to downstream environments, so the majority of this plugin is for remedying that.
+Since Gradle already has functionality and plugins for compiling JARS (for UDFs) and building Java applications (for Kafka Streams microservices), this plugin addresses just a few gaps for those patterns.
 
 # Plugin Extension
-Configuration properties for the `gradle-confluent` plugin are specified using the `confluent{}` closure, which adds the `confluent` [*extension*](https://docs.gradle.org/current/userguide/custom_plugins.html#sec:getting_input_from_the_build) to the Gradle project [ExtensionContainer](https://docs.gradle.org/current/javadoc/org/gradle/api/plugins/ExtensionContainer.html). For instance, if I wanted to disable KSQL Function support and Kafka Streams support (see below), then I could add the following closure to my `build.gradle` file:
+Configuration properties for the `gradle-confluent` plugin are specified using the `confluent{}` closure, which adds the `confluent` [*extension*](https://docs.gradle.org/current/userguide/custom_plugins.html#sec:getting_input_from_the_build) to the Gradle project [ExtensionContainer](https://docs.gradle.org/current/javadoc/org/gradle/api/plugins/ExtensionContainer.html).
+For instance, if I wanted to disable KSQL Function support and Kafka Streams support (see below), then I could add the following closure to my `build.gradle` file:
 
 ```Gradle
 confluent {
@@ -44,9 +49,21 @@ CREATE TABLE clickstream_codes (code int, definition varchar) with (key='code', 
 CREATE TABLE events_per_min AS SELECT userid, count(*) AS events FROM clickstream window TUMBLING (size 60 second) GROUP BY userid;
 ```
 
-The third statement above is called a *persistent query* in KSQL terminology, as it selects data from a KSQL stream or table, creates or uses an underlying Kafka topic, and initialize the streaming processes to persist data to that topic. Because of this, KSQL persistent query statements are regularly dependent on the creation of other KSQL streams and tables. We wanted to eliminate the need for developers to concern themselves (much) with how to express these dependencies in their KSQL scripts. We didn't want them to have to write and test *driving* scripts, which included DROP statements or TERMINATE statements, which is time-consuming and error-prone. We also wanted to make it easy for developers to tweak and rerun their individual pipelines. So we knew we wanted our approach to auto-generate DROP and TERMINATE statements as a part of the development and deployment processes. We considered many alternatives for expressing these dependencies, and even briefly considered using the [Gradle Task DAG](https://docs.gradle.org/current/userguide/build_lifecycle.html) to do this. In the end, we decided on using simple alphanumeric file and directory structure naming. We use Gradle's built-in [FileTree](https://docs.gradle.org/current/userguide/working_with_files.html#sec:file_trees) functionality which makes this very easy. You can see a sample of how this is achieved in [the KSQL scripts used for testing this plugin](src/test/resources/src/main/pipeline/). Notice that none of these sample test scripts have DROP statements or any scripted dependencies. Scripts and directories can use any naming standard desired, but the script order dependency is managed by a simple `sort()` of the FileTree object.
+The third statement above is called a *persistent query* in KSQL terminology, as it selects data from a KSQL stream or table, creates or uses an underlying Kafka topic, and initialize the streaming processes to persist data to that topic.
+Because of this, KSQL persistent query statements are regularly dependent on the creation of other KSQL streams and tables.
+We wanted to eliminate the need for developers to concern themselves (much) with how to express these dependencies in their KSQL scripts.
+We didn't want them to have to write and test *driving* scripts, which included DROP statements or TERMINATE statements, which is time-consuming and error-prone.
+We also wanted to make it easy for developers to tweak and rerun their individual pipelines.
+So we knew we wanted our approach to auto-generate DROP and TERMINATE statements as a part of the development and deployment processes.
+We considered many alternatives for expressing these dependencies, and even briefly considered using the [Gradle Task DAG](https://docs.gradle.org/current/userguide/build_lifecycle.html) to do this.
+In the end, we decided on using simple alphanumeric file and directory structure naming.
+We use Gradle's built-in [FileTree](https://docs.gradle.org/current/userguide/working_with_files.html#sec:file_trees) functionality which makes this very easy.
+You can see a sample of how this is achieved in [the KSQL scripts used for testing this plugin](src/test/resources/src/main/pipeline/).
+Notice that none of these sample test scripts have DROP statements or any scripted dependencies.
+Scripts and directories can use any naming standard desired, but the script order dependency is managed by a simple `sort()` of the FileTree object.
 
-So let's start preparing our `build.gradle` file. First, we need to apply the `gradle-confluent` plugin, but we'll also apply the `maven-publish` plugin for handling our artifacts.
+So let's start preparing our `build.gradle` file.
+First, we need to apply the `gradle-confluent` plugin, but we'll also apply the `maven-publish` plugin for handling our artifacts.
 
 ```gradle
 plugins {
@@ -55,7 +72,7 @@ plugins {
 }
 ```
  Now we can use the `./gradlew tasks` command to see the new tasks available under the **Confluent** Task Group:
- 
+
  ```
 Confluent tasks
 ---------------
@@ -67,7 +84,10 @@ pipelineZip - Build a distribution ZIP file with the pipeline source files, plus
  ```
 
 ## Executing KSQL Pipelines
-The easiest wasy to use this plugin is to simply execute all of our persistent query statements--or a subset of them--in source control. We do this using the `pipelineExecute` task, which uses the KSQL REST API to handle all of the heavy-lifting. I'll turn up the logging a bit this first time with the `-i` option so we can see exactly what's going on. Apologies in advance for the verbose screen output, but I think it's worth it:
+The easiest wasy to use this plugin is to simply execute all of our persistent query statements--or a subset of them--in source control.
+We do this using the `pipelineExecute` task, which uses the KSQL REST API to handle all of the heavy-lifting.
+I'll turn up the logging a bit this first time with the `-i` option so we can see exactly what's going on.
+Apologies in advance for the verbose screen output, but I think it's worth it:
 
 ```bash
 ==> ./gradlew pipelineExecute --console=plain -i
@@ -138,7 +158,11 @@ BUILD SUCCESSFUL in 7s
 ==>
 ```
 
-First thing to notice is that the plugin automatically constructs and issues the DROP statements for any applicable CREATE statement encountered: no need to write those yourself. It runs all the DROP statements at the beginning, but also runs them in the reverse order of the CREATE statement dependency ordering: this just makes sense if you think about it. Additionally, if any DROP statements have persistent queries involving that table or stream, the plugin finds the query ID involved and issues the required TERMINATE statement. So there are a triad of statements that are run: TERMINATE, DROP and CREATE. This behavior can be controlled with command-line options. Here is the output from the help task command:
+First thing to notice is that the plugin automatically constructs and issues the DROP statements for any applicable CREATE statement encountered: no need to write those yourself.
+It runs all the DROP statements at the beginning, but also runs them in the reverse order of the CREATE statement dependency ordering: this just makes sense if you think about it.
+Additionally, if any DROP statements have persistent queries involving that table or stream, the plugin finds the query ID involved and issues the required TERMINATE statement.
+So there are a triad of statements that are run: TERMINATE, DROP and CREATE.
+This behavior can be controlled with command-line options. Here is the output from the help task command:
 
 ```bash
 ==> ./gradlew help --task pipelineExecute
@@ -183,7 +207,8 @@ BUILD SUCCESSFUL in 1s
 1 actionable task: 1 executed
 ```
 
-Seeing some of the command-line options, we can see how the `gradle-confluent` plugin is very helpful for developers during the KSQL development phase. We can process just a single directory of KSQL scripts easily as we iterate on our KSQL code.
+Seeing some command-line options, we can see how the `gradle-confluent` plugin is very helpful for developers during the KSQL development phase.
+We can process just a single directory of KSQL scripts easily as we iterate on our KSQL code.
 
 ```bash
 ==> ./gradlew pipelineExecute --pipeline-dir 01-clickstream --from-beginning
@@ -198,7 +223,12 @@ BUILD SUCCESSFUL in 3s
 ```
 
 ## Building Artifacts
-While executing KSQL scripts from our source repository is useful for developers using KSQL, and might even suffice for some deployment pipelines, `gradle-confluent` is really designed to build and publish artifacts for downstream deployment. We of course support this using Gradle's built-in support for Maven. We simply execute `./gradlew build` to build a .zip distribution artifact with all of our KSQL in it, or `./gradlew build publish` to build and publish the distribution artifact. Let's make a few changes to our `build.gradle` file to publish to a local Maven repository. Of course, a local Maven repository is not fit for real environments, and Gradle supports all major Maven repository servers, as well as AWS S3 and Google Cloud Storage as Maven artifact repositories. We're also hard-coding our version number in the `build.gradle` file... we would normally use a plugin to automatically handle version bumping.
+While executing KSQL scripts from our source repository is useful for developers using KSQL, and might even suffice for some deployment pipelines, `gradle-confluent` is really designed to build and publish artifacts for downstream deployment.
+We of course support this using Gradle's built-in support for Maven.
+We simply execute `./gradlew build` to build a .zip distribution artifact with all of our KSQL in it, or `./gradlew build publish` to build and publish the distribution artifact.
+Let's make a few changes to our `build.gradle` file to publish to a local Maven repository.
+Of course, a local Maven repository is not fit for real environments, and Gradle supports all major Maven repository servers, as well as AWS S3 and Google Cloud Storage as Maven artifact repositories.
+We're also hard-coding our version number in the `build.gradle` file... we would normally use a plugin to automatically handle version bumping.
 
 ```gradle
 plugins {
@@ -254,7 +284,9 @@ drwxr-xr-x  2.0 unx        0 b- defN 19-Jan-11 04:00 02-clickstream-users/
 Notice our zip file has all the source scripts, but it also has the single, normalized `ksql-script.sql` file, which can be used as a KSQL server start script if we choose to deploy in that manner.
 
 ## Deploying KSQL Artifacts
-If we want to deploy our KSQL pipelines from Maven instead of Git (which let's face it, should be standard), then we define a Gradle dependency on the `ksql-examples-pipeline` artifact (or whatever we named the Gradle project building our pipelines) so that Gradle can pull that artifact from Maven to use for deployment. We are changing our `build.gradle` file again. Notice we are adding the `repositories{}` and `dependencies{}` closures, and with our dependency version, we have specified '+' which simply pulls the most recent.
+If we want to deploy our KSQL pipelines from Maven instead of Git (which let's face it, should be standard), then we define a Gradle dependency on the `ksql-examples-pipeline` artifact (or whatever we named the Gradle project building our pipelines) so that Gradle can pull that artifact from Maven to use for deployment.
+We are changing our `build.gradle` file again.
+Notice we are adding the `repositories{}` and `dependencies{}` closures, and with our dependency version, we have specified '+' which simply pulls the most recent.
 
 ```gradle
 plugins {
@@ -307,12 +339,19 @@ BUILD SUCCESSFUL in 4s
 ```
 
 # KSQL Directives
-Because the `gradle-confluent` plugin auto-generates certain statements, we immediately faced an issue defining how options around these statements would be managed. For the `DROP STREAM/TABLE` statement, for instance, we needed to control whether the `DELETE TOPIC` statement was issued as part of this statement. A simple command-line option for the Gradle `pipelineExecute` and `pipelineDeploy` tasks was not sufficient, because it didn't provide the stream/table-level granularity that's required. We introduced *directives* in our KSQL scripts: smart comments that could control certain behaviors. To date, we've only introduced the `--@DeleteTopic` directive, but others could be introduced as needed.
+Because the `gradle-confluent` plugin auto-generates certain statements, we immediately faced an issue defining how options around these statements would be managed.
+For the `DROP STREAM/TABLE` statement, for instance, we needed to control whether the `DELETE TOPIC` statement was issued as part of this statement.
+A simple command-line option for the Gradle `pipelineExecute` and `pipelineDeploy` tasks was not sufficient, because it didn't provide the stream/table-level granularity that's required.
+We introduced *directives* in our KSQL scripts: smart comments that could control certain behaviors.
+To date, we've only introduced the `--@DeleteTopic` directive, but others could be introduced as needed.
 
-Directives are signalled using `--@` followed by a camel-case directive name just above the `CREATE STREAM/TABLE` command. In this way, directives are similar to *annotations* on classes or methods in Java.
+Directives are signalled using `--@` followed by a camel-case directive name just above the `CREATE STREAM/TABLE` command.
+In this way, directives are similar to *annotations* on classes or methods in Java.
 
 ## `--@DeleteTopic`
-When applied to a table or stream, then the `DELETE TOPIC` option is added to the `DROP STREAM/TABLE` command issued during `pipelineExecute` and `pipelineDeploy` tasks. An example of this can be seen in [this test script](src/test/resources/src/main/pipeline/01-clickstream/02-integrate.sql/). This would construct the following `DROP` command:
+When applied to a table or stream, then the `DELETE TOPIC` option is added to the `DROP STREAM/TABLE` command issued during `pipelineExecute` and `pipelineDeploy` tasks.
+An example of this can be seen in [this test script](src/test/resources/src/main/pipeline/01-clickstream/02-integrate.sql/).
+This would construct the following `DROP` command:
 
 ```SQL
 DROP table IF EXISTS events_per_min DELETE TOPIC;

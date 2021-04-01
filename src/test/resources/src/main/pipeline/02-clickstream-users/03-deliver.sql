@@ -1,5 +1,7 @@
 -- Aggregate (count&groupBy) using a TABLE-Window
-CREATE TABLE USER_IP_ACTIVITY AS \
+CREATE TABLE USER_IP_ACTIVITY \
+WITH (KEY_FORMAT='JSON') \
+AS \
 SELECT username, ip, city, COUNT(*) AS count \
 FROM USER_CLICKSTREAM WINDOW TUMBLING (size 60 second) \
 GROUP BY username, ip, city \

@@ -1,13 +1,12 @@
 substitutions:
-  _PROJECT: gradle-confluent
   _ARTIFACT_BUCKET: gs://rpa-devops-artifacts
   _DOC_BUCKET: documentation.redpillanalytics.com
-  _DOC_PATH: ${_DOC_BUCKET}/${_PROJECT}
+  _DOC_PATH: ${_DOC_BUCKET}/${REPO_NAME}
   _DOC_REMOTE: s3://${_DOC_PATH}
   _DOC_LOCAL: build/docs/groovydoc/
   _DOC_BASE_URL: https://s3.amazonaws.com/${_DOC_PATH}
   _CACHE_BUCKET: gs://rpa-devops-build-cache
-  _ARTIFACT_LOCATION: ${_ARTIFACT_BUCKET}/${_PROJECT}
+  _ARTIFACT_LOCATION: ${_ARTIFACT_BUCKET}/${REPO_NAME}
   _STATUS_FILE: build-status.txt
   # Get repository URL
   _REPO_URL: $(body.repository.html_url)
@@ -30,7 +29,7 @@ steps:
   id: restore-cache
   args:
     - '--bucket=$_CACHE_BUCKET'
-    - '--key=${_PROJECT}_$( checksum build.gradle )'
+    - '--key=${REPO_NAME}-$( checksum build.gradle )'
   waitFor: ['-']
 - name: gcr.io/google.com/cloudsdktool/cloud-sdk
   id: test
@@ -38,8 +37,7 @@ steps:
   args:
     - '-cx'
     - |
-       ./gradlew cleanLibs build groovydoc runAllTests buildDashboard -PpipelineEndpoint=http://ksqldb-server:8088 -PkafkaServers=kafka:9092 \
-       || echo "fail" > ${_STATUS_FILE}
+       ./gradlew cleanLibs build groovydoc runAllTests buildDashboard -PpipelineEndpoint=http://ksqldb-server:8088 -PkafkaServers=kafka:9092
   waitFor:
     - version
     - compose
@@ -48,22 +46,10 @@ steps:
   id: save-cache
   args:
     - '--bucket=$_CACHE_BUCKET'
-    - '--key=${_PROJECT}_$( checksum build.gradle )'
+    - '--key=${REPO_NAME}-$( checksum build.gradle )'
     - '--path=.gradle/'
   waitFor:
     - test
-- id: test-check
-  name: gcr.io/google.com/cloudsdktool/cloud-sdk
-  entrypoint: 'bash'
-  args:
-    - '-cx'
-    - |
-      if [[ $(< ${_STATUS_FILE}) == "fail" ]]
-      then
-        exit 1
-      fi
-  waitFor:
-    - save-cache
 - name: gcr.io/google.com/cloudsdktool/cloud-sdk
   id: publish
   entrypoint: bash
@@ -75,7 +61,7 @@ steps:
         ./gradlew publish -Pgradle.publish.key=${_GRADLE_KEY} -Pgradle.publish.secret=${_GRADLE_SECRET}
       fi
   waitFor:
-    - test-check
+    - test
 # Need a rewrite of gradle-analytics that doesn't rely on a local git repo
 # - name: gcr.io/google.com/cloudsdktool/cloud-sdk
 #   id: analytics
@@ -100,7 +86,7 @@ steps:
         && echo "Latest API documentation located at: ${_DOC_BASE_URL}/latest/overview-summary.html"
       fi
   waitFor:
-    - test-check
+    - test
     - publish
 timeout: 3600s
 options:
