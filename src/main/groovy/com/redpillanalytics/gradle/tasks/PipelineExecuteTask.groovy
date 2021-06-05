@@ -52,10 +52,10 @@ class PipelineExecuteTask extends PipelineEndpointTask {
     * When defined, CREATE statements found in KSQL scripts are not executed. Used primarily for auto-generating and executing applicable DROP and/or TERMINATE statements.
     */
    @Input
-   @Option(option = 'no-create',
-           description = 'When defined, CREATE statements in KSQL scripts are not executed. Used primarily for auto-generating and executing applicable DROP and/or TERMINATE statements.'
+   @Option(option = 'drop-only',
+           description = 'When defined, only DROP and TERMINATE statements in KSQL scripts are executed. Used primarily for cleaning existing TABLES/STREAMS and terminating queries.'
    )
-   boolean noCreate
+   boolean dropOnly
 
    /**
     * The number of seconds to pause execution after a create statement. Default: the extension property {@link com.redpillanalytics.gradle.ConfluentExtension#statementPause}.
@@ -167,7 +167,7 @@ class PipelineExecuteTask extends PipelineEndpointTask {
       }
 
       // create KSQL objects
-      if (!noCreate) {
+      if (!dropOnly) {
          pipelineSql.each {
             if(doSkip(it))
                return

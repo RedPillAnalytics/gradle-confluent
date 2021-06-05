@@ -111,9 +111,9 @@ class PipelineTask extends DefaultTask {
 
                  .replaceAll(~/(\s)*(?:--.*)?/) { all, statement -> (statement ?: '') } // remove comments
                  .trim() // basically trim things up
-                 .replace("\\\n", ' ') // replace \ with newlines
-                 .replace("\n", ' ') // replace newlines with spaces
-                 .replace('  ', ' ') // replace 2 spaces with 1
+                 .replace("\\\n", ' ') // replace backslash then newline with a space
+                 .replace("\n", ' ') // replace newline with a space
+                 .replace('  ', ' ') // replace 2 spaces with 1 space
       }
 
       transformed.removeAll('')
