@@ -43,8 +43,7 @@ class BuildTest extends Specification {
                id 'groovy'
             }
             dependencies {
-               compile localGroovy()
-               compile group: 'org.slf4j', name: 'slf4j-simple', version: '+'
+               implementation localGroovy()
             }
 
             publishing {

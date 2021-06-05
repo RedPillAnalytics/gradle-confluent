@@ -33,15 +33,13 @@ githubRelease {
 dependencies {
 
    implementation gradleApi()
-   implementation localGroovy()
-
-   implementation 'org.slf4j:slf4j-simple:1.7.30'
-   implementation 'com.konghq:unirest-java:3.11.10'
+   implementation 'org.codehaus.groovy:groovy:3.0.8'
+   implementation 'com.konghq:unirest-java:3.11.11'
    implementation 'com.google.code.gson:gson:2.8.7'
 
    // Gradle Properties
    // It also has the Common library in it, thus the dependency here
-   implementation 'gradle.plugin.com.redpillanalytics:gradle-properties:0.1.11'
+   implementation 'gradle.plugin.com.redpillanalytics:gradle-properties:1.0.0'
 
    // testing
    testImplementation 'org.spockframework:spock-core:2.0-groovy-3.0'
@@ -52,7 +50,7 @@ group = 'com.redpillanalytics'
 
 java {
    toolchain {
-      languageVersion = JavaLanguageVersion.of(8)
+      languageVersion = JavaLanguageVersion.of(11)
    }
 }
 
