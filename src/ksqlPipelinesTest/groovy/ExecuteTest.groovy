@@ -125,11 +125,11 @@ class ExecuteTest extends Specification {
       !result.tasks.collect { it.outcome }.contains('FAILURE')
    }
 
-   def "Execute :pipelineExecute task with --no-create first"() {
+   def "Execute :pipelineExecute task with --drop-only first"() {
 
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--no-create', '-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--drop-only', '-Si', '--rerun-tasks'])
 
       expect:
       !result.tasks.collect { it.outcome }.contains('FAILURE')
@@ -146,10 +146,10 @@ class ExecuteTest extends Specification {
       !result.tasks.collect { it.outcome }.contains('FAILURE')
    }
 
-   def "Execute :pipelineExecute task with --no-create second"() {
+   def "Execute :pipelineExecute task with --drop-only second"() {
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--no-create', '-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--drop-only', '-Si', '--rerun-tasks'])
 
       expect:
       !result.tasks.collect { it.outcome }.contains('FAILURE')
@@ -167,10 +167,10 @@ class ExecuteTest extends Specification {
       !result.output.toLowerCase().contains('drop table')
    }
 
-   def "Execute :pipelineExecute task with --no-create third"() {
+   def "Execute :pipelineExecute task with --drop-only third"() {
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--no-create', '-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--drop-only', '-Si', '--rerun-tasks'])
 
       expect:
       !result.tasks.collect { it.outcome }.contains('FAILURE')
@@ -200,7 +200,7 @@ class ExecuteTest extends Specification {
    def "Execute :pipelineExecute and test for --@DeleteTopic directive"() {
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--no-create', '-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--drop-only', '-Si', '--rerun-tasks'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'
