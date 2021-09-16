@@ -1,12 +1,12 @@
 plugins {
    id 'groovy'
    id 'java-gradle-plugin'
-   id "com.gradle.plugin-publish" version "0.15.0"
+   id "com.gradle.plugin-publish" version "0.16.0"
    id "com.github.breadmoirai.github-release" version "2.2.12"
    id 'org.unbroken-dome.test-sets' version '4.0.0'
-   id "com.avast.gradle.docker-compose" version "0.14.3"
+   id "com.avast.gradle.docker-compose" version "0.14.9"
    id "com.github.ben-manes.versions" version "0.39.0"
-   id "com.redpillanalytics.gradle-analytics" version "1.4.0"
+   id "com.redpillanalytics.gradle-analytics" version "1.4.3"
    id 'com.adarshr.test-logger' version '3.0.0'
    id 'build-dashboard'
 }
@@ -33,13 +33,13 @@ githubRelease {
 dependencies {
 
    implementation gradleApi()
-   implementation 'org.codehaus.groovy:groovy:3.0.8'
+   implementation 'org.codehaus.groovy:groovy:3.0.9'
    implementation 'com.konghq:unirest-java:3.11.11'
-   implementation 'com.google.code.gson:gson:2.8.7'
+   implementation 'com.google.code.gson:gson:2.8.8'
 
    // Gradle Properties
    // It also has the Common library in it, thus the dependency here
-   implementation 'gradle.plugin.com.redpillanalytics:gradle-properties:1.0.0'
+   implementation 'gradle.plugin.com.redpillanalytics:gradle-properties:1.0.2'
 
    // testing
    testImplementation 'org.spockframework:spock-core:2.0-groovy-3.0'
