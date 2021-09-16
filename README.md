@@ -177,25 +177,25 @@ Type
      PipelineExecuteTask (com.redpillanalytics.gradle.tasks.PipelineExecuteTask)
 
 Options
+     --basic-password     The Password for Basic Authentication with the REST API URL for the KSQL Server. Default: value of 'confluent.pipelinePassword' or ''.
+
+     --basic-username     The Username for Basic Authentication with the REST API URL for the KSQL Server. Default: value of 'confluent.pipelineUsername' or ''.
+
+     --drop-only     When defined, only DROP and TERMINATE statements in KSQL scripts are executed. Used primarily for cleaning existing TABLES/STREAMS and terminating queries.
+
      --from-beginning     When defined, set 'ksql.streams.auto.offset.reset' to 'earliest'.
 
-     --no-create     When defined, CREATE statements are not processed.
-
-     --no-drop     When defined, DROP statements are not processed.
+     --no-drop     When defined, applicable DROP statements are not auto-generated and executed.
 
      --no-reverse-drops     When defined, DROP statements are not processed in reverse order of the CREATE statements, which is the default.
 
-     --no-terminate     When defined, DROP statements are not processed using a TERMINATE for all currently-running queries.
+     --no-terminate     When defined, applicable TERMINATE statements are not auto-generated and executed.
 
      --pipeline-dir     The base directory containing SQL scripts to execute, including recursive subdirectories. Default: value of 'confluent.pipelineSourcePath' or 'src/main/pipeline'.
 
      --rest-url     The REST API URL for the KSQL Server. Default: value of 'confluent.pipelineEndpoint' or 'http://localhost:8088'.
 
-     --basic--username     The Username for Basic Authentication with the REST API URL for the KSQL Server. Default: value of 'confluent.pipelineUsername' or ''.
-
-     --basic-password     The Password for Basic Authentication with the REST API URL for the KSQL Server. Default: value of 'confluent.pipelinePassword' or ''.
-
-     --statement-pause     The number of seconds to pause after executing a CREATE query. This can be useful if you find your piepeline deploys 'too quickly' for joins to form completely, or you need to monitor query deployment in realtime. Default:: value of 'confluent.statementPause' or '0'.
+     --statement-pause     The number of seconds to pause execution after a create statement. Default: value of 'confluent.statementPause'.
 
 Description
      Execute all KSQL pipelines from the provided source directory, in hierarchical order, proceeded by applicable DROP and TERMINATE commands.
