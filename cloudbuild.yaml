@@ -17,14 +17,14 @@ steps:
     - $_REPO_URL
     - $BRANCH_NAME
   waitFor: [ '-' ]
-- name: 'docker/compose:1.27.4'
-  id: compose
-  args:
-    - up
-    - -d
-  env:
-  - 'PROJECT_ID=$PROJECT_ID'
-  waitFor: ['-']
+#- name: 'docker/compose:1.27.4'
+#  id: compose
+#  args:
+#    - up
+#    - -d
+#  env:
+#  - 'PROJECT_ID=$PROJECT_ID'
+#  waitFor: ['-']
 - name: 'gcr.io/$PROJECT_ID/restore_cache'
   id: restore-cache
   args:
@@ -37,10 +37,10 @@ steps:
   args:
     - '-cx'
     - |
-       ./gradlew cleanLibs build groovydoc runAllTests buildDashboard -PpipelineEndpoint=http://ksqldb-server:8088 -PkafkaServers=kafka:9092
+       ./gradlew cleanLibs build groovydoc runAllTests buildDashboard
   waitFor:
     - version
-    - compose
+    #- compose
     - restore-cache
 - name: 'gcr.io/$PROJECT_ID/save_cache'
   id: save-cache
@@ -58,7 +58,7 @@ steps:
    - |
       if [ $BRANCH_NAME == "master" ]
       then
-        ./gradlew publish -Pgradle.publish.key=${_GRADLE_KEY} -Pgradle.publish.secret=${_GRADLE_SECRET}
+        ./gradlew publish -Pgradle.publish.key=$${GRADLE_KEY} -Pgradle.publish.secret=$${GRADLE_SECRET}
       fi
   waitFor:
     - test
@@ -96,11 +96,26 @@ options:
     - GRADLE_USER_HOME=.gradle
     - GRADLE_OPTS="-Dorg.gradle.daemon=false"
     - ORG_GRADLE_PROJECT_analytics_buildTag=$BUILD_ID
-    - GITHUB_TOKEN=$_GITHUB_TOKEN
-    - AWS_ACCESS_KEY_ID=$_AWS_ACCESS_KEY_ID
-    - AWS_SECRET_ACCESS_KEY=$_AWS_SECRET_ACCESS_KEY
+  secretEnv:
+    - GITHUB_TOKEN
+    - AWS_ACCESS_KEY_ID
+    - AWS_SECRET_ACCESS_KEY
+    - GRADLE_KEY
+    - GRADLE_SECRET
 artifacts:
   objects:
     location: ${_ARTIFACT_LOCATION}
     paths:
       - build/libs/*.jar
+availableSecrets:
+  secretManager:
+    - versionName: projects/737919165778/secrets/GITHUB_TOKEN/versions/latest
+      env: GITHUB_TOKEN
+    - versionName: projects/737919165778/secrets/AWS_ACCESS_KEY_ID/versions/latest
+      env: AWS_ACCESS_KEY_ID
+    - versionName: projects/737919165778/secrets/AWS_SECRET_ACCESS_KEY/versions/latest
+      env: AWS_SECRET_ACCESS_KEY
+    - versionName: projects/737919165778/secrets/GRADLE_KEY/versions/latest
+      env: GRADLE_KEY
+    - versionName: projects/737919165778/secrets/GRADLE_SECRET/versions/latest
+      env: GRADLE_SECRET

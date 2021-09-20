@@ -1,15 +1,26 @@
+import groovy.ant.AntBuilder
 import groovy.util.logging.Slf4j
 import org.gradle.testkit.runner.GradleRunner
+import org.testcontainers.containers.DockerComposeContainer
+import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.spock.Testcontainers
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Stepwise
-import spock.lang.Title
+
+import java.time.Duration
 
 @Slf4j
 @Stepwise
-@Title("Execute :tasks")
+@Testcontainers
 class ExecuteTest extends Specification {
 
+   @Shared
+   DockerComposeContainer environment =
+           new DockerComposeContainer<>(new File('docker-compose.yml'))
+                   .withExposedService("ksqldb-server", 8088, Wait.forHealthcheck().withStartupTimeout(Duration.ofMinutes(5)))
+                   .withExposedService('kafka', 29092)
+                   .withLocalCompose(true)
    @Shared
    File projectDir, buildDir, buildFile, settingsFile, resourcesDir
 
@@ -17,16 +28,10 @@ class ExecuteTest extends Specification {
    String projectName = 'execute-test'
 
    @Shared
-   String taskName
+   String taskName, kafka, endpoint
 
    @Shared
    def result, taskList
-
-   @Shared
-   String pipelineEndpoint = System.getProperty("pipelineEndpoint") ?: 'http://localhost:8088'
-
-   @Shared
-   String kafkaServers = System.getProperty("kafkaServers") ?: 'localhost:9092'
 
    @Shared
    String analyticsVersion = System.getProperty("analyticsVersion")
@@ -36,13 +41,11 @@ class ExecuteTest extends Specification {
       projectDir = new File("${System.getProperty("projectDir")}/$projectName")
       buildDir = new File(projectDir, 'build')
       taskList = ['pipelineExecute']
-
       resourcesDir = new File('src/test/resources')
-
-      copySource()
-
       settingsFile = new File(projectDir, 'settings.gradle').write("""rootProject.name = '$projectName'""")
       buildFile = new File(projectDir, 'build.gradle')
+      endpoint = "http://${environment.getServiceHost('ksqldb-server', 8088)}:${environment.getServicePort('ksqldb-server', 8088)}".toString()
+      kafka = "${environment.getServiceHost('kafka', 29092)}:${environment.getServicePort('kafka', 29092)}".toString()
 
       buildFile.write("""
                |plugins {
@@ -51,13 +54,13 @@ class ExecuteTest extends Specification {
                |}
                |
                |confluent {
-               |  pipelineEndpoint '$pipelineEndpoint'
+               |  pipelineEndpoint '$endpoint'
                |}
                |
                |analytics {
                |   kafka {
                |     test {
-               |        bootstrapServers = '$kafkaServers'
+               |        bootstrapServers = '$kafka'
                |     }
                |  }
                |}
@@ -65,12 +68,6 @@ class ExecuteTest extends Specification {
    }
 
    def setup() {
-
-      copySource()
-   }
-
-   def copySource() {
-
       new AntBuilder().copy(todir: projectDir) {
          fileset(dir: resourcesDir)
       }
@@ -80,7 +77,6 @@ class ExecuteTest extends Specification {
    def executeSingleTask(String taskName, List otherArgs, Boolean logOutput = true) {
 
       otherArgs.add(0, taskName)
-
       log.warn "runner arguments: ${otherArgs.toString()}"
 
       // execute the Gradle test build
@@ -94,7 +90,6 @@ class ExecuteTest extends Specification {
       if (logOutput) log.warn result.getOutput()
 
       return result
-
    }
 
    def "Execute :tasks task"() {
@@ -110,7 +105,7 @@ class ExecuteTest extends Specification {
    def "Execute :listTopics task"() {
       given:
       taskName = 'listTopics'
-      result = executeSingleTask(taskName, ['-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ['-Si'])
 
       expect:
       !result.tasks.collect { it.outcome }.contains('FAILURE')
@@ -119,7 +114,7 @@ class ExecuteTest extends Specification {
    def "Execute :pipelineExecute task with default values"() {
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ['-Si'])
 
       expect:
       !result.tasks.collect { it.outcome }.contains('FAILURE')
@@ -129,7 +124,7 @@ class ExecuteTest extends Specification {
 
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--drop-only', '-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--drop-only', '-Si'])
 
       expect:
       !result.tasks.collect { it.outcome }.contains('FAILURE')
@@ -140,7 +135,7 @@ class ExecuteTest extends Specification {
    def "Execute :pipelineExecute task with custom directory"() {
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--pipeline-dir=src/main/pipeline/01-clickstream', '-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--pipeline-dir=src/main/pipeline/01-clickstream', '-Si'])
 
       expect:
       !result.tasks.collect { it.outcome }.contains('FAILURE')
@@ -149,7 +144,7 @@ class ExecuteTest extends Specification {
    def "Execute :pipelineExecute task with --drop-only second"() {
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--drop-only', '-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--drop-only', '-Si'])
 
       expect:
       !result.tasks.collect { it.outcome }.contains('FAILURE')
@@ -160,7 +155,7 @@ class ExecuteTest extends Specification {
    def "Execute :pipelineExecute task with --no-drop"() {
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--no-drop', '-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--no-drop', '-Si'])
 
       expect:
       !result.tasks.collect { it.outcome }.contains('FAILURE')
@@ -170,7 +165,7 @@ class ExecuteTest extends Specification {
    def "Execute :pipelineExecute task with --drop-only third"() {
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--drop-only', '-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--drop-only', '-Si'])
 
       expect:
       !result.tasks.collect { it.outcome }.contains('FAILURE')
@@ -181,7 +176,7 @@ class ExecuteTest extends Specification {
    def "Execute :pipelineExecute task with --no-terminate"() {
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--no-terminate', '-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--no-terminate', '-Si'])
 
       expect:
       !result.tasks.collect { it.outcome }.contains('FAILURE')
@@ -191,7 +186,7 @@ class ExecuteTest extends Specification {
    def "Execute :pipelineExecute task with --from-beginning"() {
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--from-beginning', '-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--from-beginning', '-Si'])
 
       expect:
       !result.tasks.collect { it.outcome }.contains('FAILURE')
@@ -200,7 +195,7 @@ class ExecuteTest extends Specification {
    def "Execute :pipelineExecute and test for --@DeleteTopic directive"() {
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ['--drop-only', '-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ['--drop-only', '-Si'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'
@@ -210,11 +205,10 @@ class ExecuteTest extends Specification {
    def "Execute :pipelineExecute task with custom REST endpoint"() {
       given:
       taskName = 'pipelineExecute'
-      result = executeSingleTask(taskName, ["--rest-url", pipelineEndpoint, '-Si', '--rerun-tasks'])
+      result = executeSingleTask(taskName, ["--rest-url", endpoint, '-Si'])
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'
-
    }
 
    def "Execute :producer task"() {
@@ -224,5 +218,6 @@ class ExecuteTest extends Specification {
 
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'
+      result.tasks.collect { it.path - ":" } == ['kafkaTestSink', 'producer']
    }
 }

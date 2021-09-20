@@ -43,6 +43,7 @@ dependencies {
 
    // testing
    testImplementation 'org.spockframework:spock-core:2.0-groovy-3.0'
+   testImplementation "org.testcontainers:spock:1.16.0"
 }
 
 // Default artifact naming.
@@ -112,13 +113,9 @@ tasks.withType(Test) {
    failFast true
    testLogging.showStandardStreams true
    systemProperty 'projectDir', temporaryDir
-   systemProperty 'pipelineEndpoint', pipelineEndpoint
-   systemProperty 'kafkaServers', kafkaServers
    systemProperty 'analyticsVersion', analyticsVersion
    useJUnitPlatform()
 }
-
-runAllTests.mustRunAfter tasks.composeUp
 
 // create a publish task
 task publish {

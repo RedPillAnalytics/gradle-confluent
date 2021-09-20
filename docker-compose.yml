@@ -1,21 +1,23 @@
 version: '2'
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:${CP_VERSION}
+    image: confluentinc/cp-zookeeper:6.2.0
     hostname: zookeeper
-    container_name: zookeeper
+    #container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 32181
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka:
-    image: confluentinc/cp-enterprise-kafka:${CP_VERSION}
+    image: confluentinc/cp-enterprise-kafka:6.2.0
     hostname: kafka
-    container_name: kafka
+    #container_name: kafka
     ports:
       - "29092:29092"
     depends_on:
       - zookeeper
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "unset" , "JMX_PORT" ,";" ,"kafka-topics.sh","--zookeeper","zookeeper:32181","--list" ]
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:32181
@@ -28,7 +30,7 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:${CP_VERSION}
+    image: confluentinc/cp-schema-registry:6.2.0
     depends_on:
       - zookeeper
       - kafka
@@ -37,14 +39,17 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:32181
 
   ksqldb-server:
-    image: ${KSQL_IMAGE_BASE}confluentinc/ksqldb-server:${KSQL_VERSION}
+    image: confluentinc/ksqldb-server:0.19.0
     hostname: ksqldb-server
-    container_name: ksqldb-server
+    #container_name: ksqldb-server
     depends_on:
       - kafka
       - schema-registry
+      - datagen
     ports:
       - "8088:8088"
+    healthcheck:
+      test: curl -f http://ksqldb-server:8088/ || exit 1
     environment:
       KSQL_LISTENERS: http://0.0.0.0:8088
       KSQL_BOOTSTRAP_SERVERS: kafka:9092
@@ -55,8 +60,8 @@ services:
   # Access the cli by running:
   # > docker-compose exec ksqldb-cli  ksql http://primary-ksqldb-server:8088
   ksqldb-cli:
-    image: ${KSQL_IMAGE_BASE}confluentinc/ksqldb-cli:${KSQL_VERSION}
-    container_name: ksqldb-cli
+    image: confluentinc/ksqldb-cli:0.19.0
+    #container_name: ksqldb-cli
     depends_on:
       - ksqldb-server
     entrypoint: /bin/sh
@@ -64,7 +69,7 @@ services:
 
   # Runs the Kafka KSQL data generator
   datagen:
-    container_name: datagen
+    #container_name: datagen
     image: confluentinc/ksql-examples:5.4.2
     depends_on:
       - kafka
@@ -91,7 +96,7 @@ services:
                           iterations=100'"
 # This network is defined for Google Cloud Build jobs
 # For local testing, just run: docker network create cloudbuild
-networks:
-    default:
-        external:
-            name: cloudbuild
+#networks:
+#    default:
+#        external:
+#            name: cloudbuild

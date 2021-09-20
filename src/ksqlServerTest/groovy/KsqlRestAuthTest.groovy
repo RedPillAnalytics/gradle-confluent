@@ -1,18 +1,34 @@
 import com.redpillanalytics.KsqlRest
 import groovy.util.logging.Slf4j
+import org.testcontainers.containers.DockerComposeContainer
+import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.spock.Testcontainers
 import spock.lang.Shared
 import spock.lang.Specification
 
+import java.time.Duration
+
 @Slf4j
+@Testcontainers
 class KsqlRestAuthTest extends Specification {
+   @Shared
+   def ksqlRest
 
    @Shared
-   String pipelineEndpoint = System.getProperty("pipelineEndpoint") ?: 'http://localhost:8088'
+   DockerComposeContainer environment =
+           new DockerComposeContainer<>(new File('docker-compose.yml'))
+                   .withServices("zookeeper", "kafka", "ksqldb-server")
+                   .withExposedService("ksqldb-server", 8088, Wait.forHealthcheck().withStartupTimeout(Duration.ofMinutes(5)))
+                   .withLocalCompose(true)
+
+   @Shared
    String username = System.getProperty("pipelineUsername") ?: 'test'
+   @Shared
    String password = System.getProperty("pipelinePassword") ?: 'test'
 
-   @Shared
-   def ksqlRest = new KsqlRest(restUrl: pipelineEndpoint, username: username, password: password)
+   def setupSpec() {
+      ksqlRest = new KsqlRest(restUrl: ("http://${environment.getServiceHost('ksqldb-server', 8088)}:${environment.getServicePort('ksqldb-server', 8088)}".toString()), username: username, password: password)
+   }
 
    def "KSQL Server properties fetched"() {
 

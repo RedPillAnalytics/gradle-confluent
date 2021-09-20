@@ -1,58 +1,48 @@
 import groovy.util.logging.Slf4j
 import org.gradle.testkit.runner.GradleRunner
+import org.testcontainers.containers.DockerComposeContainer
+import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.spock.Testcontainers
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Stepwise
-import spock.lang.Title
+
+import java.time.Duration
 
 @Slf4j
 @Stepwise
-@Title("Check basic configuration")
+@Testcontainers
 class DeployTest extends Specification {
+
+   @Shared
+   DockerComposeContainer environment =
+           new DockerComposeContainer<>(new File('docker-compose.yml'))
+                   .withExposedService("ksqldb-server", 8088, Wait.forHealthcheck().withStartupTimeout(Duration.ofMinutes(5)))
+                   .withExposedService('kafka', 29092)
+                   .withLocalCompose(true)
 
    @Shared
    File projectDir, buildDir, resourcesDir, settingsFile, artifact, buildFile
 
    @Shared
-   def result, tasks
+   def result
 
    @Shared
-   String projectName = 'simple-deploy', taskName
-
-   @Shared
-   String pipelineEndpoint = System.getProperty("pipelineEndpoint") ?: 'http://localhost:8088'
-
-   @Shared
-   String kafkaServers = System.getProperty("kafkaServers") ?: 'localhost:9092'
+   String projectName = 'simple-deploy', taskName, kafka, endpoint
 
    @Shared
    String analyticsVersion = System.getProperty("analyticsVersion")
-
-   def setup() {
-
-      copySource()
-   }
-
-   def copySource() {
-
-      new AntBuilder().copy(todir: projectDir) {
-         fileset(dir: resourcesDir)
-      }
-   }
 
    def setupSpec() {
 
       projectDir = new File("${System.getProperty("projectDir")}/$projectName")
       buildDir = new File(projectDir, 'build')
       artifact = new File(buildDir, 'distributions/simple-deploy-pipeline.zip')
-
       resourcesDir = new File('src/test/resources')
-
-      copySource()
-
       settingsFile = new File(projectDir, 'settings.gradle').write("""rootProject.name = '$projectName'""")
-
       buildFile = new File(projectDir, 'build.gradle')
+      endpoint = "http://${environment.getServiceHost('ksqldb-server', 8088)}:${environment.getServicePort('ksqldb-server', 8088)}".toString()
+      kafka = "${environment.getServiceHost('kafka', 29092)}:${environment.getServicePort('kafka', 29092)}".toString()
 
       buildFile.write("""
                |plugins {
@@ -85,23 +75,27 @@ class DeployTest extends Specification {
                |
                |confluent {
                |  functionPattern = 'simple-build'
-               |  pipelineEndpoint = '$pipelineEndpoint'
+               |  pipelineEndpoint = '$endpoint'
                |}
                |analytics {
                |   kafka {
                |     test {
-               |        bootstrapServers = '$kafkaServers'
+               |        bootstrapServers = '$kafka'
                |     }
                |  }
                |}
                |""".stripMargin())
    }
 
+   def setup() {
+      new AntBuilder().copy(todir: projectDir) {
+         fileset(dir: resourcesDir)
+      }
+   }
+
    // helper method
    def executeSingleTask(String taskName, List otherArgs = []) {
-
       otherArgs.add(0, taskName)
-
       log.warn "runner arguments: ${otherArgs.toString()}"
 
       // execute the Gradle test build
@@ -136,6 +130,7 @@ class DeployTest extends Specification {
       given:
       taskName = 'producer'
       result = executeSingleTask(taskName, ['-Si'])
+      log.warn "Kafka: $kafka"
 
       expect:
       !result.tasks.collect { it.outcome }.contains('FAILED')
