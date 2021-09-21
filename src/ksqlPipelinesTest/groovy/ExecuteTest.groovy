@@ -36,8 +36,13 @@ class ExecuteTest extends Specification {
    @Shared
    String analyticsVersion = System.getProperty("analyticsVersion")
 
-   def setupSpec() {
+   def copyResources() {
+      new groovy.util.AntBuilder().copy(todir: projectDir) {
+         fileset(dir: resourcesDir)
+      }
+   }
 
+   def setupSpec() {
       projectDir = new File("${System.getProperty("projectDir")}/$projectName")
       buildDir = new File(projectDir, 'build')
       taskList = ['pipelineExecute']
@@ -46,6 +51,8 @@ class ExecuteTest extends Specification {
       buildFile = new File(projectDir, 'build.gradle')
       endpoint = "http://${environment.getServiceHost('ksqldb-server', 8088)}:${environment.getServicePort('ksqldb-server', 8088)}".toString()
       kafka = "${environment.getServiceHost('kafka', 29092)}:${environment.getServicePort('kafka', 29092)}".toString()
+
+      copyResources()
 
       buildFile.write("""
                |plugins {
@@ -68,9 +75,7 @@ class ExecuteTest extends Specification {
    }
 
    def setup() {
-      new AntBuilder().copy(todir: projectDir) {
-         fileset(dir: resourcesDir)
-      }
+      copyResources()
    }
 
    // helper method

@@ -33,6 +33,12 @@ class DeployTest extends Specification {
    @Shared
    String analyticsVersion = System.getProperty("analyticsVersion")
 
+   def copyResources() {
+      new AntBuilder().copy(todir: projectDir) {
+         fileset(dir: resourcesDir)
+      }
+   }
+
    def setupSpec() {
 
       projectDir = new File("${System.getProperty("projectDir")}/$projectName")
@@ -43,6 +49,8 @@ class DeployTest extends Specification {
       buildFile = new File(projectDir, 'build.gradle')
       endpoint = "http://${environment.getServiceHost('ksqldb-server', 8088)}:${environment.getServicePort('ksqldb-server', 8088)}".toString()
       kafka = "${environment.getServiceHost('kafka', 29092)}:${environment.getServicePort('kafka', 29092)}".toString()
+
+      copyResources()
 
       buildFile.write("""
                |plugins {
@@ -88,9 +96,7 @@ class DeployTest extends Specification {
    }
 
    def setup() {
-      new AntBuilder().copy(todir: projectDir) {
-         fileset(dir: resourcesDir)
-      }
+      copyResources()
    }
 
    // helper method
