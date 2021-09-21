@@ -30,6 +30,8 @@ steps:
     - '-cx'
     - |
        ./gradlew cleanLibs build groovydoc runAllTests buildDashboard
+  env:
+    - 'PROJECT_ID=$PROJECT_ID'
   waitFor:
     - version
     - restore-cache
