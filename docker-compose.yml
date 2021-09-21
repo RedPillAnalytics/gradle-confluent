@@ -96,7 +96,7 @@ services:
                           iterations=100'"
 # This network is defined for Google Cloud Build jobs
 # For local testing, just run: docker network create cloudbuild
-#networks:
-#    default:
-#        external:
-#            name: cloudbuild
+networks:
+    default:
+        external:
+            name: cloudbuild

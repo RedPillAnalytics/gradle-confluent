@@ -81,7 +81,7 @@ steps:
     - publish
 timeout: 3600s
 options:
-  machineType: 'N1_HIGHCPU_32'
+  #machineType: 'N1_HIGHCPU_32'
   substitution_option: 'ALLOW_LOOSE'
   dynamic_substitutions: true
   env:
