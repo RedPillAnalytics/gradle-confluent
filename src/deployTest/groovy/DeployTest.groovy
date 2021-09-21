@@ -45,13 +45,13 @@ class DeployTest extends Specification {
       buildDir = new File(projectDir, 'build')
       artifact = new File(buildDir, 'distributions/simple-deploy-pipeline.zip')
       resourcesDir = new File('src/test/resources')
-      settingsFile = new File(projectDir, 'settings.gradle').write("""rootProject.name = '$projectName'""")
       buildFile = new File(projectDir, 'build.gradle')
       endpoint = "http://${environment.getServiceHost('ksqldb-server', 8088)}:${environment.getServicePort('ksqldb-server', 8088)}".toString()
       kafka = "${environment.getServiceHost('kafka', 29092)}:${environment.getServicePort('kafka', 29092)}".toString()
 
       copyResources()
 
+      settingsFile = new File(projectDir, 'settings.gradle').write("""rootProject.name = '$projectName'""")
       buildFile.write("""
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
