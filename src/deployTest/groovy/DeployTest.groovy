@@ -1,8 +1,10 @@
 import groovy.util.logging.Slf4j
 import org.gradle.testkit.runner.GradleRunner
 import org.testcontainers.containers.DockerComposeContainer
+import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.spock.Testcontainers
+import org.testcontainers.utility.DockerImageName
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Stepwise
@@ -18,8 +20,10 @@ class DeployTest extends Specification {
    DockerComposeContainer environment =
            new DockerComposeContainer<>(new File('docker-compose.yml'))
                    .withExposedService("ksqldb-server", 8088, Wait.forHealthcheck().withStartupTimeout(Duration.ofMinutes(5)))
-                   .withExposedService('kafka', 29092)
                    .withLocalCompose(true)
+
+   @Shared
+   KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.2.0"))
 
    @Shared
    File projectDir, buildDir, resourcesDir, settingsFile, artifact, buildFile
@@ -28,7 +32,7 @@ class DeployTest extends Specification {
    def result
 
    @Shared
-   String projectName = 'simple-deploy', taskName, kafka, endpoint
+   String projectName = 'simple-deploy', taskName, endpoint
 
    @Shared
    String analyticsVersion = System.getProperty("analyticsVersion")
@@ -47,7 +51,6 @@ class DeployTest extends Specification {
       resourcesDir = new File('src/test/resources')
       buildFile = new File(projectDir, 'build.gradle')
       endpoint = "http://${environment.getServiceHost('ksqldb-server', 8088)}:${environment.getServicePort('ksqldb-server', 8088)}".toString()
-      kafka = "${environment.getServiceHost('kafka', 29092)}:${environment.getServicePort('kafka', 29092)}".toString()
 
       copyResources()
 
@@ -88,7 +91,7 @@ class DeployTest extends Specification {
                |analytics {
                |   kafka {
                |     test {
-               |        bootstrapServers = '$kafka'
+               |        bootstrapServers = '${kafka.getBootstrapServers()}'
                |     }
                |  }
                |}
