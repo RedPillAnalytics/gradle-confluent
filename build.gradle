@@ -31,8 +31,6 @@ githubRelease {
 }
 
 dependencies {
-
-   implementation gradleApi()
    implementation 'org.codehaus.groovy:groovy:3.0.9'
    implementation 'com.konghq:unirest-java:3.11.11'
    implementation 'com.google.code.gson:gson:2.8.8'
@@ -116,6 +114,7 @@ tasks.withType(Test) {
    systemProperty 'projectDir', temporaryDir
    systemProperty 'analyticsVersion', analyticsVersion
    useJUnitPlatform()
+   //maxParallelForks = Runtime.runtime.availableProcessors()
 }
 
 // create a publish task
