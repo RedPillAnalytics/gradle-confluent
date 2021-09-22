@@ -8,11 +8,11 @@ You can run the unit tests by executing:
 ./gradlew test
 ```
 
-There are a series of integration tests that use the topics from the [Confluent clickstream quickstart](https://docs.confluent.io/current/ksql/docs/tutorials/clickstream-docker.html#ksql-clickstream-docker).
-These integration tests, plus the unit tests, can be run with the command below, and this command automatically spins up a Confluent environment with docker-compose that is used for running those tests:
+There are a series of integration tests that use the topics from the [Confluent clickstream quickstart](https://docs.confluent.io/current/ksql/docs/tutorials/clickstream-docker.html#ksql-clickstream-docker) implemented using [TestContainers with docker compose](https://www.testcontainers.org/modules/docker_compose/) using a [compose file](./docker-compose.yml), as well as a standalone [TestContainer for Kafka.](https://www.testcontainers.org/modules/kafka/)
+The integration tests, plus the unit tests, can be run with the command below:
 
 ```bash
-./gradlew composeUp runAllTests
+./gradlew runAllTests
 ```
 # Motivation
 This plugin was motivated by a real-world project.

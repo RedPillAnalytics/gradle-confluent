@@ -88,14 +88,12 @@ class PipelineExecuteTask extends PipelineEndpointTask {
       Integer numCreated = 0
       Integer numDropped = 0
 
-
       // first execute the DROP KSQL statements
       // this also catches running statements and terminates them
       if (!noDrop) {
 
          // drop KSQL objects
          dropSql.each { sql ->
-
             if(doSkip(sql))
                return
 
@@ -115,7 +113,6 @@ class PipelineExecuteTask extends PipelineEndpointTask {
                   List queryIds = ksqlRest.getQueryIds(object)
 
                   if (!queryIds.isEmpty()) {
-
                      if (!noTerminate) {
                         queryIds.each { query ->
                            logger.info "Terminating query $query..."
@@ -137,7 +134,6 @@ class PipelineExecuteTask extends PipelineEndpointTask {
                            }
                            numTerminated++
                         }
-
                      } else log.info "Persistent queries exist, but '--no-terminate' option provided."
                   }
                }
