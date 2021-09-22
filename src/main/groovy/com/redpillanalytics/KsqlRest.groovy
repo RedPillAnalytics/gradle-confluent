@@ -229,19 +229,34 @@ class KsqlRest {
     *
     * @return Map with meaningful elements from the JSON payload elevated as attributes, plus a 'body' key with the full JSON payload.
     */
-   def dropKsql(String ksql, Map properties) {
-      def result = execKsql(ksql, properties)
-      log.debug "result: ${result}"
+   def dropKsql(String ksql, Map properties, Integer dropRetryPause = 10, Integer dropMaxRetries = 10) {
+      def result
+      Integer retryCount = dropMaxRetries
 
-      if (result.status == 400 && result.body.message.contains('Incompatible data source type is STREAM')) {
-         log.info "Type is now STREAM. Issuing DROP STREAM..."
-         result = execKsql(ksql.replace('TABLE', 'STREAM'), properties)
-      }
+      do {
+         result = execKsql(ksql, properties)
+         log.debug "result: ${result}"
 
-      if (result.status == 400 && result.body.message.contains('Incompatible data source type is TABLE')) {
-         log.info "Type is now TABLE. Issuing DROP TABLE..."
-         result = execKsql(ksql.replace('STREAM', 'TABLE'), properties)
-      }
+         if (result.status == 400 && result.body.message.contains('Incompatible data source type is STREAM')) {
+            log.info "Type is now STREAM. Issuing DROP STREAM..."
+            result = execKsql(ksql.replace('TABLE', 'STREAM'), properties)
+         }
+
+         if (result.status == 400 && result.body.message.contains('Incompatible data source type is TABLE')) {
+            log.info "Type is now TABLE. Issuing DROP TABLE..."
+            result = execKsql(ksql.replace('STREAM', 'TABLE'), properties)
+         }
+
+         if (result.body.commandId == null) {
+            if (retryCount <= 0) {
+               throw new GradleException("Maximum retry attempts made for drop statements. Failed to get the command id.")
+            }
+            retryCount--
+
+            log.info "Command id is null. Pausing for $dropRetryPause seconds before retrying."
+            sleep(dropRetryPause * 1000)
+         }
+      } while (result.body.commandId == null)
 
       while (['QUEUED', 'PARSING', 'EXECUTING'].contains(getCommandStatus(result.body.commandId))) {
          log.info "Command ${result.body.commandId} still pending..."

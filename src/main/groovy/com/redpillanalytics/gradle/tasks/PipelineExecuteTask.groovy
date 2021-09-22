@@ -67,6 +67,26 @@ class PipelineExecuteTask extends PipelineEndpointTask {
    )
    String statementPause = project.extensions.confluent.statementPause.toString()
 
+   /**
+    * The number of seconds to pause execution before retrying a drop statement. Default: value of 'confluent.dropRetryPause'.
+    */
+   @Input
+   @Optional
+   @Option(option = "drop-retry-pause",
+           description = "The number of seconds to pause execution before retrying a drop statement. Default: value of 'confluent.dropRetryPause'."
+   )
+   String dropRetryPause = project.extensions.confluent.dropRetryPause.toString()
+
+   /**
+    * The maximum number of times drop statements are to be retried. Default: value of 'confluent.dropMaxRetries'.
+    */
+   @Input
+   @Optional
+   @Option(option = "drop-max-retries",
+           description = "The maximum number of times drop statements are to be retried. Default: value of 'confluent.dropMaxRetries'."
+   )
+   String dropMaxRetries = project.extensions.confluent.dropMaxRetries.toString()
+
    def doSkip(it) {
       boolean setCmd = it.toString().toLowerCase().startsWith("set ")
       boolean unsetCmd = it.toString().toLowerCase().startsWith("unset ")
@@ -88,6 +108,8 @@ class PipelineExecuteTask extends PipelineEndpointTask {
       Integer numCreated = 0
       Integer numDropped = 0
 
+      Integer dropRetryPause = dropRetryPause.toInteger()
+      Integer dropMaxRetries = dropMaxRetries.toInteger()
 
       // first execute the DROP KSQL statements
       // this also catches running statements and terminates them
@@ -143,7 +165,7 @@ class PipelineExecuteTask extends PipelineEndpointTask {
                }
 
                // execute the statement
-               def result = ksqlRest.dropKsql(sql, [:])
+               def result = ksqlRest.dropKsql(sql, [:], dropRetryPause, dropMaxRetries)
 
                // write the analytics record if the analytics plugin is there
                if (project.rootProject.plugins.findPlugin('com.redpillanalytics.gradle-analytics')) {
