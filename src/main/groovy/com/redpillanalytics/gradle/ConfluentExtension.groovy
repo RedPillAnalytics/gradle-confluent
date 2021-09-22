@@ -106,6 +106,16 @@ class ConfluentExtension {
    Integer statementPause = 0
 
    /**
+    * The number of seconds to pause execution before retrying a drop statement. Default: 10
+    */
+   Integer dropRetryPause = 10
+
+   /**
+    * The maximum number of times drop statements are to be retried. Default: 10
+    */
+   Integer dropMaxRetries = 10
+
+   /**
     * Provides the path for Pipeline source files.
     *
     * @return The full path of the Pipeline source files. Uses {@link #pipelineSourcePath} first if it exists, and if it doesn't (the default), then it uses {@link #sourceBase} and {@link #pipelineSourceName}.
