@@ -16,7 +16,7 @@ class KsqlRest {
    /**
     * Regular expression for parsing KSQL statements into underlying chunks.
     */
-   static final String KSQLREGEX = /(?i)(?:.*)(create|drop|insert)(?:\s+)(table|stream|into|source connector|sink connector|connector)(?:\s+)(?:IF EXISTS\s+)?(\w+)/
+   static final String KSQLREGEX = /(?i)(?:.*)(create|drop|insert)(?:\s+)(table|stream|into|source connector|sink connector|connector)(?:\s+)(?:IF EXISTS\s+)?(\w+|"\w+")/
 
    /**
     * The base REST endpoint for the KSQL server. Defaults to 'http://localhost:8088', which is handy when developing against Confluent CLI.
@@ -293,10 +293,10 @@ class KsqlRest {
     */
    def getSourceDescription(String object, String type = '') {
       if (type == 'connector' || type == 'source connector' || type == 'sink connector') {
-         def response = execKsql("DESCRIBE CONNECTOR ${object?.toLowerCase()}", false)
+         def response = execKsql("DESCRIBE CONNECTOR ${toLowerCaseIfUnquoted(object)}", false)
          return response.body.status
       } else {
-         def response = execKsql("DESCRIBE ${object?.toLowerCase()}", false)
+         def response = execKsql("DESCRIBE ${toLowerCaseIfUnquoted(object)}", false)
          return response.body.sourceDescription
       }
    }
@@ -388,7 +388,7 @@ class KsqlRest {
     * @return Either 'table' or 'stream' or 'into' (the latter denotes it was an INSERT statement).
     */
    String getObjectName(String sql) {
-      sql.find(KSQLREGEX) { String all, String statement, String type, String name -> name.toLowerCase() }
+      sql.find(KSQLREGEX) { String all, String statement, String type, String name -> toLowerCaseIfUnquoted(name) }
    }
 
    /**
@@ -431,5 +431,15 @@ class KsqlRest {
       def topics = execKsql('show streams').body.topics[0]
       log.warn "Topics: ${topics}"
       return topics
+   }
+
+   def toLowerCaseIfUnquoted(String value) {
+      if(value == null || isQuoted(value)) return value
+      return value?.toLowerCase()
+   }
+
+   def isQuoted(String value) {
+      return value.length() >= 2 &&
+              value.charAt(0) == '"' && value.charAt(value.length() - 1) == '"'
    }
 }

@@ -207,6 +207,7 @@ class ExecuteTest extends Specification {
       expect:
       result.task(":${taskName}").outcome.name() != 'FAILED'
       result.output.toLowerCase().contains('drop table if exists events_per_min delete topic')
+      result.output.toLowerCase().contains('drop stream if exists "teststream" delete topic')
    }
 
    def "Execute :pipelineExecute task with custom REST endpoint"() {
