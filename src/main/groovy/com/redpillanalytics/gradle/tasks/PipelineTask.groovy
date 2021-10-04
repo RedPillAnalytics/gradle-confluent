@@ -132,7 +132,7 @@ class PipelineTask extends DefaultTask {
    def getDirectives() {
       List directives = []
       tokenizedSql.each { String sql ->
-         sql.find(/(?i)(--@{1,1})(\w+)(\n)(CREATE{1,1})( {1,})(\w+)( {1,})(\w+)/) { match, directive, directiveType, s1, create, s2, table, s3, object ->
+         sql.find(/(?i)(--@{1,1})(\w+)(\n)(CREATE{1,1})( {1,})(\w+)( {1,})(\w+|"\w+")/) { match, directive, directiveType, s1, create, s2, table, s3, object ->
             if (match != null) directives << [type: directiveType, object: object]
          }
       }
@@ -165,7 +165,7 @@ class PipelineTask extends DefaultTask {
    @Internal
    List getDropSql() {
       List script = pipelineSql.collect { String sql ->
-         sql.find(/(?i)(.*)(CREATE)(\s+)(table|stream|source connector|sink connector)(\s+)(\w+)/) { all, x1, create, x3, type, x4, name ->
+         sql.find(/(?i)(.*)(CREATE)(\s+)(table|stream|source connector|sink connector)(\s+)(\w+|"\w+")/) { all, x1, create, x3, type, x4, name ->
             if (type.toLowerCase() == 'source connector' || type.toLowerCase() == 'sink connector') {
                return "DROP CONNECTOR $name;\n"
             } else {
