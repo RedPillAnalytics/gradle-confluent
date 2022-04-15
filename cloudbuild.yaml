@@ -22,7 +22,7 @@ steps:
   args:
     - '-cx'
     - |
-       ./gradlew --build-cache cleanLibs build groovydoc runAllTests buildDashboard
+       ./gradlew cleanLibs build groovydoc runAllTests buildDashboard
   env:
     - 'PROJECT_ID=$PROJECT_ID'
   waitFor:
@@ -35,7 +35,7 @@ steps:
    - |
       if [ $BRANCH_NAME == "master" ]
       then
-        ./gradlew --build-cache publish -Pgradle.publish.key=$${GRADLE_KEY} -Pgradle.publish.secret=$${GRADLE_SECRET}
+        ./gradlew publish -Pgradle.publish.key=$${GRADLE_KEY} -Pgradle.publish.secret=$${GRADLE_SECRET}
       fi
   waitFor:
     - test
@@ -74,7 +74,7 @@ options:
     - GRADLE_USER_HOME=.gradle
     - GRADLE_OPTS="-Dorg.gradle.daemon=false"
     - ORG_GRADLE_PROJECT_analytics_buildTag=$BUILD_ID
-    - CI="Google Cloud Build"
+    - CI=true
   secretEnv:
     - GITHUB_TOKEN
     - AWS_ACCESS_KEY_ID
