@@ -45,7 +45,7 @@ class TasksTest extends Specification {
       buildFile = new File(projectDir, 'build.gradle').write("""
                |plugins {
                |  id 'com.redpillanalytics.gradle-confluent'
-               |  id "com.redpillanalytics.gradle-analytics" version "$analyticsVersion"
+               |  id 'com.redpillanalytics.gradle-analytics' version "$analyticsVersion"
                |  id 'maven-publish'
                |  id 'application'
                |}
