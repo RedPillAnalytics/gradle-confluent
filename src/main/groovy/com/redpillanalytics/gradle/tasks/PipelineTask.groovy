@@ -20,6 +20,12 @@ class PipelineTask extends DefaultTask {
    )
    String pipelinePath
 
+   @Input
+   @Option(option = "pipeline-file",
+            description="File containing the SQL scripts to execute.")
+   @Optional
+   String pipelineFilePath = null
+
    /**
     * When defined, DROP statements are not processed in reverse order of the CREATE statements, which is the default.
     */
@@ -57,6 +63,17 @@ class PipelineTask extends DefaultTask {
    }
 
    /**
+    * Returns a File object representation of the {@pipelinePath}/{@pipelineFilePath} parameter.
+    *
+    * @return The File object representation of the  {@pipelinePath}/{@pipelineFilePath} parameter.
+    */
+   @InputFile
+   @Optional
+   File getFile() {
+      return pipelineFilePath != null ? new File(dir, pipelineFilePath) : null
+   }
+
+   /**
     * Returns a File object representation of the KSQL create script.
     *
     * @return The File object representation of the KSQL create script.
@@ -68,11 +85,15 @@ class PipelineTask extends DefaultTask {
 
    /**
     * Gets the hierarchical collection of pipeline files, sorted using folder structure and alphanumeric logic.
+    * If a particular pipeline file is specified, returns a list with only that file.
     *
     * @return The List of pipeline KSQL files.
     */
    @Internal
    List getPipelineFiles() {
+      if(file != null)
+         return Collections.singletonList(file)
+
       def tree = project.fileTree(dir: dir, includes: ['**/*.sql', '**/*.SQL', '**/*.ksql', '**/*.KSQL'], exclude: project.extensions.confluent.pipelineCreateName)
       return tree.sort()
    }
