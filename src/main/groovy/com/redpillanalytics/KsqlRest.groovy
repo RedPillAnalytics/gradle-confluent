@@ -159,6 +159,12 @@ class KsqlRest {
          throw new GradleException("error_code: ${result.error_code}: ${result.message}")
       }
 
+      // No command id is returned for connectors, so result can be returned.
+      if (ksql.toLowerCase().startsWith("create sink connector ")
+              || ksql.toLowerCase().startsWith("create source connector ")) {
+         return result;
+      }
+
       // test normalizing the commandId
       String commandId = result.commandId[0].toString().replace('`','')
 
@@ -237,6 +243,11 @@ class KsqlRest {
          result = execKsql(ksql, properties)
          log.debug "result: ${result}"
 
+         // No command id is returned for connectors, so result can be returned.
+         if (ksql.toLowerCase().startsWith("drop connector ")) {
+            return result
+         }
+
          if (result.status == 400 && result.body.message.contains('Incompatible data source type is STREAM')) {
             log.info "Type is now STREAM. Issuing DROP STREAM..."
             result = execKsql(ksql.replace('TABLE', 'STREAM'), properties)
@@ -294,7 +305,7 @@ class KsqlRest {
    def getSourceDescription(String object, String type = '') {
       if (type == 'connector' || type == 'source connector' || type == 'sink connector') {
          def response = execKsql("DESCRIBE CONNECTOR ${toLowerCaseIfUnquoted(object)}", false)
-         return response.body.status
+         return response.body[0].status
       } else {
          def response = execKsql("DESCRIBE ${toLowerCaseIfUnquoted(object)}", false)
          return response.body.sourceDescription
