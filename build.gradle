@@ -68,8 +68,16 @@ gradlePlugin {
       gradleConfluent {
          id = 'com.redpillanalytics.gradle-confluent'
          implementationClass = 'com.redpillanalytics.gradle.ConfluentPlugin'
+         displayName = 'gradle-confluent'
       }
    }
+}
+
+pluginBundle {
+   website = 'https://github.com/RedPillAnalytics/gradle-confluent'
+   vcsUrl = 'https://github.com/RedPillAnalytics/gradle-confluent'
+   description = "A plugin for deploying streaming applications to a Confluent Kafka cluster."
+   tags = ['kafka', 'confluent', 'ksql', 'streams']
 }
 
 testSets {
