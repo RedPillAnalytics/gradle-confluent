@@ -22,7 +22,7 @@ steps:
   args:
     - '-cx'
     - |
-       ./gradlew cleanLibs build groovydoc runAllTests buildDashboard
+       ./gradlew cleanLibs build groovydoc runAllTests buildDashboard validatePlugins
   env:
     - 'PROJECT_ID=$PROJECT_ID'
   waitFor:
