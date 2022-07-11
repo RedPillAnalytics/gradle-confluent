@@ -190,7 +190,7 @@ class PipelineTask extends DefaultTask {
             if (type.toLowerCase() == 'source connector' || type.toLowerCase() == 'sink connector') {
                return "DROP CONNECTOR $name;\n"
             }
-            if(type.toLowerCase() == 'source table') {
+            else if(type.toLowerCase() == 'source table') {
                return "DROP TABLE IF EXISTS ${name}${getDirectiveObjects('DeleteTopic').contains(name) ? ' DELETE TOPIC' : ''};\n"
             }
             else {
