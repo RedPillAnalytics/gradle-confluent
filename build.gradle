@@ -1,11 +1,11 @@
 plugins {
    id 'groovy'
    id 'java-gradle-plugin'
-   id "com.gradle.plugin-publish" version "1.0.0"
+   id "com.gradle.plugin-publish" version "1.1.0"
    id "com.github.breadmoirai.github-release" version "2.4.1"
    id 'org.unbroken-dome.test-sets' version '4.0.0'
-   id "com.avast.gradle.docker-compose" version "0.16.7"
-   id "com.github.ben-manes.versions" version "0.42.0"
+   id "com.avast.gradle.docker-compose" version "0.16.11"
+   id "com.github.ben-manes.versions" version "0.44.0"
    id "com.redpillanalytics.gradle-analytics" version "1.4.6"
    id 'com.adarshr.test-logger' version '3.2.0'
    id 'build-dashboard'
@@ -33,18 +33,18 @@ githubRelease {
 }
 
 dependencies {
-   implementation 'org.codehaus.groovy:groovy:3.0.11'
-   implementation 'com.konghq:unirest-java:3.13.8'
-   implementation 'com.google.code.gson:gson:2.9.0'
+   implementation 'org.codehaus.groovy:groovy:3.0.13'
+   implementation 'com.konghq:unirest-java:3.13.13'
+   implementation 'com.google.code.gson:gson:2.10'
 
    // Gradle Properties
    // It also has the Common library in it, thus the dependency here
    implementation 'gradle.plugin.com.redpillanalytics:gradle-properties:1.0.7'
 
    // testing
-   testImplementation 'org.spockframework:spock-core:2.0-groovy-3.0'
-   testImplementation "org.testcontainers:spock:1.17.3"
-   testImplementation "org.testcontainers:kafka:1.17.3"
+   testImplementation 'org.spockframework:spock-core:2.1-groovy-3.0'
+   testImplementation "org.testcontainers:spock:1.17.6"
+   testImplementation "org.testcontainers:kafka:1.17.6"
 }
 
 // Default artifact naming.
