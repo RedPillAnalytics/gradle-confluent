@@ -16,7 +16,7 @@ class KsqlRest {
    /**
     * Regular expression for parsing KSQL statements into underlying chunks.
     */
-   static final String KSQLREGEX = /(?i)(?:.*)(create|drop|insert)(?:\s+)(table|stream|into|source connector|sink connector|connector)(?:\s+)(?:IF EXISTS\s+)?(\w+|"\w+")/
+   static final String KSQLREGEX = /(?i)(?:.*)(create|drop|insert)(?:\s+)(table|source table|stream|into|source connector|sink connector|connector)(?:\s+)(?:IF EXISTS\s+)?(\w+|"\w+")/
 
    /**
     * The base REST endpoint for the KSQL server. Defaults to 'http://localhost:8088', which is handy when developing against Confluent CLI.
